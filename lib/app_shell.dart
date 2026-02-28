@@ -224,22 +224,26 @@ class _MobileLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: child,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: selectedIndex,
-        onDestinationSelected: (i) => context.go(items[i].route),
-        backgroundColor: AppColors.surface,
-        indicatorColor: AppColors.purple700,
-        labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
-        destinations: items
-            .map(
-              (item) => NavigationDestination(
-                icon: Icon(item.icon, color: AppColors.textSecondary),
-                selectedIcon: Icon(item.icon, color: AppColors.textPrimary),
-                label: item.label,
-              ),
-            )
-            .toList(),
+      body: Stack(
+        children: [
+          // Content — padded at bottom so it doesn't hide under the navbar
+          Padding(
+            padding: const EdgeInsets.only(bottom: 80),
+            child: child,
+          ),
+          // Floating navbar
+          Positioned(
+            bottom: 16,
+            left: 16,
+            right: 16,
+            child: _FloatingNavBar(
+              key: const ValueKey('floating_nav_bar'),
+              selectedIndex: selectedIndex,
+              items: items,
+              onSelect: (i) => context.go(items[i].route),
+            ),
+          ),
+        ],
       ),
     );
   }
