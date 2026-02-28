@@ -1,0 +1,38 @@
+{
+  "@@locale": "en",
+  "appTitle": "Flutter Base App",
+  "@appTitle": { "description": "The app name" },
+
+  "homeGreeting": "Hello, Athlete",
+  "@homeGreeting": { "description": "Greeting on home screen" },
+
+  "homeMyWorkouts": "My Workouts",
+  "@homeMyWorkouts": { "description": "Section title for workouts list" },
+
+  "homeTodayWorkout": "Today's Workout",
+  "@homeTodayWorkout": { "description": "Section title for today's workout" },
+
+  "workoutStartButton": "Start Workout",
+  "@workoutStartButton": { "description": "Button to start a workout" },
+
+  "workoutNewButton": "New Workout",
+  "@workoutNewButton": { "description": "Button to create a new workout" },
+
+  "searchLabel": "Search workout",
+  "@searchLabel": { "description": "Label for search input" },
+
+  "searchHint": "e.g. Chest, Back, Legs...",
+  "@searchHint": { "description": "Hint for search input" },
+
+  "loginTitle": "Welcome back",
+  "@loginTitle": { "description": "Title on login screen" },
+
+  "loginEmailLabel": "E-mail",
+  "@loginEmailLabel": { "description": "Label for email input" },
+
+  "loginPasswordLabel": "Password",
+  "@loginPasswordLabel": { "description": "Label for password input" },
+
+  "loginButton": "Sign in",
+  "@loginButton": { "description": "Login submit button" }
+}

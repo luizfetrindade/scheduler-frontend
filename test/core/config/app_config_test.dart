@@ -1,0 +1,33 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:scheduler_frontend/core/config/app_config.dart';
+
+// NOTE: AppConfig values are compile-time constants (String.fromEnvironment).
+// The tests below only cover the default (dev) environment.
+// To test staging/prod environments run:
+//   flutter test --dart-define=ENV=staging
+//   flutter test --dart-define=ENV=prod
+// See the Makefile targets test-staging and test-prod.
+
+void main() {
+  group('AppConfig', () {
+    test('apiUrl defaults to localhost:3000', () {
+      expect(AppConfig.apiUrl, 'http://localhost:3000');
+    });
+
+    test('env defaults to dev when no dart-define is set', () {
+      expect(AppConfig.env, 'dev');
+    });
+
+    test('isDev returns true for default env', () {
+      expect(AppConfig.isDev, isTrue);
+    });
+
+    test('isStaging returns false for default env', () {
+      expect(AppConfig.isStaging, isFalse);
+    });
+
+    test('isProd returns false for default env', () {
+      expect(AppConfig.isProd, isFalse);
+    });
+  });
+}

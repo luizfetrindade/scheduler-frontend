@@ -1,0 +1,15 @@
+{
+  "@@locale": "pt",
+  "appTitle": "Flutter Base App",
+  "homeGreeting": "Olá, Atleta",
+  "homeMyWorkouts": "Meus Treinos",
+  "homeTodayWorkout": "Treino de Hoje",
+  "workoutStartButton": "Iniciar Treino",
+  "workoutNewButton": "Novo Treino",
+  "searchLabel": "Buscar treino",
+  "searchHint": "Ex: Peito, Costas, Pernas...",
+  "loginTitle": "Bem-vindo de volta",
+  "loginEmailLabel": "E-mail",
+  "loginPasswordLabel": "Senha",
+  "loginButton": "Entrar"
+}
