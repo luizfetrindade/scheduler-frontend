@@ -69,16 +69,16 @@ class AdaptiveShell extends StatelessWidget {
 
         if (isMobile) {
           return _MobileLayout(
-            child: child,
             selectedIndex: index,
             items: _mobileItems,
+            child: child,
           );
         }
 
         return _DesktopLayout(
-          child: child,
           selectedIndex: index,
           items: _desktopItems,
+          child: child,
         );
       },
     );
@@ -181,7 +181,7 @@ class _Sidebar extends StatelessWidget {
                 )),
             const Spacer(),
             const Divider(color: AppColors.surfaceHigh, height: 1),
-            _SidebarFooter(),
+            const _SidebarFooter(),
           ],
         ),
       ),
@@ -231,6 +231,8 @@ class _SidebarTile extends StatelessWidget {
 }
 
 class _SidebarFooter extends StatelessWidget {
+  const _SidebarFooter();
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(

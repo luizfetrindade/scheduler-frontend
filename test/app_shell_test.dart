@@ -46,6 +46,10 @@ void main() {
     test('returns 0 for unknown location', () {
       expect(indexForLocation('/unknown', isMobile: true), 0);
     });
+
+    test('returns 1 for sub-route /appointments/123 on mobile', () {
+      expect(indexForLocation('/appointments/123', isMobile: true), 1);
+    });
   });
 
   group('AdaptiveShell — layout', () {
