@@ -11,7 +11,6 @@ import 'package:scheduler_frontend/core/auth/auth_state.dart';
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 
 Widget _buildShell({
-  required double width,
   String location = '/',
   AuthBloc? authBloc,
 }) {
@@ -54,8 +53,9 @@ void main() {
       tester.view.physicalSize = const Size(400, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-      await tester.pumpWidget(_buildShell(width: 400));
+      await tester.pumpWidget(_buildShell());
       await tester.pump();
 
       expect(find.byType(NavigationBar), findsOneWidget);
@@ -67,8 +67,9 @@ void main() {
       tester.view.physicalSize = const Size(1200, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-      await tester.pumpWidget(_buildShell(width: 1200));
+      await tester.pumpWidget(_buildShell());
       await tester.pump();
 
       expect(find.byType(NavigationBar), findsNothing);
@@ -80,8 +81,9 @@ void main() {
       tester.view.physicalSize = const Size(400, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-      await tester.pumpWidget(_buildShell(width: 400, location: '/appointments'));
+      await tester.pumpWidget(_buildShell(location: '/appointments'));
       await tester.pump();
 
       final navBar = tester.widget<NavigationBar>(find.byType(NavigationBar));
@@ -92,8 +94,9 @@ void main() {
       tester.view.physicalSize = const Size(1200, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-      await tester.pumpWidget(_buildShell(width: 1200, location: '/clients'));
+      await tester.pumpWidget(_buildShell(location: '/clients'));
       await tester.pump();
 
       expect(find.text('Clientes'), findsOneWidget);
