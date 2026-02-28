@@ -59,7 +59,6 @@ class _FloatingNavBar extends StatelessWidget {
           height: 64,
           decoration: BoxDecoration(
             color: AppColors.surface.withValues(alpha: 0.65),
-            borderRadius: BorderRadius.circular(28),
             border: Border.all(
               color: AppColors.surfaceHigh.withValues(alpha: 0.5),
             ),
@@ -67,6 +66,9 @@ class _FloatingNavBar extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           child: LayoutBuilder(
             builder: (context, constraints) {
+              if (constraints.maxWidth == 0 || items.isEmpty) {
+                return const SizedBox.shrink();
+              }
               final itemWidth = constraints.maxWidth / items.length;
               return Stack(
                 children: [
@@ -133,14 +135,15 @@ class _NavItemButton extends StatelessWidget {
             scale: isSelected ? 1.15 : 1.0,
             duration: const Duration(milliseconds: 200),
             child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0, end: isSelected ? 1.0 : 0.0),
+              key: ValueKey(isSelected),
+              tween: Tween(begin: 0.0, end: 1.0),
               duration: const Duration(milliseconds: 200),
               builder: (context, t, _) => Icon(
                 item.icon,
                 size: 22,
                 color: Color.lerp(
-                  AppColors.textSecondary,
-                  AppColors.purple300,
+                  isSelected ? AppColors.textSecondary : AppColors.purple300,
+                  isSelected ? AppColors.purple300 : AppColors.textSecondary,
                   t,
                 ),
               ),
