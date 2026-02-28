@@ -94,7 +94,8 @@ void main() {
       await tester.pumpWidget(_buildShell(location: '/appointments'));
       await tester.pump();
 
-      // Os 5 itens mobile identificados por key no _NavItemButton
+      // Os 5 itens mobile identificados por Key('nav_item_<route>') no _NavItemButton
+      // Nota: usa Key simples (não ValueKey) para evitar conflito de type em find.byKey
       expect(find.byKey(const Key('nav_item_/')),             findsOneWidget);
       expect(find.byKey(const Key('nav_item_/appointments')), findsOneWidget);
       expect(find.byKey(const Key('nav_item_/clients')),      findsOneWidget);
@@ -123,6 +124,8 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('sidebar_toggle')));
       await tester.pumpAndSettle();
 
+      // Sidebar retraída — labels de texto não visíveis
+      expect(find.text('Home'), findsNothing);
       // BackdropFilter ainda presente (glass effect)
       expect(find.byType(BackdropFilter), findsWidgets);
     });
