@@ -359,14 +359,13 @@ class _SidebarHeader extends StatelessWidget {
             onPressed: onToggle,
             tooltip: expanded ? 'Retrair' : 'Expandir',
           ),
-          if (expanded)
-            Expanded(
-              child: AnimatedOpacity(
-                opacity: expanded ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 150),
-                child: Text('Scheduler', style: AppTypography.headingMd),
-              ),
+          Expanded(
+            child: AnimatedOpacity(
+              opacity: expanded ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 150),
+              child: Text('Scheduler', style: AppTypography.headingMd),
             ),
+          ),
         ],
       ),
     );
