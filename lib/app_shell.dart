@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -32,6 +34,123 @@ const _desktopItems = [
   _NavItem(icon: Icons.bar_chart,               label: 'Relatórios',    route: AppRoutes.reports),
   _NavItem(icon: Icons.settings_outlined,       label: 'Configurações', route: AppRoutes.settings),
 ];
+
+// ─── Floating nav bar (mobile) ────────────────────────────────────────────────
+
+class _FloatingNavBar extends StatelessWidget {
+  final int selectedIndex;
+  final List<_NavItem> items;
+  final ValueChanged<int> onSelect;
+
+  const _FloatingNavBar({
+    super.key,
+    required this.selectedIndex,
+    required this.items,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(28),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
+          height: 64,
+          decoration: BoxDecoration(
+            color: AppColors.surface.withValues(alpha: 0.65),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(
+              color: AppColors.surfaceHigh.withValues(alpha: 0.5),
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final itemWidth = constraints.maxWidth / items.length;
+              return Stack(
+                children: [
+                  // Sliding pill indicator
+                  AnimatedPositioned(
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeInOut,
+                    left: selectedIndex * itemWidth + 2,
+                    top: 0,
+                    bottom: 0,
+                    width: itemWidth - 4,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.purple700.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(22),
+                      ),
+                    ),
+                  ),
+                  // Items row (on top of pill)
+                  Row(
+                    children: items.asMap().entries.map((e) {
+                      return _NavItemButton(
+                        key: Key('nav_item_${e.value.route}'),
+                        item: e.value,
+                        isSelected: e.key == selectedIndex,
+                        width: itemWidth,
+                        onTap: () => onSelect(e.key),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NavItemButton extends StatelessWidget {
+  final _NavItem item;
+  final bool isSelected;
+  final double width;
+  final VoidCallback onTap;
+
+  const _NavItemButton({
+    super.key,
+    required this.item,
+    required this.isSelected,
+    required this.width,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        width: width,
+        child: Center(
+          child: AnimatedScale(
+            scale: isSelected ? 1.15 : 1.0,
+            duration: const Duration(milliseconds: 200),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: isSelected ? 1.0 : 0.0),
+              duration: const Duration(milliseconds: 200),
+              builder: (context, t, _) => Icon(
+                item.icon,
+                size: 22,
+                color: Color.lerp(
+                  AppColors.textSecondary,
+                  AppColors.purple300,
+                  t,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 // ─── Helper exported for tests ────────────────────────────────────────────────
 
