@@ -387,57 +387,46 @@ class _SidebarTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final icon = Icon(
-      item.icon,
-      color: isSelected ? AppColors.purple300 : AppColors.textSecondary,
-      size: 20,
-    );
-
-    if (!expanded) {
-      return Tooltip(
-        message: item.label,
-        child: InkWell(
-          onTap: onTap,
+    // Single widget tree always in the tree — title cross-fades via
+    // AnimatedSwitcher so the content animates smoothly during the sidebar
+    // width transition. After pumpAndSettle the Text is removed from the tree
+    // when collapsed, keeping find.text assertions reliable in tests.
+    return Tooltip(
+      message: expanded ? '' : item.label,
+      child: ListTile(
+        leading: Icon(
+          item.icon,
+          color: isSelected ? AppColors.purple300 : AppColors.textSecondary,
+          size: 20,
+        ),
+        title: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 150),
+          child: expanded
+              ? Text(
+                  item.label,
+                  key: const ValueKey('label'),
+                  style: AppTypography.bodySm.copyWith(
+                    color: isSelected
+                        ? AppColors.purple300
+                        : AppColors.textSecondary,
+                    fontWeight:
+                        isSelected ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                )
+              : const SizedBox.shrink(key: ValueKey('empty')),
+        ),
+        tileColor: isSelected
+            ? AppColors.purple700.withValues(alpha: 0.2)
+            : Colors.transparent,
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
-          child: Container(
-            width: 64,
-            height: 44,
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? AppColors.purple700.withValues(alpha: 0.2)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(AppRadius.md),
-            ),
-            child: Center(child: icon),
-          ),
         ),
-      );
-    }
-
-    return ListTile(
-      leading: icon,
-      title: AnimatedOpacity(
-        opacity: expanded ? 1.0 : 0.0,
-        duration: const Duration(milliseconds: 150),
-        child: Text(
-          item.label,
-          style: AppTypography.bodySm.copyWith(
-            color: isSelected ? AppColors.purple300 : AppColors.textSecondary,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-          ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.xs,
         ),
+        onTap: onTap,
       ),
-      tileColor: isSelected
-          ? AppColors.purple700.withValues(alpha: 0.2)
-          : Colors.transparent,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.md),
-      ),
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.xs,
-      ),
-      onTap: onTap,
     );
   }
 }
