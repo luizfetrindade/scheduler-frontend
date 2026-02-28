@@ -1,207 +1,196 @@
 import 'package:flutter/material.dart';
-import 'package:scheduler_frontend/core/l10n/l10n.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:scheduler_frontend/core/auth/auth_bloc.dart';
+import 'package:scheduler_frontend/core/auth/auth_state.dart';
 import 'package:scheduler_frontend/design_system/base_design_system.dart';
+import 'package:scheduler_frontend/features/appointments/bloc/appointments_bloc.dart';
+import 'package:scheduler_frontend/features/appointments/bloc/appointments_event.dart';
+import 'package:scheduler_frontend/features/appointments/bloc/appointments_state.dart';
+import 'package:scheduler_frontend/features/appointments/data/appointment_model.dart';
+import 'package:scheduler_frontend/features/business/bloc/business_bloc.dart';
+import 'package:scheduler_frontend/features/business/bloc/business_event.dart';
+import 'package:scheduler_frontend/features/business/bloc/business_state.dart';
+import 'package:scheduler_frontend/features/home/presentation/widgets/appointment_card.dart';
+import 'package:scheduler_frontend/features/home/presentation/widgets/business_selector_header.dart';
+import 'package:scheduler_frontend/features/home/presentation/widgets/greeting_row.dart';
+import 'package:scheduler_frontend/features/home/presentation/widgets/stats_summary_row.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends StatelessWidget {
   const HomePage({super.key});
-
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  final _searchController = TextEditingController();
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const _Header(),
-              const SizedBox(height: AppSpacing.xl),
-              BaseInputField(
-                label: context.l10n.searchLabel,
-                hint: context.l10n.searchHint,
-                controller: _searchController,
-                prefixIcon: Icons.search_outlined,
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              Text(context.l10n.homeTodayWorkout, style: AppTypography.headingMd),
-              const SizedBox(height: AppSpacing.md),
-              const _TodayWorkoutCard(),
-              const SizedBox(height: AppSpacing.xl),
-              Text(context.l10n.homeMyWorkouts, style: AppTypography.headingMd),
-              const SizedBox(height: AppSpacing.md),
-              _WorkoutCard(
-                name: 'Treino A — Peito',
-                muscles: 'Peitoral · Ombro · Tríceps',
-                exercises: 6,
-                onTap: () {},
-              ),
-              const SizedBox(height: AppSpacing.md),
-              _WorkoutCard(
-                name: 'Treino B — Costas',
-                muscles: 'Costas · Bíceps · Antebraço',
-                exercises: 5,
-                onTap: () {},
-              ),
-              const SizedBox(height: AppSpacing.md),
-              _WorkoutCard(
-                name: 'Treino C — Pernas',
-                muscles: 'Quadríceps · Posterior · Glúteo',
-                exercises: 7,
-                onTap: () {},
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              BaseButton(
-                label: context.l10n.workoutNewButton,
-                onPressed: () {},
-                variant: BaseButtonVariant.secondary,
-                prefixIcon: Icons.add,
-              ),
-              const SizedBox(height: AppSpacing.md),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Header extends StatelessWidget {
-  const _Header();
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(context.l10n.homeGreeting, style: AppTypography.bodySm.copyWith(color: AppColors.textSecondary)),
-            const SizedBox(height: AppSpacing.xs),
-            Text(context.l10n.appTitle, style: AppTypography.displayLg),
-          ],
-        ),
-        BaseCard(
-          padding: AppSpacing.sm,
-          onTap: () {},
-          child: const Icon(Icons.person_outline, color: AppColors.purple500, size: 24),
-        ),
-      ],
-    );
-  }
-}
-
-class _TodayWorkoutCard extends StatelessWidget {
-  const _TodayWorkoutCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return BaseCard(
-      elevated: true,
-      onTap: () {},
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.local_fire_department, color: AppColors.purple500, size: 20),
-              const SizedBox(width: AppSpacing.xs),
-              Text('Treino A — Peito', style: AppTypography.headingMd),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text('Peitoral · Ombro · Tríceps', style: AppTypography.bodySm.copyWith(color: AppColors.textSecondary)),
-          const SizedBox(height: AppSpacing.lg),
-          Row(
-            children: [
-              _StatChip(icon: Icons.fitness_center_outlined, label: '6 exercícios'),
-              const SizedBox(width: AppSpacing.md),
-              _StatChip(icon: Icons.timer_outlined, label: '~45 min'),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          BaseButton(
-            label: context.l10n.workoutStartButton,
-            onPressed: () {},
-            prefixIcon: Icons.play_arrow_rounded,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _StatChip({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: AppColors.textSecondary, size: 14),
-        const SizedBox(width: AppSpacing.xs),
-        Text(label, style: AppTypography.caption),
-      ],
-    );
-  }
-}
-
-class _WorkoutCard extends StatelessWidget {
-  final String name;
-  final String muscles;
-  final int exercises;
-  final VoidCallback onTap;
-
-  const _WorkoutCard({
-    required this.name,
-    required this.muscles,
-    required this.exercises,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return BaseCard(
-      onTap: onTap,
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name, style: AppTypography.bodyMd),
-                const SizedBox(height: AppSpacing.xs),
-                Text(muscles, style: AppTypography.caption),
+        child: BlocListener<BusinessBloc, BusinessState>(
+          listener: (context, state) {
+            if (state is BusinessLoaded) {
+              context.read<AppointmentsBloc>().add(
+                    AppointmentsLoadRequested(
+                      slug: state.active.slug,
+                      date: DateTime.now(),
+                    ),
+                  );
+            }
+          },
+          child: RefreshIndicator(
+            color: AppColors.purple500,
+            onRefresh: () async {
+              final bizState = context.read<BusinessBloc>().state;
+              if (bizState is BusinessLoaded) {
+                context.read<AppointmentsBloc>().add(
+                      AppointmentsLoadRequested(
+                        slug: bizState.active.slug,
+                        date: DateTime.now(),
+                      ),
+                    );
+              }
+            },
+            child: CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate([
+                      _buildHeader(context),
+                      const SizedBox(height: AppSpacing.lg),
+                      _buildGreeting(context),
+                      const SizedBox(height: AppSpacing.lg),
+                      _buildStats(context),
+                      const SizedBox(height: AppSpacing.xl),
+                      Text(
+                        'Agendamentos de hoje',
+                        style: AppTypography.headingMd,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      _buildAppointmentList(context),
+                    ]),
+                  ),
+                ),
               ],
             ),
           ),
-          const SizedBox(width: AppSpacing.md),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text('$exercises', style: AppTypography.headingMd.copyWith(color: AppColors.purple500)),
-              Text('exercícios', style: AppTypography.caption),
-            ],
-          ),
-        ],
+        ),
       ),
     );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    final authState = context.watch<AuthBloc>().state;
+    final userName =
+        authState is AuthAuthenticated ? authState.user.firstName : '';
+
+    return BlocBuilder<BusinessBloc, BusinessState>(
+      builder: (context, state) {
+        if (state is! BusinessLoaded) return const SizedBox.shrink();
+        return BusinessSelectorHeader(
+          active: state.active,
+          businesses: state.businesses,
+          userName: userName,
+          onSelect: (biz) =>
+              context.read<BusinessBloc>().add(BusinessSelected(biz)),
+        );
+      },
+    );
+  }
+
+  Widget _buildGreeting(BuildContext context) {
+    final authState = context.watch<AuthBloc>().state;
+    final firstName =
+        authState is AuthAuthenticated ? authState.user.firstName : '';
+    return GreetingRow(firstName: firstName);
+  }
+
+  Widget _buildStats(BuildContext context) {
+    return BlocBuilder<AppointmentsBloc, AppointmentsState>(
+      builder: (context, state) {
+        if (state is AppointmentsLoaded) {
+          return StatsSummaryRow(
+            total: state.total,
+            pending: state.pending,
+            confirmed: state.confirmed,
+          );
+        }
+        return const StatsSummaryRow(total: 0, pending: 0, confirmed: 0);
+      },
+    );
+  }
+
+  Widget _buildAppointmentList(BuildContext context) {
+    return BlocBuilder<AppointmentsBloc, AppointmentsState>(
+      builder: (context, state) {
+        return switch (state) {
+          AppointmentsLoading() => const Center(
+              child: CircularProgressIndicator(color: AppColors.purple500),
+            ),
+          AppointmentsLoaded(:final appointments) when appointments.isEmpty =>
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.xl),
+                child: Text(
+                  'Nenhum agendamento hoje',
+                  style: AppTypography.bodySm
+                      .copyWith(color: AppColors.textSecondary),
+                ),
+              ),
+            ),
+          AppointmentsLoaded(:final appointments) => Column(
+              children: appointments
+                  .map(
+                    (appt) => Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                      child: AppointmentCard(
+                        appointment: appt,
+                        onConfirm: appt.status == AppointmentStatus.pending
+                            ? () => _updateStatus(
+                                  context,
+                                  appt,
+                                  AppointmentStatus.confirmed,
+                                )
+                            : null,
+                        onNoShow: appt.status == AppointmentStatus.pending
+                            ? () => _updateStatus(
+                                  context,
+                                  appt,
+                                  AppointmentStatus.noShow,
+                                )
+                            : null,
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          AppointmentsError(:final message) => Center(
+              child: Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.xl),
+                child: Text(
+                  message,
+                  style:
+                      AppTypography.bodySm.copyWith(color: AppColors.error),
+                ),
+              ),
+            ),
+          _ => const SizedBox.shrink(),
+        };
+      },
+    );
+  }
+
+  void _updateStatus(
+    BuildContext context,
+    AppointmentModel appt,
+    AppointmentStatus newStatus,
+  ) {
+    final bizState = context.read<BusinessBloc>().state;
+    if (bizState is! BusinessLoaded) return;
+
+    context.read<AppointmentsBloc>().add(
+          AppointmentStatusChanged(
+            slug: bizState.active.slug,
+            appointmentId: appt.id,
+            status: newStatus,
+          ),
+        );
   }
 }
