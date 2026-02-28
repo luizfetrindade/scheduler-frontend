@@ -269,7 +269,6 @@ class _DesktopLayout extends StatelessWidget {
       body: Row(
         children: [
           _Sidebar(selectedIndex: selectedIndex, items: items),
-          const VerticalDivider(width: 1, thickness: 1, color: AppColors.surfaceHigh),
           Expanded(child: child),
         ],
       ),
@@ -279,37 +278,96 @@ class _DesktopLayout extends StatelessWidget {
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
-class _Sidebar extends StatelessWidget {
+class _Sidebar extends StatefulWidget {
   final int selectedIndex;
   final List<_NavItem> items;
 
   const _Sidebar({required this.selectedIndex, required this.items});
 
   @override
+  State<_Sidebar> createState() => _SidebarState();
+}
+
+class _SidebarState extends State<_Sidebar> {
+  bool _expanded = true;
+
+  @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 220,
-      child: ColoredBox(
-        color: AppColors.surface,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: AppSpacing.xl),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              child: Text('Scheduler', style: AppTypography.headingMd),
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeInOut,
+      width: _expanded ? 220 : 64,
+      child: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(
+            color: AppColors.surface.withValues(alpha: 0.75),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _SidebarHeader(
+                  expanded: _expanded,
+                  onToggle: () => setState(() => _expanded = !_expanded),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                ...widget.items.asMap().entries.map(
+                  (e) => _SidebarTile(
+                    item: e.value,
+                    isSelected: e.key == widget.selectedIndex,
+                    expanded: _expanded,
+                    onTap: () => context.go(e.value.route),
+                  ),
+                ),
+                const Spacer(),
+                const Divider(color: AppColors.surfaceHigh, height: 1),
+                _SidebarFooter(expanded: _expanded),
+              ],
             ),
-            const SizedBox(height: AppSpacing.xl),
-            ...items.asMap().entries.map((e) => _SidebarTile(
-                  item: e.value,
-                  isSelected: e.key == selectedIndex,
-                  onTap: () => context.go(e.value.route),
-                )),
-            const Spacer(),
-            const Divider(color: AppColors.surfaceHigh, height: 1),
-            const _SidebarFooter(),
-          ],
+          ),
         ),
+      ),
+    );
+  }
+}
+
+class _SidebarHeader extends StatelessWidget {
+  final bool expanded;
+  final VoidCallback onToggle;
+
+  const _SidebarHeader({required this.expanded, required this.onToggle});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(
+        top: AppSpacing.lg,
+        left: AppSpacing.xs,
+        right: AppSpacing.xs,
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            key: const ValueKey('sidebar_toggle'),
+            icon: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: Icon(
+                expanded ? Icons.chevron_left : Icons.chevron_right,
+                key: ValueKey(expanded),
+                color: AppColors.textSecondary,
+              ),
+            ),
+            onPressed: onToggle,
+            tooltip: expanded ? 'Retrair' : 'Expandir',
+          ),
+          if (expanded)
+            Expanded(
+              child: AnimatedOpacity(
+                opacity: expanded ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 150),
+                child: Text('Scheduler', style: AppTypography.headingMd),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -318,27 +376,56 @@ class _Sidebar extends StatelessWidget {
 class _SidebarTile extends StatelessWidget {
   final _NavItem item;
   final bool isSelected;
+  final bool expanded;
   final VoidCallback onTap;
 
   const _SidebarTile({
     required this.item,
     required this.isSelected,
+    required this.expanded,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final icon = Icon(
+      item.icon,
+      color: isSelected ? AppColors.purple300 : AppColors.textSecondary,
+      size: 20,
+    );
+
+    if (!expanded) {
+      return Tooltip(
+        message: item.label,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          child: Container(
+            width: 64,
+            height: 44,
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? AppColors.purple700.withValues(alpha: 0.2)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+            ),
+            child: Center(child: icon),
+          ),
+        ),
+      );
+    }
+
     return ListTile(
-      leading: Icon(
-        item.icon,
-        color: isSelected ? AppColors.purple300 : AppColors.textSecondary,
-        size: 20,
-      ),
-      title: Text(
-        item.label,
-        style: AppTypography.bodySm.copyWith(
-          color: isSelected ? AppColors.purple300 : AppColors.textSecondary,
-          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+      leading: icon,
+      title: AnimatedOpacity(
+        opacity: expanded ? 1.0 : 0.0,
+        duration: const Duration(milliseconds: 150),
+        child: Text(
+          item.label,
+          style: AppTypography.bodySm.copyWith(
+            color: isSelected ? AppColors.purple300 : AppColors.textSecondary,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+          ),
         ),
       ),
       tileColor: isSelected
@@ -357,7 +444,9 @@ class _SidebarTile extends StatelessWidget {
 }
 
 class _SidebarFooter extends StatelessWidget {
-  const _SidebarFooter();
+  final bool expanded;
+
+  const _SidebarFooter({required this.expanded});
 
   @override
   Widget build(BuildContext context) {
@@ -365,33 +454,63 @@ class _SidebarFooter extends StatelessWidget {
       builder: (context, state) {
         final name =
             state is AuthAuthenticated ? state.user.firstName : '';
+        final avatar = CircleAvatar(
+          radius: 16,
+          backgroundColor: AppColors.purple700,
+          child: Text(
+            name.isNotEmpty ? name[0].toUpperCase() : '?',
+            style: AppTypography.bodySm.copyWith(color: AppColors.textPrimary),
+          ),
+        );
+
+        if (!expanded) {
+          return Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Center(
+              child: Tooltip(
+                message: 'Sair',
+                child: GestureDetector(
+                  onTap: () => context
+                      .read<AuthBloc>()
+                      .add(const AuthLogoutRequested()),
+                  child: avatar,
+                ),
+              ),
+            ),
+          );
+        }
+
         return Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Row(
             children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: AppColors.purple700,
-                child: Text(
-                  name.isNotEmpty ? name[0].toUpperCase() : '?',
-                  style: AppTypography.bodySm
-                      .copyWith(color: AppColors.textPrimary),
-                ),
-              ),
+              avatar,
               const SizedBox(width: AppSpacing.sm),
               Expanded(
-                child: Text(
-                  name,
-                  style: AppTypography.bodySm,
-                  overflow: TextOverflow.ellipsis,
+                child: AnimatedOpacity(
+                  opacity: expanded ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 150),
+                  child: Text(
+                    name,
+                    style: AppTypography.bodySm,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.logout,
-                    color: AppColors.textSecondary, size: 18),
-                tooltip: 'Sair',
-                onPressed: () =>
-                    context.read<AuthBloc>().add(const AuthLogoutRequested()),
+              AnimatedOpacity(
+                opacity: expanded ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 150),
+                child: IconButton(
+                  icon: const Icon(
+                    Icons.logout,
+                    color: AppColors.textSecondary,
+                    size: 18,
+                  ),
+                  tooltip: 'Sair',
+                  onPressed: () => context
+                      .read<AuthBloc>()
+                      .add(const AuthLogoutRequested()),
+                ),
               ),
             ],
           ),
