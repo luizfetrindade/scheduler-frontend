@@ -53,7 +53,8 @@ void main() {
   });
 
   group('AdaptiveShell — layout', () {
-    testWidgets('mostra NavigationBar em tela estreita (< 720px)', (tester) async {
+    testWidgets('mostra floating navbar em tela estreita (< 720px)',
+        (tester) async {
       tester.view.physicalSize = const Size(400, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -62,7 +63,10 @@ void main() {
       await tester.pumpWidget(_buildShell());
       await tester.pump();
 
-      expect(find.byType(NavigationBar), findsOneWidget);
+      // Widget nativo substituído — não deve existir mais
+      expect(find.byType(NavigationBar), findsNothing);
+      // Floating navbar identificada por key
+      expect(find.byKey(const ValueKey('floating_nav_bar')), findsOneWidget);
       // Relatórios não aparece no mobile
       expect(find.text('Relatórios'), findsNothing);
     });
@@ -81,7 +85,7 @@ void main() {
       expect(find.text('Relatórios'), findsOneWidget);
     });
 
-    testWidgets('NavigationBar.selectedIndex reflete a rota atual no mobile', (tester) async {
+    testWidgets('floating navbar contém os 5 itens mobile', (tester) async {
       tester.view.physicalSize = const Size(400, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -90,11 +94,41 @@ void main() {
       await tester.pumpWidget(_buildShell(location: '/appointments'));
       await tester.pump();
 
-      final navBar = tester.widget<NavigationBar>(find.byType(NavigationBar));
-      expect(navBar.selectedIndex, 1);
+      // Os 5 itens mobile identificados por key no _NavItemButton
+      expect(find.byKey(const Key('nav_item_/')),             findsOneWidget);
+      expect(find.byKey(const Key('nav_item_/appointments')), findsOneWidget);
+      expect(find.byKey(const Key('nav_item_/clients')),      findsOneWidget);
+      expect(find.byKey(const Key('nav_item_/services')),     findsOneWidget);
+      expect(find.byKey(const Key('nav_item_/settings')),     findsOneWidget);
+      // Relatórios NÃO está nos itens mobile
+      expect(find.byKey(const Key('nav_item_/reports')),      findsNothing);
     });
 
-    testWidgets('item da sidebar é destacado conforme a rota no desktop', (tester) async {
+    testWidgets('sidebar tem botão de toggle e pode ser retraída',
+        (tester) async {
+      tester.view.physicalSize = const Size(1200, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(_buildShell());
+      await tester.pump();
+
+      // Sidebar começa expandida — labels visíveis
+      expect(find.text('Home'), findsOneWidget);
+      // Toggle button presente
+      expect(find.byKey(const ValueKey('sidebar_toggle')), findsOneWidget);
+
+      // Tap no toggle → sidebar retrái
+      await tester.tap(find.byKey(const ValueKey('sidebar_toggle')));
+      await tester.pumpAndSettle();
+
+      // BackdropFilter ainda presente (glass effect)
+      expect(find.byType(BackdropFilter), findsWidgets);
+    });
+
+    testWidgets('item da sidebar é destacado conforme a rota no desktop',
+        (tester) async {
       tester.view.physicalSize = const Size(1200, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
