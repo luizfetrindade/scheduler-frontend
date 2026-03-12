@@ -80,9 +80,9 @@ class _CreateAppointmentSheetState extends State<CreateAppointmentSheet> {
                 const SizedBox(height: AppSpacing.lg),
                 _buildDateTimeRow(),
                 const SizedBox(height: AppSpacing.md),
-                _buildDurationSelector(),
-                const SizedBox(height: AppSpacing.md),
                 _buildServiceSelector(),
+                const SizedBox(height: AppSpacing.md),
+                _buildDurationSelector(),
                 const SizedBox(height: AppSpacing.md),
                 TextFormField(
                   controller: _nameController,
@@ -175,100 +175,227 @@ class _CreateAppointmentSheetState extends State<CreateAppointmentSheet> {
 
         if (services.isEmpty) return const SizedBox.shrink();
 
-        final selectedService = services
-            .where((s) => s.id == _selectedServiceId)
-            .firstOrNull;
+        final selected = services.where((s) => s.id == _selectedServiceId).firstOrNull;
 
-        return Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.xs,
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            border: Border.all(color: AppColors.surfaceHigh),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.design_services_outlined,
-                  size: 18, color: AppColors.purple500),
-              const SizedBox(width: AppSpacing.sm),
-              Text(
-                'Serviço',
-                style: AppTypography.bodySm.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const Spacer(),
-              DropdownButton<String?>(
-                value: _selectedServiceId,
-                underline: const SizedBox.shrink(),
-                dropdownColor: AppColors.surface,
-                hint: Text(
-                  'Opcional',
-                  style: AppTypography.bodySm.copyWith(
-                    color: AppColors.textDisabled,
-                  ),
-                ),
-                style: AppTypography.bodySm.copyWith(
-                  color: AppColors.textPrimary,
-                ),
-                items: [
-                  DropdownMenuItem<String?>(
-                    value: null,
-                    child: Text(
-                      'Nenhum',
-                      style: AppTypography.bodySm.copyWith(
-                        color: AppColors.textSecondary,
+        return GestureDetector(
+          onTap: () => _openServicePicker(context, services),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            decoration: BoxDecoration(
+              color: context.appColors.surface,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              border: Border.all(color: context.appColors.surfaceHigh),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.design_services_outlined,
+                    size: 18, color: context.appColors.primary),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Serviço',
+                        style: AppTypography.bodySm.copyWith(
+                          color: context.appColors.textSecondary,
+                        ),
                       ),
-                    ),
-                  ),
-                  ...services.map(
-                    (s) => DropdownMenuItem<String?>(
-                      value: s.id,
-                      child: Text(s.name),
-                    ),
-                  ),
-                ],
-                onChanged: (value) {
-                  setState(() {
-                    _selectedServiceId = value;
-                    if (value == null) {
-                      _durationMinutes = 60;
-                      _isCustomDuration = false;
-                    } else {
-                      final svc = services.firstWhere((s) => s.id == value);
-                      if (svc.durationMinutes != null) {
-                        final dur = svc.durationMinutes!;
-                        if (_durationOptions.contains(dur)) {
-                          _durationMinutes = dur;
-                          _isCustomDuration = false;
-                        } else {
-                          _durationMinutes = dur;
-                          _isCustomDuration = true;
-                          _customDurationController.text = dur.toString();
-                        }
-                      }
-                    }
-                  });
-                },
-              ),
-              if (selectedService?.price != null)
-                Padding(
-                  padding: const EdgeInsets.only(left: AppSpacing.xs),
-                  child: Text(
-                    'R\$ ${selectedService!.price!.toStringAsFixed(2).replaceAll('.', ',')}',
-                    style: AppTypography.bodySm.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
+                      if (selected != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          _serviceSubtitle(selected),
+                          style: AppTypography.bodySm.copyWith(
+                            color: context.appColors.textSecondary,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-            ],
+                Text(
+                  selected?.name ?? 'Nenhum',
+                  style: AppTypography.bodySm.copyWith(
+                    color: selected != null
+                        ? context.appColors.textPrimary
+                        : context.appColors.textDisabled,
+                    fontWeight: selected != null
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Icon(Icons.chevron_right,
+                    size: 16, color: context.appColors.textSecondary),
+              ],
+            ),
           ),
         );
       },
     );
+  }
+
+  /// Duration + price subtitle for a service tile.
+  String _serviceSubtitle(ServiceModel svc) {
+    final parts = <String>[];
+    if (svc.durationMinutes != null) parts.add(_formatDuration(svc.durationMinutes!));
+    if (svc.price != null) {
+      parts.add('R\$ ${svc.price!.toStringAsFixed(2).replaceAll('.', ',')}');
+    }
+    return parts.join(' · ');
+  }
+
+  Future<void> _openServicePicker(
+      BuildContext context, List<ServiceModel> services) async {
+    final scrollCtrl = ScrollController();
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: context.appColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: SizedBox(
+            height: 360,
+            child: Column(
+              children: [
+                const SizedBox(height: AppSpacing.sm),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: context.appColors.surfaceHigh,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Escolher serviço',
+                        style: AppTypography.bodySm.copyWith(
+                          color: context.appColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          _applyService(null);
+                          Navigator.of(ctx).pop();
+                        },
+                        child: Text(
+                          'Nenhum',
+                          style: AppTypography.bodySm.copyWith(
+                            color: context.appColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Divider(height: 1, color: context.appColors.surfaceHigh),
+                Expanded(
+                  child: ListView.builder(
+                    controller: scrollCtrl,
+                    itemCount: services.length,
+                    itemBuilder: (ctx, i) {
+                      final svc = services[i];
+                      final isSelected = svc.id == _selectedServiceId;
+                      final subtitle = _serviceSubtitle(svc);
+                      return InkWell(
+                        onTap: () {
+                          _applyService(svc);
+                          Navigator.of(ctx).pop();
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.lg,
+                            vertical: AppSpacing.sm,
+                          ),
+                          color: isSelected
+                              ? context.appColors.primary.withValues(alpha: 0.12)
+                              : Colors.transparent,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      svc.name,
+                                      style: AppTypography.bodySm.copyWith(
+                                        color: isSelected
+                                            ? context.appColors.primary
+                                            : context.appColors.textPrimary,
+                                        fontWeight: isSelected
+                                            ? FontWeight.w600
+                                            : FontWeight.normal,
+                                      ),
+                                    ),
+                                    if (subtitle.isNotEmpty) ...[
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        subtitle,
+                                        style: AppTypography.bodySm.copyWith(
+                                          color: context.appColors.textSecondary,
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                              if (isSelected)
+                                Icon(Icons.check,
+                                    size: 16,
+                                    color: context.appColors.primary),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    scrollCtrl.dispose();
+  }
+
+  /// Applies a service selection: updates serviceId and auto-fills duration.
+  void _applyService(ServiceModel? svc) {
+    setState(() {
+      _selectedServiceId = svc?.id;
+      if (svc == null) {
+        _durationMinutes = 60;
+        _isCustomDuration = false;
+        _customDurationController.clear();
+      } else if (svc.durationMinutes != null) {
+        final dur = svc.durationMinutes!;
+        if (_durationOptions.contains(dur)) {
+          _durationMinutes = dur;
+          _isCustomDuration = false;
+        } else {
+          _durationMinutes = dur;
+          _isCustomDuration = true;
+          _customDurationController.text = dur.toString();
+        }
+      }
+    });
   }
 
   Widget _buildDurationSelector() {
