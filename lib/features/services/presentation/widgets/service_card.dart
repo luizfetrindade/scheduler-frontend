@@ -26,9 +26,9 @@ class ServiceCard extends StatelessWidget {
           vertical: AppSpacing.sm,
         ),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.appColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(color: AppColors.surfaceHigh),
+          border: Border.all(color: context.appColors.surfaceHigh),
         ),
         child: Row(
           children: [
@@ -42,7 +42,7 @@ class ServiceCard extends StatelessWidget {
                         child: Text(
                           service.name,
                           style: AppTypography.bodySm.copyWith(
-                            color: AppColors.textPrimary,
+                            color: context.appColors.textPrimary,
                             fontWeight: FontWeight.w600,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -56,13 +56,13 @@ class ServiceCard extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.surfaceHigh,
+                            color: context.appColors.surfaceHigh,
                             borderRadius: BorderRadius.circular(AppRadius.sm),
                           ),
                           child: Text(
                             'Inativo',
                             style: AppTypography.caption.copyWith(
-                              color: AppColors.textSecondary,
+                              color: context.appColors.textSecondary,
                             ),
                           ),
                         ),
@@ -70,19 +70,19 @@ class ServiceCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 2),
-                  _buildSubtitle(),
+                  _buildSubtitle(context),
                 ],
               ),
             ),
             IconButton(
               icon: const Icon(Icons.edit_outlined, size: 18),
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
               onPressed: onEdit,
               tooltip: 'Editar',
             ),
             PopupMenuButton<_ServiceAction>(
-              icon: const Icon(Icons.more_vert, size: 18, color: AppColors.textSecondary),
-              color: AppColors.surface,
+              icon: Icon(Icons.more_vert, size: 18, color: context.appColors.textSecondary),
+              color: context.appColors.surface,
               onSelected: (action) {
                 if (action == _ServiceAction.toggleActive) onToggleActive();
                 if (action == _ServiceAction.delete) onDelete();
@@ -93,7 +93,7 @@ class ServiceCard extends StatelessWidget {
                   child: Text(
                     service.isActive ? 'Desativar' : 'Reativar',
                     style: AppTypography.bodySm.copyWith(
-                      color: AppColors.textPrimary,
+                      color: context.appColors.textPrimary,
                     ),
                   ),
                 ),
@@ -114,7 +114,7 @@ class ServiceCard extends StatelessWidget {
     );
   }
 
-  Widget _buildSubtitle() {
+  Widget _buildSubtitle(BuildContext context) {
     final parts = <String>[];
     if (service.price != null) {
       parts.add('R\$ ${service.price!.toStringAsFixed(2).replaceAll('.', ',')}');
@@ -125,7 +125,7 @@ class ServiceCard extends StatelessWidget {
     if (parts.isEmpty) return const SizedBox.shrink();
     return Text(
       parts.join(' · '),
-      style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+      style: AppTypography.caption.copyWith(color: context.appColors.textSecondary),
     );
   }
 

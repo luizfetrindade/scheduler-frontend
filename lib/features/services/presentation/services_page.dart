@@ -16,18 +16,18 @@ class ServicesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.appColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.appColors.background,
         elevation: 0,
         title: Text(
           'Serviços',
-          style: AppTypography.headingMd.copyWith(color: AppColors.textPrimary),
+          style: AppTypography.headingMd.copyWith(color: context.appColors.textPrimary),
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.purple500,
-        foregroundColor: Colors.white,
+        backgroundColor: context.appColors.primary,
+        foregroundColor: context.appColors.background,
         onPressed: () => _openForm(context, initial: null),
         child: const Icon(Icons.add),
       ),
@@ -44,8 +44,8 @@ class ServicesPage extends StatelessWidget {
         },
         builder: (context, state) {
           if (state is ServicesLoading) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppColors.purple500),
+            return Center(
+              child: CircularProgressIndicator(color: context.appColors.primary),
             );
           }
 
@@ -85,12 +85,12 @@ class ServicesPage extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.cut_outlined, size: 48, color: AppColors.textDisabled),
+          Icon(Icons.cut_outlined, size: 48, color: context.appColors.textDisabled),
           const SizedBox(height: AppSpacing.md),
           Text(
             'Nenhum serviço cadastrado',
             style: AppTypography.bodySm.copyWith(
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -99,7 +99,7 @@ class ServicesPage extends StatelessWidget {
             child: Text(
               'Adicionar serviço',
               style: AppTypography.bodySm.copyWith(
-                color: AppColors.purple500,
+                color: context.appColors.primary,
               ),
             ),
           ),
@@ -112,7 +112,7 @@ class ServicesPage extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.appColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
       ),
@@ -141,14 +141,14 @@ class ServicesPage extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: ctx.appColors.surface,
         title: Text(
           'Excluir serviço',
-          style: AppTypography.bodySm.copyWith(color: AppColors.textPrimary),
+          style: AppTypography.bodySm.copyWith(color: ctx.appColors.textPrimary),
         ),
         content: Text(
           'Tem certeza que deseja excluir "${svc.name}"? Esta ação não pode ser desfeita.',
-          style: AppTypography.bodySm.copyWith(color: AppColors.textSecondary),
+          style: AppTypography.bodySm.copyWith(color: ctx.appColors.textSecondary),
         ),
         actions: [
           TextButton(
@@ -156,7 +156,7 @@ class ServicesPage extends StatelessWidget {
             child: Text(
               'Cancelar',
               style: AppTypography.bodySm.copyWith(
-                color: AppColors.textSecondary,
+                color: ctx.appColors.textSecondary,
               ),
             ),
           ),

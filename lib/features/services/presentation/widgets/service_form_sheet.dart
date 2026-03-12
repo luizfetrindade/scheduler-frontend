@@ -156,7 +156,7 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
                 Text(
                   _isEditing ? 'Editar Serviço' : 'Novo Serviço',
                   style: AppTypography.headingMd.copyWith(
-                    color: AppColors.textPrimary,
+                    color: context.appColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
@@ -164,9 +164,9 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
                 // Name
                 TextFormField(
                   controller: _nameCtrl,
-                  decoration: _inputDecoration('Nome do serviço'),
+                  decoration: _inputDecoration(context, 'Nome do serviço'),
                   style: AppTypography.bodySm.copyWith(
-                    color: AppColors.textPrimary,
+                    color: context.appColors.textPrimary,
                   ),
                   validator: (v) {
                     if (v == null || v.trim().length < 2) {
@@ -183,11 +183,11 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
                 // Price — BRL mask
                 TextFormField(
                   controller: _priceCtrl,
-                  decoration: _inputDecoration('Preço (opcional)'),
+                  decoration: _inputDecoration(context, 'Preço (opcional)'),
                   keyboardType: TextInputType.number,
                   inputFormatters: [_BrlCurrencyFormatter()],
                   style: AppTypography.bodySm.copyWith(
-                    color: AppColors.textPrimary,
+                    color: context.appColors.textPrimary,
                   ),
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) return null;
@@ -209,8 +209,8 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
                     return ElevatedButton(
                       onPressed: isLoading ? null : _submit,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.purple500,
-                        foregroundColor: Colors.white,
+                        backgroundColor: context.appColors.primary,
+                        foregroundColor: context.appColors.background,
                         padding: const EdgeInsets.symmetric(
                           vertical: AppSpacing.md,
                         ),
@@ -219,12 +219,12 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
                         ),
                       ),
                       child: isLoading
-                          ? const SizedBox(
+                          ? SizedBox(
                               height: 20,
                               width: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Colors.white,
+                                color: context.appColors.background,
                               ),
                             )
                           : Text(_isEditing ? 'Salvar' : 'Criar Serviço'),
@@ -240,7 +240,7 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
   }
 
   // ---------------------------------------------------------------------------
-  // Duration tile — tappable, opens CupertinoPicker
+  // Duration tile — tappable, opens scrollable list
   // ---------------------------------------------------------------------------
 
   Widget _buildDurationTile(BuildContext context) {
@@ -257,32 +257,32 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
           vertical: AppSpacing.sm,
         ),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.appColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(color: AppColors.surfaceHigh),
+          border: Border.all(color: context.appColors.surfaceHigh),
         ),
         child: Row(
           children: [
-            Icon(Icons.timer_outlined, size: 18, color: AppColors.purple500),
+            Icon(Icons.timer_outlined, size: 18, color: context.appColors.primary),
             const SizedBox(width: AppSpacing.sm),
             Text(
               'Duração',
               style: AppTypography.bodySm.copyWith(
-                color: AppColors.textSecondary,
+                color: context.appColors.textSecondary,
               ),
             ),
             const Spacer(),
             Text(
               label,
               style: AppTypography.bodySm.copyWith(
-                color: hasValue ? AppColors.textPrimary : AppColors.textDisabled,
+                color: hasValue ? context.appColors.textPrimary : context.appColors.textDisabled,
               ),
             ),
             const SizedBox(width: AppSpacing.xs),
             Icon(
               Icons.chevron_right,
               size: 16,
-              color: AppColors.textSecondary,
+              color: context.appColors.textSecondary,
             ),
           ],
         ),
@@ -291,7 +291,6 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
   }
 
   Future<void> _openDurationPicker(BuildContext context) async {
-    // Scroll to current selection on open
     final initialIndex = _selectedDuration != null
         ? _kDurationOptions.indexOf(_selectedDuration!)
         : -1;
@@ -301,7 +300,7 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
 
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.appColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
       ),
@@ -311,19 +310,17 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
             height: 360,
             child: Column(
               children: [
-                // Handle bar
                 const SizedBox(height: AppSpacing.sm),
                 Container(
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceHigh,
+                    color: ctx.appColors.surfaceHigh,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
 
-                // Header
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.md,
@@ -335,7 +332,7 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
                       Text(
                         'Duração do serviço',
                         style: AppTypography.bodySm.copyWith(
-                          color: AppColors.textPrimary,
+                          color: ctx.appColors.textPrimary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -347,7 +344,7 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
                         child: Text(
                           'Sem duração',
                           style: AppTypography.bodySm.copyWith(
-                            color: AppColors.textSecondary,
+                            color: ctx.appColors.textSecondary,
                           ),
                         ),
                       ),
@@ -355,9 +352,8 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
                   ),
                 ),
 
-                const Divider(height: 1, color: AppColors.surfaceHigh),
+                Divider(height: 1, color: ctx.appColors.surfaceHigh),
 
-                // Scrollable list — works on web (mouse wheel + click) and mobile
                 Expanded(
                   child: StatefulBuilder(
                     builder: (ctx, setPickerState) {
@@ -378,28 +374,27 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
                                 horizontal: AppSpacing.lg,
                               ),
                               color: isSelected
-                                  ? AppColors.purple500.withValues(alpha: 0.12)
+                                  ? ctx.appColors.primary.withValues(alpha: 0.12)
                                   : Colors.transparent,
                               child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     _formatDuration(min),
                                     style: AppTypography.bodySm.copyWith(
                                       color: isSelected
-                                          ? AppColors.purple500
-                                          : AppColors.textPrimary,
+                                          ? ctx.appColors.primary
+                                          : ctx.appColors.textPrimary,
                                       fontWeight: isSelected
                                           ? FontWeight.w600
                                           : FontWeight.normal,
                                     ),
                                   ),
                                   if (isSelected)
-                                    const Icon(
+                                    Icon(
                                       Icons.check,
                                       size: 16,
-                                      color: AppColors.purple500,
+                                      color: ctx.appColors.primary,
                                     ),
                                 ],
                               ),
@@ -456,17 +451,16 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
   // Helpers
   // ---------------------------------------------------------------------------
 
-  InputDecoration _inputDecoration(String label) => InputDecoration(
+  InputDecoration _inputDecoration(BuildContext context, String label) => InputDecoration(
         labelText: label,
-        labelStyle:
-            AppTypography.bodySm.copyWith(color: AppColors.textSecondary),
+        labelStyle: AppTypography.bodySm.copyWith(color: context.appColors.textSecondary),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: const BorderSide(color: AppColors.surfaceHigh),
+          borderSide: BorderSide(color: context.appColors.surfaceHigh),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: const BorderSide(color: AppColors.purple500),
+          borderSide: BorderSide(color: context.appColors.primary),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
@@ -477,6 +471,6 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
           borderSide: const BorderSide(color: AppColors.error),
         ),
         filled: true,
-        fillColor: AppColors.surface,
+        fillColor: context.appColors.surface,
       );
 }
