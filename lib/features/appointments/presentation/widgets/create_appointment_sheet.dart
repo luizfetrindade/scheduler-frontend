@@ -6,6 +6,9 @@ import 'package:scheduler_frontend/features/appointments/bloc/schedule_bloc.dart
 import 'package:scheduler_frontend/features/appointments/bloc/schedule_event.dart';
 import 'package:scheduler_frontend/features/appointments/bloc/schedule_state.dart';
 import 'package:scheduler_frontend/features/appointments/presentation/widgets/recurrence_selector.dart';
+import 'package:scheduler_frontend/features/services/bloc/services_bloc.dart';
+import 'package:scheduler_frontend/features/services/bloc/services_state.dart';
+import 'package:scheduler_frontend/features/services/data/service_model.dart';
 
 class CreateAppointmentSheet extends StatefulWidget {
   final DateTime initialDateTime;
@@ -27,6 +30,7 @@ class _CreateAppointmentSheetState extends State<CreateAppointmentSheet> {
   bool _isCustomDuration = false;
   bool _isSubmitting = false;
   String? _recurrenceRule;
+  String? _selectedServiceId;
 
   static const _durationOptions = [15, 30, 45, 60, 90, 120];
 
@@ -77,6 +81,8 @@ class _CreateAppointmentSheetState extends State<CreateAppointmentSheet> {
                 _buildDateTimeRow(),
                 const SizedBox(height: AppSpacing.md),
                 _buildDurationSelector(),
+                const SizedBox(height: AppSpacing.md),
+                _buildServiceSelector(),
                 const SizedBox(height: AppSpacing.md),
                 TextFormField(
                   controller: _nameController,
@@ -155,6 +161,106 @@ class _CreateAppointmentSheetState extends State<CreateAppointmentSheet> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildServiceSelector() {
+    return BlocBuilder<ServicesBloc, ServicesState>(
+      builder: (context, state) {
+        final services = switch (state) {
+          ServicesLoaded(:final services) =>
+              services.where((s) => s.isActive).toList(),
+          _ => <ServiceModel>[],
+        };
+
+        if (services.isEmpty) return const SizedBox.shrink();
+
+        final selectedService = services
+            .where((s) => s.id == _selectedServiceId)
+            .firstOrNull;
+
+        return Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.xs,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            border: Border.all(color: AppColors.surfaceHigh),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.design_services_outlined,
+                  size: 18, color: AppColors.purple500),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                'Serviço',
+                style: AppTypography.bodySm.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const Spacer(),
+              DropdownButton<String?>(
+                value: _selectedServiceId,
+                underline: const SizedBox.shrink(),
+                dropdownColor: AppColors.surface,
+                hint: Text(
+                  'Opcional',
+                  style: AppTypography.bodySm.copyWith(
+                    color: AppColors.textDisabled,
+                  ),
+                ),
+                style: AppTypography.bodySm.copyWith(
+                  color: AppColors.textPrimary,
+                ),
+                items: [
+                  DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text(
+                      'Nenhum',
+                      style: AppTypography.bodySm.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  ...services.map(
+                    (s) => DropdownMenuItem<String?>(
+                      value: s.id,
+                      child: Text(s.name),
+                    ),
+                  ),
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    _selectedServiceId = value;
+                    if (value == null) {
+                      _durationMinutes = 60;
+                      _isCustomDuration = false;
+                    } else {
+                      final svc = services.firstWhere((s) => s.id == value);
+                      if (svc.durationMinutes != null) {
+                        _durationMinutes = svc.durationMinutes!;
+                        _isCustomDuration = false;
+                      }
+                    }
+                  });
+                },
+              ),
+              if (selectedService?.price != null)
+                Padding(
+                  padding: const EdgeInsets.only(left: AppSpacing.xs),
+                  child: Text(
+                    'R\$ ${selectedService!.price!.toStringAsFixed(2).replaceAll('.', ',')}',
+                    style: AppTypography.bodySm.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -369,6 +475,7 @@ class _CreateAppointmentSheetState extends State<CreateAppointmentSheet> {
                 ? null
                 : _notesController.text.trim(),
             recurrenceRule: _recurrenceRule,
+            serviceId: _selectedServiceId,
           ),
         );
   }
