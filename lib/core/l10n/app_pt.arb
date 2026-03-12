@@ -11,5 +11,10 @@
   "loginTitle": "Bem-vindo de volta",
   "loginEmailLabel": "E-mail",
   "loginPasswordLabel": "Senha",
-  "loginButton": "Entrar"
+  "loginButton": "Entrar",
+  "loginNoAccount": "Não tem conta? Criar conta",
+  "registerTitle": "Criar conta",
+  "registerNameLabel": "Nome completo",
+  "registerButton": "Criar conta",
+  "registerHaveAccount": "Já tem conta? Entrar"
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:scheduler_frontend/design_system/components/input/base_input_field.dart';
+import 'package:scheduler_frontend/design_system/tokens/app_theme.dart';
 
 void main() {
   Widget buildInput({
@@ -15,6 +16,7 @@ void main() {
     TextInputType keyboardType = TextInputType.text,
   }) {
     return MaterialApp(
+      theme: AppTheme.dark(),
       home: Scaffold(
         body: BaseInputField(
           label: label,

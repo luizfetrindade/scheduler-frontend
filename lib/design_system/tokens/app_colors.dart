@@ -15,4 +15,5 @@ abstract final class AppColors {
 
   static const Color error   = Color(0xFFEF4444);
   static const Color success = Color(0xFF22C55E);
+  static const Color blocked = Color(0xFF64748B);
 }

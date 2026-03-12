@@ -31,7 +31,7 @@ class AppointmentCard extends StatelessWidget {
             child: Text(
               timeStr,
               style: AppTypography.bodySm.copyWith(
-                color: AppColors.purple300,
+                color: context.appColors.primaryLight,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -68,9 +68,9 @@ class AppointmentCard extends StatelessWidget {
                 if (onNoShow != null)
                   IconButton(
                     onPressed: onNoShow,
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.person_off_outlined,
-                      color: AppColors.textSecondary,
+                      color: context.appColors.textSecondary,
                     ),
                     tooltip: 'Não compareceu',
                   ),
@@ -89,11 +89,11 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = switch (status) {
-      AppointmentStatus.pending => AppColors.purple300,
+      AppointmentStatus.pending => context.appColors.primaryLight,
       AppointmentStatus.confirmed => AppColors.success,
       AppointmentStatus.cancelled => AppColors.error,
-      AppointmentStatus.noShow => AppColors.textDisabled,
-      AppointmentStatus.completed => AppColors.textSecondary,
+      AppointmentStatus.noShow => context.appColors.textDisabled,
+      AppointmentStatus.completed => context.appColors.textSecondary,
     };
 
     return Container(

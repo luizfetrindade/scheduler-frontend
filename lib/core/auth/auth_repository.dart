@@ -27,6 +27,25 @@ class AuthRepository {
     };
   }
 
+  Future<Result<_TokenRecord>> register({
+    required String name,
+    required String email,
+    required String password,
+  }) async {
+    final result = await _client.post<Map<String, dynamic>>(
+      '/auth/register',
+      fromJson: (json) => json,
+      body: {'name': name, 'email': email, 'password': password},
+    );
+    return switch (result) {
+      Success(:final data) => Success((
+          accessToken: data['accessToken'] as String,
+          refreshToken: data['refreshToken'] as String,
+        )),
+      HttpFailure(:final failure) => HttpFailure(failure),
+    };
+  }
+
   Future<Result<UserModel>> getMe() =>
       _client.get('/auth/me', fromJson: UserModel.fromJson);
 

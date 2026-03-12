@@ -7,6 +7,7 @@ import 'package:scheduler_frontend/app_shell.dart';
 import 'package:scheduler_frontend/core/auth/auth_bloc.dart';
 import 'package:scheduler_frontend/core/auth/auth_event.dart';
 import 'package:scheduler_frontend/core/auth/auth_state.dart';
+import 'package:scheduler_frontend/design_system/tokens/app_theme.dart';
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 
@@ -19,6 +20,7 @@ Widget _buildShell({
     when(() => bloc.state).thenReturn(const AuthUnauthenticated());
   }
   return MaterialApp(
+    theme: AppTheme.dark(),
     home: BlocProvider<AuthBloc>.value(
       value: bloc,
       child: AdaptiveShell(

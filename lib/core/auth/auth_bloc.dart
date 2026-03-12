@@ -10,6 +10,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AuthBloc(this._repository) : super(const AuthInitial()) {
     on<AuthUserFetched>(_onUserFetched);
     on<AuthLoginRequested>(_onLoginRequested);
+    on<AuthRegisterRequested>(_onRegisterRequested);
     on<AuthLogoutRequested>(_onLogoutRequested);
   }
 
@@ -39,6 +40,31 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       password: event.password,
     );
     switch (loginResult) {
+      case Success(:final data):
+        await _repository.saveTokens(data.accessToken, data.refreshToken);
+        final meResult = await _repository.getMe();
+        switch (meResult) {
+          case Success(:final data):
+            emit(AuthAuthenticated(data));
+          case HttpFailure(:final failure):
+            emit(AuthError(_message(failure)));
+        }
+      case HttpFailure(:final failure):
+        emit(AuthError(_message(failure)));
+    }
+  }
+
+  Future<void> _onRegisterRequested(
+    AuthRegisterRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    final registerResult = await _repository.register(
+      name: event.name,
+      email: event.email,
+      password: event.password,
+    );
+    switch (registerResult) {
       case Success(:final data):
         await _repository.saveTokens(data.accessToken, data.refreshToken);
         final meResult = await _repository.getMe();

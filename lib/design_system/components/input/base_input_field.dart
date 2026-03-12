@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:scheduler_frontend/design_system/tokens/app_colors.dart';
+import 'package:scheduler_frontend/design_system/tokens/app_colors_extension.dart';
 import 'package:scheduler_frontend/design_system/tokens/app_radius.dart';
 import 'package:scheduler_frontend/design_system/tokens/app_spacing.dart';
 import 'package:scheduler_frontend/design_system/tokens/app_typography.dart';
@@ -50,8 +51,8 @@ class _BaseInputFieldState extends State<BaseInputField> {
           widget.label,
           style: AppTypography.bodySm.copyWith(
             color: widget.isDisabled
-                ? AppColors.textDisabled
-                : AppColors.textSecondary,
+                ? context.appColors.textDisabled
+                : context.appColors.textSecondary,
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
@@ -60,40 +61,40 @@ class _BaseInputFieldState extends State<BaseInputField> {
           enabled: !widget.isDisabled,
           obscureText: widget.isPassword && _obscureText,
           keyboardType: widget.keyboardType,
-          style: AppTypography.bodyMd.copyWith(color: AppColors.textPrimary),
+          style: AppTypography.bodyMd.copyWith(color: context.appColors.textPrimary),
           decoration: InputDecoration(
             hintText: widget.hint,
             hintStyle:
-                AppTypography.bodyMd.copyWith(color: AppColors.textSecondary),
+                AppTypography.bodyMd.copyWith(color: context.appColors.textSecondary),
             filled: true,
             fillColor: widget.isDisabled
-                ? AppColors.surface.withValues(alpha: 0.5)
-                : AppColors.surface,
+                ? context.appColors.surface.withValues(alpha: 0.5)
+                : context.appColors.surface,
             prefixIcon: widget.prefixIcon != null
                 ? Icon(widget.prefixIcon,
-                    color: AppColors.textSecondary, size: _kIconSize)
+                    color: context.appColors.textSecondary, size: _kIconSize)
                 : null,
-            suffixIcon: _buildSuffixIcon(),
+            suffixIcon: _buildSuffixIcon(context),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppRadius.md),
               borderSide: BorderSide(
-                  color: hasError ? AppColors.error : AppColors.surfaceHigh),
+                  color: hasError ? AppColors.error : context.appColors.surfaceHigh),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppRadius.md),
               borderSide: BorderSide(
-                  color: hasError ? AppColors.error : AppColors.surfaceHigh),
+                  color: hasError ? AppColors.error : context.appColors.surfaceHigh),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppRadius.md),
               borderSide: BorderSide(
-                color: hasError ? AppColors.error : AppColors.purple500,
+                color: hasError ? AppColors.error : context.appColors.primary,
                 width: _kFocusedBorderWidth,
               ),
             ),
             disabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppRadius.md),
-              borderSide: const BorderSide(color: AppColors.surfaceHigh),
+              borderSide: BorderSide(color: context.appColors.surfaceHigh),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.md,
@@ -112,21 +113,21 @@ class _BaseInputFieldState extends State<BaseInputField> {
     );
   }
 
-  Widget? _buildSuffixIcon() {
+  Widget? _buildSuffixIcon(BuildContext context) {
     if (widget.isPassword) {
       return IconButton(
         icon: Icon(
           _obscureText
               ? Icons.visibility_off_outlined
               : Icons.visibility_outlined,
-          color: AppColors.textSecondary,
+          color: context.appColors.textSecondary,
           size: _kIconSize,
         ),
         onPressed: () => setState(() => _obscureText = !_obscureText),
       );
     }
     if (widget.suffixIcon != null) {
-      return Icon(widget.suffixIcon, color: AppColors.textSecondary, size: _kIconSize);
+      return Icon(widget.suffixIcon, color: context.appColors.textSecondary, size: _kIconSize);
     }
     return null;
   }

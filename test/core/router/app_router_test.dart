@@ -26,6 +26,13 @@ void main() {
         equals(AppRoutes.login),
       );
     });
+
+    test('no redirect when on register route', () {
+      expect(
+        computeRedirect(isLoggedIn: false, location: AppRoutes.register),
+        isNull,
+      );
+    });
   });
 
   group('computeRedirect — authenticated', () {
@@ -47,6 +54,13 @@ void main() {
       expect(
         computeRedirect(isLoggedIn: true, location: '/other'),
         isNull,
+      );
+    });
+
+    test('redirects to home when on register route (already authenticated)', () {
+      expect(
+        computeRedirect(isLoggedIn: true, location: AppRoutes.register),
+        equals(AppRoutes.home),
       );
     });
   });

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:scheduler_frontend/design_system/tokens/app_theme.dart';
 import 'package:scheduler_frontend/features/business/data/business_model.dart';
 import 'package:scheduler_frontend/features/home/presentation/widgets/business_selector_header.dart';
 
@@ -8,7 +9,10 @@ const _biz1 =
 const _biz2 =
     BusinessModel(id: '2', slug: 's2', name: 'Salão B', logo: null, timezone: 'UTC');
 
-Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
+Widget _wrap(Widget child) => MaterialApp(
+      theme: AppTheme.dark(),
+      home: Scaffold(body: child),
+    );
 
 void main() {
   testWidgets('shows active business name and dropdown icon', (tester) async {

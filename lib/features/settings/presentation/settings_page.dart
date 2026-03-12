@@ -6,9 +6,9 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: AppColors.background,
-      body: Center(
+    return Scaffold(
+      backgroundColor: context.appColors.background,
+      body: const Center(
         child: Text('Configurações', style: AppTypography.headingMd),
       ),
     );

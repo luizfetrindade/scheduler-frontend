@@ -19,7 +19,7 @@ class BusinessSelectorHeader extends StatelessWidget {
   void _openSelector(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.appColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -29,7 +29,7 @@ class BusinessSelectorHeader extends StatelessWidget {
             .map((b) => ListTile(
                   title: Text(b.name, style: AppTypography.bodyMd),
                   trailing: b.id == active.id
-                      ? const Icon(Icons.check, color: AppColors.purple500)
+                      ? Icon(Icons.check, color: context.appColors.primary)
                       : null,
                   onTap: () {
                     Navigator.pop(context);
@@ -53,9 +53,9 @@ class BusinessSelectorHeader extends StatelessWidget {
               Text(active.name, style: AppTypography.headingMd),
               if (businesses.length > 1) ...[
                 const SizedBox(width: 4),
-                const Icon(
+                Icon(
                   Icons.keyboard_arrow_down,
-                  color: AppColors.textSecondary,
+                  color: context.appColors.textSecondary,
                   size: 20,
                 ),
               ],
@@ -65,10 +65,10 @@ class BusinessSelectorHeader extends StatelessWidget {
         const Spacer(),
         CircleAvatar(
           radius: 18,
-          backgroundColor: AppColors.purple700,
+          backgroundColor: context.appColors.primaryDark,
           child: Text(
             userName.isNotEmpty ? userName[0].toUpperCase() : '?',
-            style: AppTypography.bodyMd.copyWith(color: AppColors.textPrimary),
+            style: AppTypography.bodyMd.copyWith(color: context.appColors.textPrimary),
           ),
         ),
       ],

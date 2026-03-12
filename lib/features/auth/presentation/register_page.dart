@@ -8,14 +8,15 @@ import 'package:scheduler_frontend/core/l10n/l10n.dart';
 import 'package:scheduler_frontend/core/router/app_routes.dart';
 import 'package:scheduler_frontend/design_system/base_design_system.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _RegisterPageState extends State<RegisterPage> {
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -23,6 +24,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -30,7 +32,8 @@ class _LoginPageState extends State<LoginPage> {
 
   void _submit() {
     context.read<AuthBloc>().add(
-          AuthLoginRequested(
+          AuthRegisterRequested(
+            name: _nameController.text.trim(),
             email: _emailController.text.trim(),
             password: _passwordController.text,
           ),
@@ -55,13 +58,15 @@ class _LoginPageState extends State<LoginPage> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             if (constraints.maxWidth < _kBreakpoint) {
-              return _MobileLogin(
+              return _MobileRegister(
+                nameController: _nameController,
                 emailController: _emailController,
                 passwordController: _passwordController,
                 onSubmit: _submit,
               );
             }
-            return _DesktopLogin(
+            return _DesktopRegister(
+              nameController: _nameController,
               emailController: _emailController,
               passwordController: _passwordController,
               onSubmit: _submit,
@@ -73,14 +78,16 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
-// ─── Mobile layout (unchanged) ───────────────────────────────────────────────
+// ─── Mobile layout ──────────────────────────────────────────────────────────
 
-class _MobileLogin extends StatelessWidget {
+class _MobileRegister extends StatelessWidget {
+  final TextEditingController nameController;
   final TextEditingController emailController;
   final TextEditingController passwordController;
   final VoidCallback onSubmit;
 
-  const _MobileLogin({
+  const _MobileRegister({
+    required this.nameController,
     required this.emailController,
     required this.passwordController,
     required this.onSubmit,
@@ -89,15 +96,17 @@ class _MobileLogin extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(context.l10n.loginTitle, style: AppTypography.displayLg),
+            const SizedBox(height: AppSpacing.xxxl),
+            Text(context.l10n.registerTitle, style: AppTypography.displayLg),
             const SizedBox(height: AppSpacing.xl),
-            _LoginForm(
+            _RegisterForm(
+              nameController: nameController,
               emailController: emailController,
               passwordController: passwordController,
               onSubmit: onSubmit,
@@ -109,14 +118,16 @@ class _MobileLogin extends StatelessWidget {
   }
 }
 
-// ─── Desktop layout ──────────────────────────────────────────────────────────
+// ─── Desktop layout ─────────────────────────────────────────────────────────
 
-class _DesktopLogin extends StatelessWidget {
+class _DesktopRegister extends StatelessWidget {
+  final TextEditingController nameController;
   final TextEditingController emailController;
   final TextEditingController passwordController;
   final VoidCallback onSubmit;
 
-  const _DesktopLogin({
+  const _DesktopRegister({
+    required this.nameController,
     required this.emailController,
     required this.passwordController,
     required this.onSubmit,
@@ -184,18 +195,19 @@ class _DesktopLogin extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      context.l10n.loginTitle,
+                      context.l10n.registerTitle,
                       style: AppTypography.displayLg,
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
-                      'Entre com suas credenciais para continuar.',
+                      'Preencha os dados para criar sua conta.',
                       style: AppTypography.bodyMd.copyWith(
                         color: context.appColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xxl),
-                    _LoginForm(
+                    _RegisterForm(
+                      nameController: nameController,
                       emailController: emailController,
                       passwordController: passwordController,
                       onSubmit: onSubmit,
@@ -211,14 +223,16 @@ class _DesktopLogin extends StatelessWidget {
   }
 }
 
-// ─── Shared form ─────────────────────────────────────────────────────────────
+// ─── Shared form ────────────────────────────────────────────────────────────
 
-class _LoginForm extends StatelessWidget {
+class _RegisterForm extends StatelessWidget {
+  final TextEditingController nameController;
   final TextEditingController emailController;
   final TextEditingController passwordController;
   final VoidCallback onSubmit;
 
-  const _LoginForm({
+  const _RegisterForm({
+    required this.nameController,
     required this.emailController,
     required this.passwordController,
     required this.onSubmit,
@@ -229,6 +243,13 @@ class _LoginForm extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        BaseInputField(
+          label: context.l10n.registerNameLabel,
+          controller: nameController,
+          keyboardType: TextInputType.name,
+          prefixIcon: Icons.person_outlined,
+        ),
+        const SizedBox(height: AppSpacing.md),
         BaseInputField(
           label: context.l10n.loginEmailLabel,
           controller: emailController,
@@ -245,7 +266,7 @@ class _LoginForm extends StatelessWidget {
         const SizedBox(height: AppSpacing.xl),
         BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) => BaseButton(
-            label: context.l10n.loginButton,
+            label: context.l10n.registerButton,
             isLoading: state is AuthLoading,
             onPressed: state is AuthLoading ? null : onSubmit,
           ),
@@ -253,9 +274,9 @@ class _LoginForm extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         Center(
           child: TextButton(
-            onPressed: () => context.go(AppRoutes.register),
+            onPressed: () => context.go(AppRoutes.login),
             child: Text(
-              context.l10n.loginNoAccount,
+              context.l10n.registerHaveAccount,
               style: AppTypography.bodySm.copyWith(color: context.appColors.primaryLight),
             ),
           ),

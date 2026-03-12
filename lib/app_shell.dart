@@ -58,9 +58,9 @@ class _FloatingNavBar extends StatelessWidget {
         child: Container(
           height: 64,
           decoration: BoxDecoration(
-            color: AppColors.surface.withValues(alpha: 0.65),
+            color: context.appColors.surface.withValues(alpha: 0.65),
             border: Border.all(
-              color: AppColors.surfaceHigh.withValues(alpha: 0.5),
+              color: context.appColors.surfaceHigh.withValues(alpha: 0.5),
             ),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
@@ -82,7 +82,7 @@ class _FloatingNavBar extends StatelessWidget {
                     width: itemWidth - 4,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: AppColors.purple700.withValues(alpha: 0.5),
+                        color: context.appColors.primaryDark.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(22),
                       ),
                     ),
@@ -142,8 +142,8 @@ class _NavItemButton extends StatelessWidget {
                 item.icon,
                 size: 22,
                 color: Color.lerp(
-                  isSelected ? AppColors.textSecondary : AppColors.purple300,
-                  isSelected ? AppColors.purple300 : AppColors.textSecondary,
+                  isSelected ? context.appColors.textSecondary : context.appColors.primaryLight,
+                  isSelected ? context.appColors.primaryLight : context.appColors.textSecondary,
                   t,
                 ),
               ),
@@ -223,7 +223,7 @@ class _MobileLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.appColors.background,
       body: Stack(
         children: [
           // Content — padded at bottom so it doesn't hide under the navbar
@@ -265,7 +265,7 @@ class _DesktopLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.appColors.background,
       body: Row(
         children: [
           _Sidebar(selectedIndex: selectedIndex, items: items),
@@ -301,27 +301,37 @@ class _SidebarState extends State<_Sidebar> {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
           child: Container(
-            color: AppColors.surface.withValues(alpha: 0.75),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _SidebarHeader(
-                  expanded: _expanded,
-                  onToggle: () => setState(() => _expanded = !_expanded),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                ...widget.items.asMap().entries.map(
-                  (e) => _SidebarTile(
-                    item: e.value,
-                    isSelected: e.key == widget.selectedIndex,
-                    expanded: _expanded,
-                    onTap: () => context.go(e.value.route),
-                  ),
-                ),
-                const Spacer(),
-                const Divider(color: AppColors.surfaceHigh, height: 1),
-                _SidebarFooter(expanded: _expanded),
-              ],
+            color: context.appColors.surface.withValues(alpha: 0.75),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // Use actual width to decide layout, not _expanded,
+                // so children don't show wide content while the
+                // AnimatedContainer is still animating to the target width.
+                final showExpanded = constraints.maxWidth >= 140;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _SidebarHeader(
+                      expanded: showExpanded,
+                      onToggle: () =>
+                          setState(() => _expanded = !_expanded),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    ...widget.items.asMap().entries.map(
+                      (e) => _SidebarTile(
+                        item: e.value,
+                        isSelected: e.key == widget.selectedIndex,
+                        expanded: showExpanded,
+                        onTap: () => context.go(e.value.route),
+                      ),
+                    ),
+                    const Spacer(),
+                    Divider(
+                        color: context.appColors.surfaceHigh, height: 1),
+                    _SidebarFooter(expanded: showExpanded),
+                  ],
+                );
+              },
             ),
           ),
         ),
@@ -353,7 +363,7 @@ class _SidebarHeader extends StatelessWidget {
               child: Icon(
                 expanded ? Icons.chevron_left : Icons.chevron_right,
                 key: ValueKey(expanded),
-                color: AppColors.textSecondary,
+                color: context.appColors.textSecondary,
               ),
             ),
             onPressed: onToggle,
@@ -387,46 +397,69 @@ class _SidebarTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Single widget tree always in the tree — title cross-fades via
-    // AnimatedSwitcher so the content animates smoothly during the sidebar
-    // width transition. After pumpAndSettle the Text is removed from the tree
-    // when collapsed, keeping find.text assertions reliable in tests.
-    return Tooltip(
-      message: expanded ? '' : item.label,
-      child: ListTile(
-        leading: Icon(
-          item.icon,
-          color: isSelected ? AppColors.purple300 : AppColors.textSecondary,
-          size: 20,
-        ),
-        title: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 150),
-          child: expanded
-              ? Text(
-                  item.label,
-                  key: const ValueKey('label'),
-                  style: AppTypography.bodySm.copyWith(
+    // Custom layout instead of ListTile to guarantee a fixed tile height.
+    // ListTile repositions the leading icon based on title content, which
+    // causes icons to visually shift during the expand/collapse animation.
+    // Tooltip is intentionally omitted: it triggers a Flutter web overlay
+    // assertion (_zOrderIndex != null) when the widget rebuilds mid-animation.
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      child: Ink(
+          decoration: BoxDecoration(
+            color: isSelected
+                ? context.appColors.primaryDark.withValues(alpha: 0.2)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+          ),
+          child: SizedBox(
+            height: 52,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: Row(
+                children: [
+                  Icon(
+                    item.icon,
                     color: isSelected
-                        ? AppColors.purple300
-                        : AppColors.textSecondary,
-                    fontWeight:
-                        isSelected ? FontWeight.w600 : FontWeight.w400,
+                        ? context.appColors.primaryLight
+                        : context.appColors.textSecondary,
+                    size: 20,
                   ),
-                )
-              : const SizedBox.shrink(key: ValueKey('empty')),
+                  Expanded(
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 150),
+                      layoutBuilder: (currentChild, previousChildren) => Stack(
+                        alignment: AlignmentDirectional.centerStart,
+                        children: [
+                          ...previousChildren,
+                          if (currentChild != null) currentChild,
+                        ],
+                      ),
+                      child: expanded
+                          ? Padding(
+                              key: const ValueKey('label'),
+                              padding:
+                                  const EdgeInsets.only(left: AppSpacing.sm),
+                              child: Text(
+                                item.label,
+                                style: AppTypography.bodySm.copyWith(
+                                  color: isSelected
+                                      ? context.appColors.primaryLight
+                                      : context.appColors.textSecondary,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.w400,
+                                ),
+                              ),
+                            )
+                          : const SizedBox.shrink(key: ValueKey('empty')),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
-        tileColor: isSelected
-            ? AppColors.purple700.withValues(alpha: 0.2)
-            : Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.xs,
-        ),
-        onTap: onTap,
-      ),
     );
   }
 }
@@ -444,10 +477,10 @@ class _SidebarFooter extends StatelessWidget {
             state is AuthAuthenticated ? state.user.firstName : '';
         final avatar = CircleAvatar(
           radius: 16,
-          backgroundColor: AppColors.purple700,
+          backgroundColor: context.appColors.primaryDark,
           child: Text(
             name.isNotEmpty ? name[0].toUpperCase() : '?',
-            style: AppTypography.bodySm.copyWith(color: AppColors.textPrimary),
+            style: AppTypography.bodySm.copyWith(color: context.appColors.textPrimary),
           ),
         );
 
@@ -475,30 +508,22 @@ class _SidebarFooter extends StatelessWidget {
               avatar,
               const SizedBox(width: AppSpacing.sm),
               Expanded(
-                child: AnimatedOpacity(
-                  opacity: expanded ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 150),
-                  child: Text(
-                    name,
-                    style: AppTypography.bodySm,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                child: Text(
+                  name,
+                  style: AppTypography.bodySm,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              AnimatedOpacity(
-                opacity: expanded ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 150),
-                child: IconButton(
-                  icon: const Icon(
-                    Icons.logout,
-                    color: AppColors.textSecondary,
-                    size: 18,
-                  ),
-                  tooltip: 'Sair',
-                  onPressed: () => context
-                      .read<AuthBloc>()
-                      .add(const AuthLogoutRequested()),
+              IconButton(
+                icon: Icon(
+                  Icons.logout,
+                  color: context.appColors.textSecondary,
+                  size: 18,
                 ),
+                tooltip: 'Sair',
+                onPressed: () => context
+                    .read<AuthBloc>()
+                    .add(const AuthLogoutRequested()),
               ),
             ],
           ),

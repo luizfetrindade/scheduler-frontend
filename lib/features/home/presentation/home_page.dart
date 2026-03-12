@@ -21,7 +21,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.appColors.background,
       body: SafeArea(
         child: BlocListener<BusinessBloc, BusinessState>(
           listener: (context, state) {
@@ -35,7 +35,7 @@ class HomePage extends StatelessWidget {
             }
           },
           child: RefreshIndicator(
-            color: AppColors.purple500,
+            color: context.appColors.primary,
             onRefresh: () async {
               final bizState = context.read<BusinessBloc>().state;
               if (bizState is BusinessLoaded) {
@@ -121,8 +121,8 @@ class HomePage extends StatelessWidget {
     return BlocBuilder<AppointmentsBloc, AppointmentsState>(
       builder: (context, state) {
         return switch (state) {
-          AppointmentsLoading() => const Center(
-              child: CircularProgressIndicator(color: AppColors.purple500),
+          AppointmentsLoading() => Center(
+              child: CircularProgressIndicator(color: context.appColors.primary),
             ),
           AppointmentsLoaded(:final appointments) when appointments.isEmpty =>
             Center(
@@ -131,7 +131,7 @@ class HomePage extends StatelessWidget {
                 child: Text(
                   'Nenhum agendamento hoje',
                   style: AppTypography.bodySm
-                      .copyWith(color: AppColors.textSecondary),
+                      .copyWith(color: context.appColors.textSecondary),
                 ),
               ),
             ),

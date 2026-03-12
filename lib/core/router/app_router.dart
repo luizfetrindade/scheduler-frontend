@@ -6,6 +6,7 @@ import 'package:scheduler_frontend/core/network/router_notifier.dart';
 import 'package:scheduler_frontend/core/router/app_routes.dart';
 import 'package:scheduler_frontend/features/appointments/presentation/appointments_page.dart';
 import 'package:scheduler_frontend/features/auth/presentation/login_page.dart';
+import 'package:scheduler_frontend/features/auth/presentation/register_page.dart';
 import 'package:scheduler_frontend/features/clients/presentation/clients_page.dart';
 import 'package:scheduler_frontend/features/home/presentation/home_page.dart';
 import 'package:scheduler_frontend/features/reports/presentation/reports_page.dart';
@@ -14,9 +15,10 @@ import 'package:scheduler_frontend/features/settings/presentation/settings_page.
 
 /// Pure redirect logic — testable without a BuildContext.
 String? computeRedirect({required bool isLoggedIn, required String location}) {
-  final isOnLogin = location == AppRoutes.login;
-  if (!isLoggedIn && !isOnLogin) return AppRoutes.login;
-  if (isLoggedIn && isOnLogin) return AppRoutes.home;
+  final isOnPublicRoute =
+      location == AppRoutes.login || location == AppRoutes.register;
+  if (!isLoggedIn && !isOnPublicRoute) return AppRoutes.login;
+  if (isLoggedIn && isOnPublicRoute) return AppRoutes.home;
   return null;
 }
 
@@ -31,6 +33,10 @@ GoRouter createAppRouter(AuthBloc authBloc) => GoRouter(
         GoRoute(
           path: AppRoutes.login,
           builder: (context, _) => const LoginPage(),
+        ),
+        GoRoute(
+          path: AppRoutes.register,
+          builder: (context, _) => const RegisterPage(),
         ),
         ShellRoute(
           builder: (context, state, child) => AdaptiveShell(
