@@ -15,6 +15,8 @@ void main() {
     test('textPrimary é #F5F5F5', () => expect(dark.textPrimary, const Color(0xFFF5F5F5)));
     test('textSecondary é #A3A3A3', () => expect(dark.textSecondary, const Color(0xFFA3A3A3)));
     test('textDisabled é #525252', () => expect(dark.textDisabled, const Color(0xFF525252)));
+    test('sidebarBackground é #1A1A1A', () => expect(dark.sidebarBackground, const Color(0xFF1A1A1A)));
+    test('sidebarForeground é #A3A3A3', () => expect(dark.sidebarForeground, const Color(0xFFA3A3A3)));
   });
 
   group('AppColorsExtension.light()', () {
@@ -29,6 +31,8 @@ void main() {
     test('textPrimary é #2D4A35', () => expect(light.textPrimary, const Color(0xFF2D4A35)));
     test('textSecondary é #3A5A40', () => expect(light.textSecondary, const Color(0xFF3A5A40)));
     test('textDisabled é #7A9A7A', () => expect(light.textDisabled, const Color(0xFF7A9A7A)));
+    test('sidebarBackground é #4A5759', () => expect(light.sidebarBackground, const Color(0xFF4A5759)));
+    test('sidebarForeground é #DAD7CD', () => expect(light.sidebarForeground, const Color(0xFFDAD7CD)));
   });
 
   group('AppColorsExtension.copyWith()', () {

@@ -303,7 +303,7 @@ class _SidebarState extends State<_Sidebar> {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
           child: Container(
-            color: context.appColors.surface.withValues(alpha: 0.75),
+            color: context.appColors.sidebarBackground,
             child: LayoutBuilder(
               builder: (context, constraints) {
                 // Use actual width to decide layout, not _expanded,
@@ -330,7 +330,7 @@ class _SidebarState extends State<_Sidebar> {
                     const Spacer(),
                     _SidebarThemeToggle(expanded: showExpanded),
                     Divider(
-                        color: context.appColors.surfaceHigh, height: 1),
+                        color: context.appColors.sidebarForeground.withValues(alpha: 0.2), height: 1),
                     _SidebarFooter(expanded: showExpanded),
                   ],
                 );
@@ -366,7 +366,7 @@ class _SidebarHeader extends StatelessWidget {
               child: Icon(
                 expanded ? Icons.chevron_left : Icons.chevron_right,
                 key: ValueKey(expanded),
-                color: context.appColors.textSecondary,
+                color: context.appColors.sidebarForeground,
               ),
             ),
             onPressed: onToggle,
@@ -376,7 +376,7 @@ class _SidebarHeader extends StatelessWidget {
             child: AnimatedOpacity(
               opacity: expanded ? 1.0 : 0.0,
               duration: const Duration(milliseconds: 150),
-              child: Text('Scheduler', style: AppTypography.headingMd),
+              child: Text('Scheduler', style: AppTypography.headingMd.copyWith(color: context.appColors.sidebarForeground)),
             ),
           ),
         ],
@@ -411,7 +411,7 @@ class _SidebarTile extends StatelessWidget {
       child: Ink(
           decoration: BoxDecoration(
             color: isSelected
-                ? context.appColors.primaryDark.withValues(alpha: 0.2)
+                ? context.appColors.sidebarForeground.withValues(alpha: 0.15)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(AppRadius.md),
           ),
@@ -424,8 +424,8 @@ class _SidebarTile extends StatelessWidget {
                   Icon(
                     item.icon,
                     color: isSelected
-                        ? context.appColors.primary
-                        : context.appColors.textSecondary,
+                        ? context.appColors.sidebarForeground
+                        : context.appColors.sidebarForeground.withValues(alpha: 0.65),
                     size: 20,
                   ),
                   Expanded(
@@ -447,8 +447,8 @@ class _SidebarTile extends StatelessWidget {
                                 item.label,
                                 style: AppTypography.bodySm.copyWith(
                                   color: isSelected
-                                      ? context.appColors.primary
-                                      : context.appColors.textSecondary,
+                                      ? context.appColors.sidebarForeground
+                                      : context.appColors.sidebarForeground.withValues(alpha: 0.65),
                                   fontWeight: isSelected
                                       ? FontWeight.w600
                                       : FontWeight.w400,
@@ -490,7 +490,7 @@ class _SidebarThemeToggle extends StatelessWidget {
                 message: isLight ? 'Modo escuro' : 'Modo claro',
                 child: IconButton(
                   icon: Icon(icon,
-                      color: context.appColors.textSecondary, size: 20),
+                      color: context.appColors.sidebarForeground, size: 20),
                   onPressed: () => context.read<ThemeCubit>().toggle(),
                 ),
               ),
@@ -505,19 +505,19 @@ class _SidebarThemeToggle extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(icon, color: context.appColors.primary, size: 18),
+              Icon(icon, color: context.appColors.sidebarForeground, size: 18),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
                   isLight ? 'Modo claro' : 'Modo escuro',
                   style: AppTypography.bodySm.copyWith(
-                    color: context.appColors.textSecondary,
+                    color: context.appColors.sidebarForeground,
                   ),
                 ),
               ),
               Switch(
                 value: isLight,
-                activeColor: context.appColors.primary,
+                activeColor: context.appColors.sidebarForeground,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 onChanged: (_) => context.read<ThemeCubit>().toggle(),
               ),
@@ -542,10 +542,10 @@ class _SidebarFooter extends StatelessWidget {
             state is AuthAuthenticated ? state.user.firstName : '';
         final avatar = CircleAvatar(
           radius: 16,
-          backgroundColor: context.appColors.primaryDark,
+          backgroundColor: context.appColors.sidebarForeground.withValues(alpha: 0.2),
           child: Text(
             name.isNotEmpty ? name[0].toUpperCase() : '?',
-            style: AppTypography.bodySm.copyWith(color: context.appColors.textPrimary),
+            style: AppTypography.bodySm.copyWith(color: context.appColors.sidebarForeground),
           ),
         );
 
@@ -575,14 +575,14 @@ class _SidebarFooter extends StatelessWidget {
               Expanded(
                 child: Text(
                   name,
-                  style: AppTypography.bodySm,
+                  style: AppTypography.bodySm.copyWith(color: context.appColors.sidebarForeground),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
               IconButton(
                 icon: Icon(
                   Icons.logout,
-                  color: context.appColors.textSecondary,
+                  color: context.appColors.sidebarForeground,
                   size: 18,
                 ),
                 tooltip: 'Sair',
