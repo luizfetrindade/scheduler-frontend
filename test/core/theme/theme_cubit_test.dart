@@ -35,7 +35,7 @@ void main() {
   });
 
   group('ThemeCubit — toggle()', () {
-    testWidgets('dark → light: emite ThemeMode.light', (WidgetTester tester) async {
+    test('dark → light: emite ThemeMode.light', () async {
       final prefs = await _prefs();
       final cubit = ThemeCubit(prefs);
       expect(cubit.state.themeMode, ThemeMode.dark);
@@ -44,7 +44,7 @@ void main() {
       await cubit.close();
     });
 
-    testWidgets('light → dark: emite ThemeMode.dark', (WidgetTester tester) async {
+    test('light → dark: emite ThemeMode.dark', () async {
       final prefs = await _prefs({'theme_mode': 'light'});
       final cubit = ThemeCubit(prefs);
       expect(cubit.state.themeMode, ThemeMode.light);
