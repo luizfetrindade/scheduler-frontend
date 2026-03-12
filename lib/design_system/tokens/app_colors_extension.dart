@@ -36,15 +36,15 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
       );
 
   static AppColorsExtension light() => const AppColorsExtension(
-        background:    Color(0xFFF3E3D0),
-        surface:       Color(0xFFD2C4B4),
-        surfaceHigh:   Color(0xFFBFB3A4),
-        primary:       Color(0xFF81A6C6),
-        primaryLight:  Color(0xFFAACDDC),
-        primaryDark:   Color(0xFF5A8BAD),
-        textPrimary:   Color(0xFF4B2E2B),
-        textSecondary: Color(0xFF7A5C59),
-        textDisabled:  Color(0xFFB59C9A),
+        background:    Color(0xFFDAD7CD),
+        surface:       Color(0xFFBEC8B2),
+        surfaceHigh:   Color(0xFFA3B18A),
+        primary:       Color(0xFF588157),
+        primaryLight:  Color(0xFFA3B18A),
+        primaryDark:   Color(0xFF3A5A40),
+        textPrimary:   Color(0xFF2D4A35),
+        textSecondary: Color(0xFF3A5A40),
+        textDisabled:  Color(0xFF7A9A7A),
       );
 
   @override

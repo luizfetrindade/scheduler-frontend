@@ -20,15 +20,15 @@ void main() {
   group('AppColorsExtension.light()', () {
     final light = AppColorsExtension.light();
 
-    test('background é #F3E3D0', () => expect(light.background, const Color(0xFFF3E3D0)));
-    test('surface é #D2C4B4', () => expect(light.surface, const Color(0xFFD2C4B4)));
-    test('surfaceHigh é #BFB3A4', () => expect(light.surfaceHigh, const Color(0xFFBFB3A4)));
-    test('primary é #81A6C6', () => expect(light.primary, const Color(0xFF81A6C6)));
-    test('primaryLight é #AACDDC', () => expect(light.primaryLight, const Color(0xFFAACDDC)));
-    test('primaryDark é #5A8BAD', () => expect(light.primaryDark, const Color(0xFF5A8BAD)));
-    test('textPrimary é #4B2E2B', () => expect(light.textPrimary, const Color(0xFF4B2E2B)));
-    test('textSecondary é #7A5C59', () => expect(light.textSecondary, const Color(0xFF7A5C59)));
-    test('textDisabled é #B59C9A', () => expect(light.textDisabled, const Color(0xFFB59C9A)));
+    test('background é #DAD7CD', () => expect(light.background, const Color(0xFFDAD7CD)));
+    test('surface é #BEC8B2', () => expect(light.surface, const Color(0xFFBEC8B2)));
+    test('surfaceHigh é #A3B18A', () => expect(light.surfaceHigh, const Color(0xFFA3B18A)));
+    test('primary é #588157', () => expect(light.primary, const Color(0xFF588157)));
+    test('primaryLight é #A3B18A', () => expect(light.primaryLight, const Color(0xFFA3B18A)));
+    test('primaryDark é #3A5A40', () => expect(light.primaryDark, const Color(0xFF3A5A40)));
+    test('textPrimary é #2D4A35', () => expect(light.textPrimary, const Color(0xFF2D4A35)));
+    test('textSecondary é #3A5A40', () => expect(light.textSecondary, const Color(0xFF3A5A40)));
+    test('textDisabled é #7A9A7A', () => expect(light.textDisabled, const Color(0xFF7A9A7A)));
   });
 
   group('AppColorsExtension.copyWith()', () {

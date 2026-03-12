@@ -17,11 +17,11 @@ abstract final class AppTheme {
   static ThemeData light() => ThemeData(
         fontFamily: 'Lexend',
         brightness: Brightness.light,
-        scaffoldBackgroundColor: const Color(0xFFF3E3D0),
+        scaffoldBackgroundColor: const Color(0xFFDAD7CD),
         colorScheme: const ColorScheme.light(
-          primary: Color(0xFF81A6C6),
-          surface: Color(0xFFD2C4B4),
-          onSurface: Color(0xFF81A6C6),
+          primary: Color(0xFF588157),
+          surface: Color(0xFFBEC8B2),
+          onSurface: Color(0xFF2D4A35),
         ),
         extensions: [AppColorsExtension.light()],
       );
