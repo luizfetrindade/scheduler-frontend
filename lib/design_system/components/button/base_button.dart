@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:scheduler_frontend/design_system/components/button/base_button_variant.dart';
 import 'package:scheduler_frontend/design_system/tokens/app_colors.dart';
+import 'package:scheduler_frontend/design_system/tokens/app_colors_extension.dart';
 import 'package:scheduler_frontend/design_system/tokens/app_radius.dart';
 import 'package:scheduler_frontend/design_system/tokens/app_spacing.dart';
 import 'package:scheduler_frontend/design_system/tokens/app_typography.dart';
@@ -27,44 +28,47 @@ class BaseButton extends StatelessWidget {
 
   bool get _isInteractive => !isDisabled && !isLoading;
 
-  Color get _backgroundColor => switch (variant) {
-        BaseButtonVariant.primary     => AppColors.purple500,
+  Color _backgroundColor(BuildContext context) => switch (variant) {
+        BaseButtonVariant.primary     => context.appColors.primary,
         BaseButtonVariant.secondary   => Colors.transparent,
         BaseButtonVariant.ghost       => Colors.transparent,
         BaseButtonVariant.destructive => AppColors.error,
       };
 
-  Color get _foregroundColor => switch (variant) {
-        BaseButtonVariant.primary     => AppColors.textPrimary,
-        BaseButtonVariant.secondary   => AppColors.purple500,
-        BaseButtonVariant.ghost       => AppColors.purple500,
-        BaseButtonVariant.destructive => AppColors.textPrimary,
+  Color _foregroundColor(BuildContext context) => switch (variant) {
+        BaseButtonVariant.primary     => context.appColors.textPrimary,
+        BaseButtonVariant.secondary   => context.appColors.primary,
+        BaseButtonVariant.ghost       => context.appColors.primary,
+        BaseButtonVariant.destructive => context.appColors.textPrimary,
       };
 
-  Border? get _border => variant == BaseButtonVariant.secondary
-      ? Border.all(color: AppColors.purple500, width: 1.5)
-      : null;
+  Border? _border(BuildContext context) =>
+      variant == BaseButtonVariant.secondary
+          ? Border.all(color: context.appColors.primary, width: 1.5)
+          : null;
 
   @override
   Widget build(BuildContext context) {
     return Opacity(
       opacity: isDisabled ? 0.5 : 1.0,
       child: Material(
-        color: _backgroundColor,
+        color: _backgroundColor(context),
         borderRadius: BorderRadius.circular(AppRadius.md),
         child: InkWell(
           onTap: _isInteractive ? onPressed : null,
           borderRadius: BorderRadius.circular(AppRadius.md),
-          splashColor: AppColors.purple300.withValues(alpha: 0.2),
+          splashColor: context.appColors.primaryLight.withValues(alpha: 0.2),
           child: Container(
             height: AppSpacing.xxxl,
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             decoration: BoxDecoration(
-              border: _border,
+              border: _border(context),
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: Center(
-              child: isLoading ? _buildLoading() : _buildContent(),
+              child: isLoading
+                  ? _buildLoading(context)
+                  : _buildContent(context),
             ),
           ),
         ),
@@ -72,32 +76,32 @@ class BaseButton extends StatelessWidget {
     );
   }
 
-  Widget _buildLoading() => SizedBox(
+  Widget _buildLoading(BuildContext context) => SizedBox(
         width: 20,
         height: 20,
         child: CircularProgressIndicator(
           strokeWidth: 2,
-          valueColor: AlwaysStoppedAnimation(_foregroundColor),
+          valueColor: AlwaysStoppedAnimation(_foregroundColor(context)),
         ),
       );
 
-  Widget _buildContent() {
-    final label = Text(
-      this.label,
-      style: AppTypography.bodyMd.copyWith(color: _foregroundColor),
+  Widget _buildContent(BuildContext context) {
+    final labelWidget = Text(
+      label,
+      style: AppTypography.bodyMd.copyWith(color: _foregroundColor(context)),
     );
 
     if (prefixIcon != null) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(prefixIcon, color: _foregroundColor, size: _kPrefixIconSize),
+          Icon(prefixIcon, color: _foregroundColor(context), size: _kPrefixIconSize),
           const SizedBox(width: AppSpacing.sm),
-          label,
+          labelWidget,
         ],
       );
     }
 
-    return label;
+    return labelWidget;
   }
 }

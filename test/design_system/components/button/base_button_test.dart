@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:scheduler_frontend/design_system/components/button/base_button.dart';
 import 'package:scheduler_frontend/design_system/components/button/base_button_variant.dart';
+import 'package:scheduler_frontend/design_system/tokens/app_theme.dart';
 
 void main() {
   Widget buildButton({
@@ -13,6 +14,7 @@ void main() {
     IconData? prefixIcon,
   }) {
     return MaterialApp(
+      theme: AppTheme.dark(),
       home: Scaffold(
         body: BaseButton(
           label: label,
