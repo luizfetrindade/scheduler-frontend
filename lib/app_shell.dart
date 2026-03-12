@@ -424,7 +424,7 @@ class _SidebarTile extends StatelessWidget {
                   Icon(
                     item.icon,
                     color: isSelected
-                        ? context.appColors.primaryLight
+                        ? context.appColors.primary
                         : context.appColors.textSecondary,
                     size: 20,
                   ),
@@ -447,7 +447,7 @@ class _SidebarTile extends StatelessWidget {
                                 item.label,
                                 style: AppTypography.bodySm.copyWith(
                                   color: isSelected
-                                      ? context.appColors.primaryLight
+                                      ? context.appColors.primary
                                       : context.appColors.textSecondary,
                                   fontWeight: isSelected
                                       ? FontWeight.w600
