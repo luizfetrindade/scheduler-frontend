@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_http/flutter_http.dart';
 import 'package:scheduler_frontend/core/config/app_config.dart';
+import 'package:scheduler_frontend/core/network/web_token_storage.dart';
 
 /// Wraps flutter_http's HttpClient and transparently unwraps the backend's
 /// response envelope: { "data": <payload>, "meta": { "timestamp": "..." } }.
@@ -21,7 +23,7 @@ class ApiClient {
   ApiClient._(this._http, this._rawDio, this.tokenStorage);
 
   factory ApiClient.create() {
-    final ts = TokenStorage();
+    final ts = kIsWeb ? WebTokenStorage() : TokenStorage();
     final http = HttpClient(
       baseUrl: AppConfig.apiUrl,
       tokenStorage: ts,
@@ -80,6 +82,28 @@ class ApiClient {
         fromJson: (envelope) => fromJson(_unwrapObject(envelope)),
         body: body,
       );
+
+  /// DELETE via raw Dio. Backend returns 204 No Content — no body to unwrap.
+  Future<Result<void>> delete(String path) async {
+    final token = await tokenStorage.getAccessToken();
+    try {
+      await _rawDio.delete<void>(
+        path,
+        options: Options(headers: {
+          if (token != null) 'Authorization': 'Bearer $token',
+        }),
+      );
+      return const Success(null);
+    } on DioException catch (e) {
+      final code = e.response?.statusCode;
+      if (code == 401) return const HttpFailure(UnauthorizedFailure('Unauthorized'));
+      if (code == 404) return const HttpFailure(NotFoundFailure('Not found'));
+      return HttpFailure(
+          ServerFailure(e.message ?? 'Server error', statusCode: code ?? 500));
+    } catch (e) {
+      return HttpFailure(UnknownFailure(e.toString()));
+    }
+  }
 
   /// PATCH via raw Dio with manual Bearer token injection.
   /// Also unwraps the response envelope.
