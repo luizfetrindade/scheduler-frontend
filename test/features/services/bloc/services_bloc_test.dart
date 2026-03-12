@@ -150,4 +150,54 @@ void main() {
       ServicesError('Sem conexão com a internet', services: [_svc1]),
     ],
   );
+
+  blocTest<ServicesBloc, ServicesState>(
+    'emits [ActionInProgress, Error] on ServiceDeleteRequested failure — restores list',
+    seed: () => ServicesLoaded([_svc1, _svc2]),
+    build: () {
+      when(() => mockRepo.deleteService(
+                businessId: any(named: 'businessId'),
+                serviceId: any(named: 'serviceId'),
+              ))
+          .thenAnswer((_) async =>
+              const HttpFailure(NetworkFailure('no connection')));
+      return ServicesBloc(mockRepo);
+    },
+    act: (b) => b.add(const ServiceDeleteRequested(
+      businessId: 'biz-1',
+      serviceId: 's1',
+    )),
+    expect: () => [
+      ServicesActionInProgress([_svc1, _svc2]),
+      ServicesError('Sem conexão com a internet', services: [_svc1, _svc2]),
+    ],
+  );
+
+  blocTest<ServicesBloc, ServicesState>(
+    'emits [ActionInProgress, Error] on ServiceUpdateRequested failure — restores list',
+    seed: () => ServicesLoaded([_svc1, _svc2]),
+    build: () {
+      when(() => mockRepo.updateService(
+                businessId: any(named: 'businessId'),
+                serviceId: any(named: 'serviceId'),
+                name: any(named: 'name'),
+                description: any(named: 'description'),
+                price: any(named: 'price'),
+                durationMinutes: any(named: 'durationMinutes'),
+                isActive: any(named: 'isActive'),
+              ))
+          .thenAnswer((_) async =>
+              const HttpFailure(NetworkFailure('no connection')));
+      return ServicesBloc(mockRepo);
+    },
+    act: (b) => b.add(const ServiceUpdateRequested(
+      businessId: 'biz-1',
+      serviceId: 's1',
+      name: 'Corte Novo',
+    )),
+    expect: () => [
+      ServicesActionInProgress([_svc1, _svc2]),
+      ServicesError('Sem conexão com a internet', services: [_svc1, _svc2]),
+    ],
+  );
 }

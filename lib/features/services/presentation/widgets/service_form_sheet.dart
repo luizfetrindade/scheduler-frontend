@@ -52,8 +52,15 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
   Widget build(BuildContext context) {
     return BlocListener<ServicesBloc, ServicesState>(
       listener: (context, state) {
-        if (state is ServicesLoaded || state is ServicesError) {
+        if (state is ServicesLoaded) {
           Navigator.of(context).pop();
+        } else if (state is ServicesError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: AppColors.error,
+            ),
+          );
         }
       },
       child: Padding(

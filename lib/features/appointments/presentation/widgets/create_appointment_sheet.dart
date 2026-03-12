@@ -240,8 +240,15 @@ class _CreateAppointmentSheetState extends State<CreateAppointmentSheet> {
                     } else {
                       final svc = services.firstWhere((s) => s.id == value);
                       if (svc.durationMinutes != null) {
-                        _durationMinutes = svc.durationMinutes!;
-                        _isCustomDuration = false;
+                        final dur = svc.durationMinutes!;
+                        if (_durationOptions.contains(dur)) {
+                          _durationMinutes = dur;
+                          _isCustomDuration = false;
+                        } else {
+                          _durationMinutes = dur;
+                          _isCustomDuration = true;
+                          _customDurationController.text = dur.toString();
+                        }
                       }
                     }
                   });
