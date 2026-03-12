@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:scheduler_frontend/design_system/tokens/app_colors.dart';
+import 'package:scheduler_frontend/design_system/tokens/app_colors_extension.dart';
 import 'package:scheduler_frontend/design_system/tokens/app_radius.dart';
 import 'package:scheduler_frontend/design_system/tokens/app_shadows.dart';
 import 'package:scheduler_frontend/design_system/tokens/app_spacing.dart';
@@ -24,12 +24,12 @@ class BaseCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final borderRadius = BorderRadius.circular(AppRadius.lg);
     return Material(
-      color: AppColors.surface,
+      color: context.appColors.surface,
       borderRadius: borderRadius,
       child: InkWell(
         onTap: onTap,
         borderRadius: borderRadius,
-        splashColor: AppColors.purple300.withValues(alpha: _kSplashAlpha),
+        splashColor: context.appColors.primaryLight.withValues(alpha: _kSplashAlpha),
         child: Container(
           padding: EdgeInsets.all(padding),
           decoration: BoxDecoration(
