@@ -46,6 +46,17 @@ void main() {
       expect(svc.isActive, true); // original untouched
     });
 
+    test('fromJson parses price as String (Prisma Decimal)', () {
+      final json = {
+        'id': 'svc-3',
+        'name': 'Barba',
+        'price': '25',
+        'isActive': true,
+      };
+      final svc = ServiceModel.fromJson(json);
+      expect(svc.price, 25.0);
+    });
+
     test('copyWith can clear optional fields to null', () {
       final svc = ServiceModel.fromJson(fullJson);
       final cleared = svc.copyWith(price: null, durationMinutes: null);

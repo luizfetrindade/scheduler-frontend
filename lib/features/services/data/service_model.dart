@@ -2,6 +2,14 @@ import 'package:equatable/equatable.dart';
 
 const _sentinel = Object();
 
+/// Backend may return price as a String (Prisma Decimal) or as a num.
+double? _parsePrice(Object? value) {
+  if (value == null) return null;
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value);
+  return null;
+}
+
 class ServiceModel extends Equatable {
   final String id;
   final String name;
@@ -23,7 +31,7 @@ class ServiceModel extends Equatable {
         id: json['id'] as String,
         name: json['name'] as String,
         description: json['description'] as String?,
-        price: (json['price'] as num?)?.toDouble(),
+        price: _parsePrice(json['price']),
         durationMinutes: json['durationMinutes'] as int?,
         isActive: json['isActive'] as bool? ?? true,
       );
