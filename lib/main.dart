@@ -18,7 +18,11 @@ import 'package:scheduler_frontend/features/appointments/bloc/appointments_bloc.
 import 'package:scheduler_frontend/features/appointments/data/appointment_repository.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_bloc.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_event.dart';
+import 'package:scheduler_frontend/features/business/bloc/business_state.dart';
 import 'package:scheduler_frontend/features/business/data/business_repository.dart';
+import 'package:scheduler_frontend/features/services/bloc/services_bloc.dart';
+import 'package:scheduler_frontend/features/services/bloc/services_event.dart';
+import 'package:scheduler_frontend/features/services/data/service_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,6 +39,7 @@ void main() async {
   final authRepo = AuthRepository(apiClient);
   final businessRepo = BusinessRepository(apiClient);
   final appointmentRepo = AppointmentRepository(apiClient);
+  final serviceRepo = ServiceRepository(apiClient);
 
   final authBloc = AuthBloc(authRepo)..add(const AuthUserFetched());
 
@@ -43,6 +48,7 @@ void main() async {
     preferences: preferences,
     businessRepo: businessRepo,
     appointmentRepo: appointmentRepo,
+    serviceRepo: serviceRepo,
   ));
 }
 
@@ -51,6 +57,7 @@ class SchedulerApp extends StatelessWidget {
   final PreferencesService preferences;
   final BusinessRepository businessRepo;
   final AppointmentRepository appointmentRepo;
+  final ServiceRepository serviceRepo;
 
   const SchedulerApp({
     super.key,
@@ -58,6 +65,7 @@ class SchedulerApp extends StatelessWidget {
     required this.preferences,
     required this.businessRepo,
     required this.appointmentRepo,
+    required this.serviceRepo,
   });
 
   @override
@@ -70,6 +78,7 @@ class SchedulerApp extends StatelessWidget {
           BlocProvider(create: (_) => ThemeCubit(preferences)),
           BlocProvider(create: (_) => BusinessBloc(businessRepo)),
           BlocProvider(create: (_) => AppointmentsBloc(appointmentRepo)),
+          BlocProvider(create: (_) => ServicesBloc(serviceRepo)),
         ],
         child: _AppBody(authBloc: authBloc),
       ),
@@ -84,12 +93,25 @@ class _AppBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ThemeCubit, ThemeState>(
-      builder: (context, themeState) => BlocListener<AuthBloc, AuthState>(
-        listener: (context, state) {
-          if (state is AuthAuthenticated) {
-            context.read<BusinessBloc>().add(const BusinessLoadRequested());
-          }
-        },
+      builder: (context, themeState) => MultiBlocListener(
+        listeners: [
+          BlocListener<AuthBloc, AuthState>(
+            listener: (context, state) {
+              if (state is AuthAuthenticated) {
+                context.read<BusinessBloc>().add(const BusinessLoadRequested());
+              }
+            },
+          ),
+          BlocListener<BusinessBloc, BusinessState>(
+            listener: (context, state) {
+              if (state is BusinessLoaded) {
+                context
+                    .read<ServicesBloc>()
+                    .add(ServicesLoadRequested(state.active.id));
+              }
+            },
+          ),
+        ],
         child: MaterialApp.router(
           title: 'Scheduler',
           debugShowCheckedModeBanner: false,
