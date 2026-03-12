@@ -291,14 +291,13 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
   }
 
   Future<void> _openDurationPicker(BuildContext context) async {
-    // Start scroll at current selection (or index 0)
+    // Scroll to current selection on open
     final initialIndex = _selectedDuration != null
         ? _kDurationOptions.indexOf(_selectedDuration!)
         : -1;
-    final startIndex = initialIndex >= 0 ? initialIndex : 0;
-
-    // Track selection inside the picker (null = "Sem duração" item)
-    int? pickerValue = _selectedDuration;
+    final scrollController = ScrollController(
+      initialScrollOffset: initialIndex > 0 ? (initialIndex * 48.0) : 0,
+    );
 
     await showModalBottomSheet<void>(
       context: context,
@@ -309,7 +308,7 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
       builder: (ctx) {
         return SafeArea(
           child: SizedBox(
-            height: 320,
+            height: 360,
             child: Column(
               children: [
                 // Handle bar
@@ -322,14 +321,24 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: AppSpacing.xs),
 
-                // Header row
+                // Header
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.xs,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      Text(
+                        'Duração do serviço',
+                        style: AppTypography.bodySm.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                       TextButton(
                         onPressed: () {
                           setState(() => _selectedDuration = null);
@@ -342,58 +351,63 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
                           ),
                         ),
                       ),
-                      Text(
-                        'Duração',
-                        style: AppTypography.bodySm.copyWith(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          setState(() => _selectedDuration = pickerValue ?? _kDurationOptions[startIndex]);
-                          Navigator.of(ctx).pop();
-                        },
-                        child: Text(
-                          'OK',
-                          style: AppTypography.bodySm.copyWith(
-                            color: AppColors.purple500,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
                     ],
                   ),
                 ),
 
-                // Divider
                 const Divider(height: 1, color: AppColors.surfaceHigh),
 
-                // Picker
+                // Scrollable list — works on web (mouse wheel + click) and mobile
                 Expanded(
-                  child: ListWheelScrollView.useDelegate(
-                    itemExtent: 44,
-                    diameterRatio: 1.4,
-                    physics: const FixedExtentScrollPhysics(),
-                    controller: FixedExtentScrollController(initialItem: startIndex),
-                    onSelectedItemChanged: (index) {
-                      pickerValue = _kDurationOptions[index];
-                    },
-                    childDelegate: ListWheelChildBuilderDelegate(
-                      childCount: _kDurationOptions.length,
-                      builder: (context, index) {
-                        final min = _kDurationOptions[index];
-                        return Center(
-                          child: Text(
-                            _formatDuration(min),
-                            style: AppTypography.bodySm.copyWith(
-                              color: AppColors.textPrimary,
-                              fontSize: 17,
+                  child: StatefulBuilder(
+                    builder: (ctx, setPickerState) {
+                      return ListView.builder(
+                        controller: scrollController,
+                        itemCount: _kDurationOptions.length,
+                        itemBuilder: (ctx, index) {
+                          final min = _kDurationOptions[index];
+                          final isSelected = _selectedDuration == min;
+                          return InkWell(
+                            onTap: () {
+                              setState(() => _selectedDuration = min);
+                              Navigator.of(ctx).pop();
+                            },
+                            child: Container(
+                              height: 48,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.lg,
+                              ),
+                              color: isSelected
+                                  ? AppColors.purple500.withValues(alpha: 0.12)
+                                  : Colors.transparent,
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    _formatDuration(min),
+                                    style: AppTypography.bodySm.copyWith(
+                                      color: isSelected
+                                          ? AppColors.purple500
+                                          : AppColors.textPrimary,
+                                      fontWeight: isSelected
+                                          ? FontWeight.w600
+                                          : FontWeight.normal,
+                                    ),
+                                  ),
+                                  if (isSelected)
+                                    const Icon(
+                                      Icons.check,
+                                      size: 16,
+                                      color: AppColors.purple500,
+                                    ),
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
+                          );
+                        },
+                      );
+                    },
                   ),
                 ),
               ],
@@ -402,6 +416,8 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
         );
       },
     );
+
+    scrollController.dispose();
   }
 
   // ---------------------------------------------------------------------------
