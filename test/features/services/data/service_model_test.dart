@@ -42,6 +42,16 @@ void main() {
       expect(updated.isActive, false);
       expect(updated.id, svc.id);
       expect(updated.price, svc.price);
+      expect(svc.name, 'Corte de cabelo'); // original untouched
+      expect(svc.isActive, true); // original untouched
+    });
+
+    test('copyWith can clear optional fields to null', () {
+      final svc = ServiceModel.fromJson(fullJson);
+      final cleared = svc.copyWith(price: null, durationMinutes: null);
+      expect(cleared.price, isNull);
+      expect(cleared.durationMinutes, isNull);
+      expect(cleared.id, svc.id); // other fields unchanged
     });
   });
 }

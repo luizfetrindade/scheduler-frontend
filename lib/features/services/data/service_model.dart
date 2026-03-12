@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+const _sentinel = Object();
+
 class ServiceModel extends Equatable {
   final String id;
   final String name;
@@ -28,17 +30,21 @@ class ServiceModel extends Equatable {
 
   ServiceModel copyWith({
     String? name,
-    String? description,
-    double? price,
-    int? durationMinutes,
+    Object? description = _sentinel,
+    Object? price = _sentinel,
+    Object? durationMinutes = _sentinel,
     bool? isActive,
   }) =>
       ServiceModel(
         id: id,
         name: name ?? this.name,
-        description: description ?? this.description,
-        price: price ?? this.price,
-        durationMinutes: durationMinutes ?? this.durationMinutes,
+        description: description == _sentinel
+            ? this.description
+            : description as String?,
+        price: price == _sentinel ? this.price : price as double?,
+        durationMinutes: durationMinutes == _sentinel
+            ? this.durationMinutes
+            : durationMinutes as int?,
         isActive: isActive ?? this.isActive,
       );
 
