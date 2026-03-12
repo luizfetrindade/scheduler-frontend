@@ -167,6 +167,7 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
       durationMinutes: event.durationMinutes,
       notes: event.notes,
       recurrenceRule: event.recurrenceRule,
+      serviceId: event.serviceId,
     );
 
     switch (result) {

@@ -43,6 +43,7 @@ class ScheduleAppointmentCreateRequested extends ScheduleEvent {
   final int durationMinutes;
   final String? notes;
   final String? recurrenceRule;
+  final String? serviceId;
 
   const ScheduleAppointmentCreateRequested({
     required this.clientName,
@@ -51,11 +52,12 @@ class ScheduleAppointmentCreateRequested extends ScheduleEvent {
     this.durationMinutes = 60,
     this.notes,
     this.recurrenceRule,
+    this.serviceId,
   });
 
   @override
   List<Object?> get props =>
-      [clientName, clientEmail, startsAt, durationMinutes, notes, recurrenceRule];
+      [clientName, clientEmail, startsAt, durationMinutes, notes, recurrenceRule, serviceId];
 }
 
 class ScheduleBlockCreateRequested extends ScheduleEvent {

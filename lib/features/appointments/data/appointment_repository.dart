@@ -39,6 +39,7 @@ class AppointmentRepository {
     int durationMinutes = 60,
     String? notes,
     String? recurrenceRule,
+    String? serviceId,
   }) =>
       _client.post(
         '/b/$slug/appointments',
@@ -51,6 +52,7 @@ class AppointmentRepository {
           'bookedBy': 'BUSINESS',
           if (notes != null && notes.isNotEmpty) 'notes': notes,
           if (recurrenceRule != null) 'recurrenceRule': recurrenceRule,
+          if (serviceId != null) 'serviceId': serviceId,
         },
       );
 
