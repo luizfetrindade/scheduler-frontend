@@ -21,7 +21,7 @@ abstract final class AppTheme {
         colorScheme: const ColorScheme.light(
           primary: Color(0xFF81A6C6),
           surface: Color(0xFFD2C4B4),
-          onSurface: Color(0xFF2C1E14),
+          onSurface: Color(0xFF81A6C6),
         ),
         extensions: [AppColorsExtension.light()],
       );

@@ -42,9 +42,9 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
         primary:       Color(0xFF81A6C6),
         primaryLight:  Color(0xFFAACDDC),
         primaryDark:   Color(0xFF5A8BAD),
-        textPrimary:   Color(0xFF2C1E14),
-        textSecondary: Color(0xFF7A6B5A),
-        textDisabled:  Color(0xFFB0A090),
+        textPrimary:   Color(0xFF81A6C6),
+        textSecondary: Color(0xFFAACDDC),
+        textDisabled:  Color(0xFFC5DCE8),
       );
 
   @override

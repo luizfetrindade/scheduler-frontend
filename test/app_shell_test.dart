@@ -7,9 +7,12 @@ import 'package:scheduler_frontend/app_shell.dart';
 import 'package:scheduler_frontend/core/auth/auth_bloc.dart';
 import 'package:scheduler_frontend/core/auth/auth_event.dart';
 import 'package:scheduler_frontend/core/auth/auth_state.dart';
+import 'package:scheduler_frontend/core/theme/theme_cubit.dart';
+import 'package:scheduler_frontend/core/theme/theme_state.dart';
 import 'package:scheduler_frontend/design_system/tokens/app_theme.dart';
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
+class MockThemeCubit extends MockCubit<ThemeState> implements ThemeCubit {}
 
 Widget _buildShell({
   String location = '/',
@@ -19,10 +22,15 @@ Widget _buildShell({
   if (authBloc == null) {
     when(() => bloc.state).thenReturn(const AuthUnauthenticated());
   }
+  final themeCubit = MockThemeCubit();
+  when(() => themeCubit.state).thenReturn(const ThemeState(themeMode: ThemeMode.dark));
   return MaterialApp(
     theme: AppTheme.dark(),
-    home: BlocProvider<AuthBloc>.value(
-      value: bloc,
+    home: MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthBloc>.value(value: bloc),
+        BlocProvider<ThemeCubit>.value(value: themeCubit),
+      ],
       child: AdaptiveShell(
         currentLocation: location,
         child: const SizedBox.expand(),

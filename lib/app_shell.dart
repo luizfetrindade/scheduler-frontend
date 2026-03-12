@@ -7,6 +7,8 @@ import 'package:scheduler_frontend/core/auth/auth_bloc.dart';
 import 'package:scheduler_frontend/core/auth/auth_event.dart';
 import 'package:scheduler_frontend/core/auth/auth_state.dart';
 import 'package:scheduler_frontend/core/router/app_routes.dart';
+import 'package:scheduler_frontend/core/theme/theme_cubit.dart';
+import 'package:scheduler_frontend/core/theme/theme_state.dart';
 import 'package:scheduler_frontend/design_system/base_design_system.dart';
 
 // ─── Nav item descriptor ─────────────────────────────────────────────────────
@@ -326,6 +328,7 @@ class _SidebarState extends State<_Sidebar> {
                       ),
                     ),
                     const Spacer(),
+                    _SidebarThemeToggle(expanded: showExpanded),
                     Divider(
                         color: context.appColors.surfaceHigh, height: 1),
                     _SidebarFooter(expanded: showExpanded),
@@ -460,6 +463,68 @@ class _SidebarTile extends StatelessWidget {
             ),
           ),
         ),
+    );
+  }
+}
+
+class _SidebarThemeToggle extends StatelessWidget {
+  final bool expanded;
+
+  const _SidebarThemeToggle({required this.expanded});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ThemeCubit, ThemeState>(
+      builder: (context, state) {
+        final isLight = state.themeMode == ThemeMode.light;
+        final icon = isLight ? Icons.light_mode : Icons.dark_mode;
+
+        if (!expanded) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.xs,
+              vertical: AppSpacing.xs,
+            ),
+            child: Center(
+              child: Tooltip(
+                message: isLight ? 'Modo escuro' : 'Modo claro',
+                child: IconButton(
+                  icon: Icon(icon,
+                      color: context.appColors.textSecondary, size: 20),
+                  onPressed: () => context.read<ThemeCubit>().toggle(),
+                ),
+              ),
+            ),
+          );
+        }
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.xs,
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: context.appColors.primary, size: 18),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  isLight ? 'Modo claro' : 'Modo escuro',
+                  style: AppTypography.bodySm.copyWith(
+                    color: context.appColors.textSecondary,
+                  ),
+                ),
+              ),
+              Switch(
+                value: isLight,
+                activeColor: context.appColors.primary,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                onChanged: (_) => context.read<ThemeCubit>().toggle(),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

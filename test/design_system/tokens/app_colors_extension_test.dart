@@ -26,9 +26,9 @@ void main() {
     test('primary é #81A6C6', () => expect(light.primary, const Color(0xFF81A6C6)));
     test('primaryLight é #AACDDC', () => expect(light.primaryLight, const Color(0xFFAACDDC)));
     test('primaryDark é #5A8BAD', () => expect(light.primaryDark, const Color(0xFF5A8BAD)));
-    test('textPrimary é #2C1E14', () => expect(light.textPrimary, const Color(0xFF2C1E14)));
-    test('textSecondary é #7A6B5A', () => expect(light.textSecondary, const Color(0xFF7A6B5A)));
-    test('textDisabled é #B0A090', () => expect(light.textDisabled, const Color(0xFFB0A090)));
+    test('textPrimary é #81A6C6', () => expect(light.textPrimary, const Color(0xFF81A6C6)));
+    test('textSecondary é #AACDDC', () => expect(light.textSecondary, const Color(0xFFAACDDC)));
+    test('textDisabled é #C5DCE8', () => expect(light.textDisabled, const Color(0xFFC5DCE8)));
   });
 
   group('AppColorsExtension.copyWith()', () {
