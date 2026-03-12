@@ -78,6 +78,28 @@ void main() {
           )).called(1);
     });
 
+    test('createService excludes null optional fields from body', () async {
+      Map<String, dynamic>? capturedBody;
+      when(() => mockClient.post<ServiceModel>(
+            any(),
+            fromJson: any(named: 'fromJson'),
+            body: any(named: 'body'),
+          )).thenAnswer((invocation) async {
+        capturedBody = invocation.namedArguments[#body] as Map<String, dynamic>;
+        return Success(svc);
+      });
+
+      await repo.createService(
+        businessId: 'biz-1',
+        name: 'Corte',
+        // price and durationMinutes intentionally omitted (null)
+      );
+
+      expect(capturedBody, containsPair('name', 'Corte'));
+      expect(capturedBody, isNot(contains('price')));
+      expect(capturedBody, isNot(contains('durationMinutes')));
+    });
+
     test('deleteService calls delete with correct path', () async {
       when(() => mockClient.delete(any()))
           .thenAnswer((_) async => const Success(null));

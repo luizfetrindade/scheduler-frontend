@@ -48,7 +48,7 @@ class ServiceRepository {
         fromJson: ServiceModel.fromJson,
         body: {
           if (name != null) 'name': name,
-          if (description != null) 'description': description,
+          if (description != null && description.isNotEmpty) 'description': description,
           if (price != null) 'price': price,
           if (durationMinutes != null) 'durationMinutes': durationMinutes,
           if (isActive != null) 'isActive': isActive,
