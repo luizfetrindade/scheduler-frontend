@@ -36,7 +36,7 @@ class SettingsPage extends StatelessWidget {
                   ),
                   title: Text(
                     'Modo claro',
-                    style: TextStyle(color: context.appColors.textPrimary),
+                    style: AppTypography.bodySm.copyWith(color: context.appColors.textPrimary),
                   ),
                   trailing: Switch(
                     value: isLight,
