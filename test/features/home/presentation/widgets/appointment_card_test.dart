@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:scheduler_frontend/design_system/tokens/app_theme.dart';
 import 'package:scheduler_frontend/features/appointments/data/appointment_model.dart';
 import 'package:scheduler_frontend/features/home/presentation/widgets/appointment_card.dart';
 
-Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
+Widget _wrap(Widget child) => MaterialApp(
+      theme: AppTheme.light(),
+      home: Scaffold(body: child),
+    );
 
 final _pending = AppointmentModel(
   id: 'a1',

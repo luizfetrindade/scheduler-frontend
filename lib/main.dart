@@ -11,7 +11,9 @@ import 'package:scheduler_frontend/core/cache/preferences_service.dart';
 import 'package:scheduler_frontend/core/l10n/l10n.dart';
 import 'package:scheduler_frontend/core/network/api_client.dart';
 import 'package:scheduler_frontend/core/router/app_router.dart';
-import 'package:scheduler_frontend/design_system/tokens/app_colors.dart';
+import 'package:scheduler_frontend/core/theme/theme_cubit.dart';
+import 'package:scheduler_frontend/core/theme/theme_state.dart';
+import 'package:scheduler_frontend/design_system/tokens/app_theme.dart';
 import 'package:scheduler_frontend/features/appointments/bloc/appointments_bloc.dart';
 import 'package:scheduler_frontend/features/appointments/data/appointment_repository.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_bloc.dart';
@@ -38,6 +40,7 @@ void main() async {
 
   runApp(SchedulerApp(
     authBloc: authBloc,
+    preferences: preferences,
     businessRepo: businessRepo,
     appointmentRepo: appointmentRepo,
   ));
@@ -45,25 +48,31 @@ void main() async {
 
 class SchedulerApp extends StatelessWidget {
   final AuthBloc authBloc;
+  final PreferencesService preferences;
   final BusinessRepository businessRepo;
   final AppointmentRepository appointmentRepo;
 
   const SchedulerApp({
     super.key,
     required this.authBloc,
+    required this.preferences,
     required this.businessRepo,
     required this.appointmentRepo,
   });
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider.value(value: authBloc),
-        BlocProvider(create: (_) => BusinessBloc(businessRepo)),
-        BlocProvider(create: (_) => AppointmentsBloc(appointmentRepo)),
-      ],
-      child: _AppBody(authBloc: authBloc),
+    return RepositoryProvider.value(
+      value: appointmentRepo,
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider.value(value: authBloc),
+          BlocProvider(create: (_) => ThemeCubit(preferences)),
+          BlocProvider(create: (_) => BusinessBloc(businessRepo)),
+          BlocProvider(create: (_) => AppointmentsBloc(appointmentRepo)),
+        ],
+        child: _AppBody(authBloc: authBloc),
+      ),
     );
   }
 }
@@ -74,24 +83,22 @@ class _AppBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
-        if (state is AuthAuthenticated) {
-          context.read<BusinessBloc>().add(const BusinessLoadRequested());
-        }
-      },
-      child: MaterialApp.router(
-        title: 'Scheduler',
-        debugShowCheckedModeBanner: false,
-        routerConfig: createAppRouter(authBloc),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        theme: ThemeData(
-          scaffoldBackgroundColor: AppColors.background,
-          colorScheme: const ColorScheme.dark(
-            primary: AppColors.purple500,
-            surface: AppColors.surface,
-          ),
+    return BlocBuilder<ThemeCubit, ThemeState>(
+      builder: (context, themeState) => BlocListener<AuthBloc, AuthState>(
+        listener: (context, state) {
+          if (state is AuthAuthenticated) {
+            context.read<BusinessBloc>().add(const BusinessLoadRequested());
+          }
+        },
+        child: MaterialApp.router(
+          title: 'Scheduler',
+          debugShowCheckedModeBanner: false,
+          routerConfig: createAppRouter(authBloc),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          themeMode: themeState.themeMode,
+          theme: AppTheme.light(),
+          darkTheme: AppTheme.dark(),
         ),
       ),
     );
