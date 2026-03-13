@@ -24,6 +24,9 @@ import 'package:scheduler_frontend/features/services/bloc/services_bloc.dart';
 import 'package:scheduler_frontend/features/services/bloc/services_event.dart';
 import 'package:scheduler_frontend/features/reports/data/reports_repository.dart';
 import 'package:scheduler_frontend/features/services/data/service_repository.dart';
+import 'package:scheduler_frontend/features/clients/bloc/clients_bloc.dart';
+import 'package:scheduler_frontend/features/clients/bloc/clients_event.dart';
+import 'package:scheduler_frontend/features/clients/data/client_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,6 +44,7 @@ void main() async {
   final businessRepo = BusinessRepository(apiClient);
   final appointmentRepo = AppointmentRepository(apiClient);
   final serviceRepo = ServiceRepository(apiClient);
+  final clientRepo = ClientRepository(apiClient);
   final reportsRepo = ReportsRepository(apiClient);
 
   final authBloc = AuthBloc(authRepo)..add(const AuthUserFetched());
@@ -51,6 +55,7 @@ void main() async {
     businessRepo: businessRepo,
     appointmentRepo: appointmentRepo,
     serviceRepo: serviceRepo,
+    clientRepo: clientRepo,
     reportsRepo: reportsRepo,
   ));
 }
@@ -61,6 +66,7 @@ class SchedulerApp extends StatelessWidget {
   final BusinessRepository businessRepo;
   final AppointmentRepository appointmentRepo;
   final ServiceRepository serviceRepo;
+  final ClientRepository clientRepo;
   final ReportsRepository reportsRepo;
 
   const SchedulerApp({
@@ -70,6 +76,7 @@ class SchedulerApp extends StatelessWidget {
     required this.businessRepo,
     required this.appointmentRepo,
     required this.serviceRepo,
+    required this.clientRepo,
     required this.reportsRepo,
   });
 
@@ -87,6 +94,7 @@ class SchedulerApp extends StatelessWidget {
           BlocProvider(create: (_) => BusinessBloc(businessRepo)),
           BlocProvider(create: (_) => AppointmentsBloc(appointmentRepo)),
           BlocProvider(create: (_) => ServicesBloc(serviceRepo)),
+          BlocProvider(create: (_) => ClientsBloc(clientRepo)),
         ],
         child: _AppBody(authBloc: authBloc),
       ),
@@ -116,6 +124,15 @@ class _AppBody extends StatelessWidget {
                 context
                     .read<ServicesBloc>()
                     .add(ServicesLoadRequested(state.active.id));
+              }
+            },
+          ),
+          BlocListener<BusinessBloc, BusinessState>(
+            listener: (context, state) {
+              if (state is BusinessLoaded) {
+                context
+                    .read<ClientsBloc>()
+                    .add(ClientsLoadRequested(state.active.id));
               }
             },
           ),
