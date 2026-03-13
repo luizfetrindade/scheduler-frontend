@@ -26,7 +26,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
       case Success(:final data):
         emit(ReportsLoaded(data, event.period));
       case HttpFailure(:final failure):
-        emit(ReportsError(_message(failure)));
+        emit(ReportsError(_message(failure), event.period));
     }
   }
 

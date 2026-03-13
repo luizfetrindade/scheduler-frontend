@@ -27,8 +27,9 @@ class ReportsLoaded extends ReportsState {
 
 class ReportsError extends ReportsState {
   final String message;
-  const ReportsError(this.message);
+  final ReportPeriod period;
+  const ReportsError(this.message, this.period);
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [message, period];
 }

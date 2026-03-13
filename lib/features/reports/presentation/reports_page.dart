@@ -60,13 +60,9 @@ class _ReportsView extends StatelessWidget {
                   action: SnackBarAction(
                     label: 'Tentar novamente',
                     onPressed: () {
-                      final current = ctx.read<ReportsBloc>().state;
-                      final period = current is ReportsLoaded
-                          ? current.period
-                          : ReportPeriod.monthly;
                       ctx
                           .read<ReportsBloc>()
-                          .add(ReportsLoadRequested(slug: slug, period: period));
+                          .add(ReportsLoadRequested(slug: slug, period: state.period));
                     },
                   ),
                 ),
