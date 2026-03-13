@@ -22,6 +22,7 @@ import 'package:scheduler_frontend/features/business/bloc/business_state.dart';
 import 'package:scheduler_frontend/features/business/data/business_repository.dart';
 import 'package:scheduler_frontend/features/services/bloc/services_bloc.dart';
 import 'package:scheduler_frontend/features/services/bloc/services_event.dart';
+import 'package:scheduler_frontend/features/reports/data/reports_repository.dart';
 import 'package:scheduler_frontend/features/services/data/service_repository.dart';
 
 void main() async {
@@ -40,6 +41,7 @@ void main() async {
   final businessRepo = BusinessRepository(apiClient);
   final appointmentRepo = AppointmentRepository(apiClient);
   final serviceRepo = ServiceRepository(apiClient);
+  final reportsRepo = ReportsRepository(apiClient);
 
   final authBloc = AuthBloc(authRepo)..add(const AuthUserFetched());
 
@@ -49,6 +51,7 @@ void main() async {
     businessRepo: businessRepo,
     appointmentRepo: appointmentRepo,
     serviceRepo: serviceRepo,
+    reportsRepo: reportsRepo,
   ));
 }
 
@@ -58,6 +61,7 @@ class SchedulerApp extends StatelessWidget {
   final BusinessRepository businessRepo;
   final AppointmentRepository appointmentRepo;
   final ServiceRepository serviceRepo;
+  final ReportsRepository reportsRepo;
 
   const SchedulerApp({
     super.key,
@@ -66,12 +70,16 @@ class SchedulerApp extends StatelessWidget {
     required this.businessRepo,
     required this.appointmentRepo,
     required this.serviceRepo,
+    required this.reportsRepo,
   });
 
   @override
   Widget build(BuildContext context) {
-    return RepositoryProvider.value(
-      value: appointmentRepo,
+    return MultiRepositoryProvider(
+      providers: [
+        RepositoryProvider.value(value: appointmentRepo),
+        RepositoryProvider.value(value: reportsRepo),
+      ],
       child: MultiBlocProvider(
         providers: [
           BlocProvider.value(value: authBloc),
