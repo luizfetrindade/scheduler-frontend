@@ -49,3 +49,4 @@ app.*.map.json
 
 # Generated l10n
 lib/core/l10n/generated/
+.worktrees/
