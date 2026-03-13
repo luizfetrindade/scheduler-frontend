@@ -44,6 +44,9 @@ class _ClientFormSheetState extends State<ClientFormSheet> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<ClientsBloc, ClientsState>(
+      listenWhen: (previous, current) =>
+          (current is ClientsLoaded && previous is ClientsActionInProgress) ||
+          current is ClientsError,
       listener: (context, state) {
         if (state is ClientsLoaded) {
           Navigator.of(context).pop();
