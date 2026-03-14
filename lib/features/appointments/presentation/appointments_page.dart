@@ -14,6 +14,10 @@ import 'package:scheduler_frontend/features/appointments/presentation/widgets/sc
 import 'package:scheduler_frontend/features/appointments/presentation/widgets/week_view.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_bloc.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_state.dart';
+import 'package:scheduler_frontend/features/professionals/bloc/professionals_bloc.dart';
+import 'package:scheduler_frontend/features/professionals/bloc/professionals_state.dart';
+import 'package:scheduler_frontend/features/professionals/data/professional_model.dart';
+import 'package:scheduler_frontend/features/professionals/presentation/widgets/professional_filter_chips.dart';
 
 class AppointmentsPage extends StatelessWidget {
   const AppointmentsPage({super.key});
@@ -187,6 +191,13 @@ class AppointmentsBody extends StatelessWidget {
   }) {
     final bloc = context.read<ScheduleBloc>();
 
+    final profsState = context.read<ProfessionalsBloc>().state;
+    final professionals = switch (profsState) {
+      ProfessionalsLoaded(:final professionals) => professionals,
+      ProfessionalsActionInProgress(:final professionals) => professionals,
+      _ => <ProfessionalModel>[],
+    };
+
     return Column(
       children: [
         ScheduleToolbar(
@@ -196,6 +207,8 @@ class AppointmentsBody extends StatelessWidget {
           onNext: () => bloc.add(const ScheduleNextPeriod()),
           onDateSelected: (date) => bloc.add(ScheduleDateSelected(date)),
         ),
+        if (professionals.isNotEmpty)
+          ProfessionalFilterChips(professionals: professionals),
         Expanded(
           child: isLoading
               ? Center(
