@@ -10,6 +10,8 @@ import 'package:scheduler_frontend/features/auth/presentation/register_page.dart
 import 'package:scheduler_frontend/features/clients/presentation/clients_page.dart';
 import 'package:scheduler_frontend/features/home/presentation/home_page.dart';
 import 'package:scheduler_frontend/features/reports/presentation/reports_page.dart';
+import 'package:scheduler_frontend/features/professionals/presentation/professional_profile_page.dart';
+import 'package:scheduler_frontend/features/professionals/presentation/professionals_page.dart';
 import 'package:scheduler_frontend/features/services/presentation/services_page.dart';
 import 'package:scheduler_frontend/features/settings/presentation/settings_page.dart';
 
@@ -48,6 +50,18 @@ GoRouter createAppRouter(AuthBloc authBloc) => GoRouter(
             GoRoute(path: AppRoutes.appointments, builder: (context, _) => const AppointmentsPage()),
             GoRoute(path: AppRoutes.clients,      builder: (context, _) => const ClientsPage()),
             GoRoute(path: AppRoutes.services,     builder: (context, _) => const ServicesPage()),
+            GoRoute(
+              path: AppRoutes.professionals,
+              builder: (_, __) => const ProfessionalsPage(),
+              routes: [
+                GoRoute(
+                  path: ':id',
+                  builder: (_, state) => ProfessionalProfilePage(
+                    professionalId: state.pathParameters['id']!,
+                  ),
+                ),
+              ],
+            ),
             GoRoute(path: AppRoutes.reports,      builder: (context, _) => const ReportsPage()),
             GoRoute(path: AppRoutes.settings,     builder: (context, _) => const SettingsPage()),
           ],

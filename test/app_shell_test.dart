@@ -49,8 +49,8 @@ void main() {
       expect(indexForLocation('/appointments', isMobile: true), 1);
     });
 
-    test('returns 4 for /reports on desktop (index 4 in desktop list)', () {
-      expect(indexForLocation('/reports', isMobile: false), 4);
+    test('returns 5 for /reports on desktop (index 5 in desktop list)', () {
+      expect(indexForLocation('/reports', isMobile: false), 5);
     });
 
     test('returns 0 for unknown location', () {
@@ -106,13 +106,14 @@ void main() {
 
       // Os 5 itens mobile identificados por Key('nav_item_<route>') no _NavItemButton
       // Nota: usa Key simples (não ValueKey) para evitar conflito de type em find.byKey
-      expect(find.byKey(const Key('nav_item_/')),             findsOneWidget);
-      expect(find.byKey(const Key('nav_item_/appointments')), findsOneWidget);
-      expect(find.byKey(const Key('nav_item_/clients')),      findsOneWidget);
-      expect(find.byKey(const Key('nav_item_/services')),     findsOneWidget);
-      expect(find.byKey(const Key('nav_item_/settings')),     findsOneWidget);
-      // Relatórios NÃO está nos itens mobile
-      expect(find.byKey(const Key('nav_item_/reports')),      findsNothing);
+      expect(find.byKey(const Key('nav_item_/')),               findsOneWidget);
+      expect(find.byKey(const Key('nav_item_/appointments')),   findsOneWidget);
+      expect(find.byKey(const Key('nav_item_/clients')),        findsOneWidget);
+      expect(find.byKey(const Key('nav_item_/services')),       findsOneWidget);
+      expect(find.byKey(const Key('nav_item_/professionals')),  findsOneWidget);
+      // Relatórios e Configurações NÃO estão nos itens mobile
+      expect(find.byKey(const Key('nav_item_/reports')),        findsNothing);
+      expect(find.byKey(const Key('nav_item_/settings')),       findsNothing);
     });
 
     testWidgets('sidebar tem botão de toggle e pode ser retraída',
