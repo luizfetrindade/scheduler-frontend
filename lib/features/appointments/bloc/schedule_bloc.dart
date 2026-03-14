@@ -9,6 +9,7 @@ import 'package:scheduler_frontend/features/appointments/data/appointment_reposi
 class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
   final AppointmentRepository _repository;
   String _slug = '';
+  String? _pendingProfessionalFilter;
 
   ScheduleBloc(this._repository) : super(const ScheduleInitial()) {
     on<ScheduleInitialized>(_onInitialized);
@@ -20,6 +21,7 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
     on<ScheduleBlockCreateRequested>(_onBlockCreateRequested);
     on<ScheduleAppointmentCancelRequested>(_onCancelRequested);
     on<ScheduleRecurrenceCancelRequested>(_onRecurrenceCancelRequested);
+    on<ScheduleFilterByProfessional>(_onFilterByProfessional);
   }
 
   Future<void> _onInitialized(
@@ -102,8 +104,14 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
         final sorted = List<AppointmentModel>.from(data)
           ..sort((a, b) => a.startsAt.compareTo(b.startsAt));
         final key = DateFormat('yyyy-MM-dd').format(date);
+        final allByDate = {key: sorted};
+        final activeFilter = _pendingProfessionalFilter;
+        _pendingProfessionalFilter = null;
+        final filteredByDate = _applyFilter(allByDate, activeFilter);
         emit(ScheduleLoaded(
-          appointmentsByDate: {key: sorted},
+          appointmentsByDate: filteredByDate,
+          allAppointmentsByDate: allByDate,
+          activeProfessionalFilter: activeFilter,
           selectedDate: date,
           viewMode: mode,
         ));
@@ -144,8 +152,13 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
       }
     }
 
+    final activeFilter = _pendingProfessionalFilter;
+    _pendingProfessionalFilter = null;
+    final filteredByDate = _applyFilter(byDate, activeFilter);
     emit(ScheduleLoaded(
-      appointmentsByDate: byDate,
+      appointmentsByDate: filteredByDate,
+      allAppointmentsByDate: byDate,
+      activeProfessionalFilter: activeFilter,
       selectedDate: date,
       viewMode: mode,
       hasPartialError: hasPartialError,
@@ -280,6 +293,39 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
           viewMode: mode,
         ));
     }
+  }
+
+  void _onFilterByProfessional(
+    ScheduleFilterByProfessional event,
+    Emitter<ScheduleState> emit,
+  ) {
+    final current = state;
+    if (current is ScheduleLoaded) {
+      final filtered = _applyFilter(current.allAppointmentsByDate, event.professionalId);
+      emit(ScheduleLoaded(
+        appointmentsByDate: filtered,
+        allAppointmentsByDate: current.allAppointmentsByDate,
+        activeProfessionalFilter: event.professionalId,
+        selectedDate: current.selectedDate,
+        viewMode: current.viewMode,
+        hasPartialError: current.hasPartialError,
+      ));
+    } else {
+      _pendingProfessionalFilter = event.professionalId;
+    }
+  }
+
+  Map<String, List<AppointmentModel>> _applyFilter(
+    Map<String, List<AppointmentModel>> byDate,
+    String? professionalId,
+  ) {
+    if (professionalId == null) return byDate;
+    return {
+      for (final entry in byDate.entries)
+        entry.key: entry.value
+            .where((a) => a.staffId == professionalId)
+            .toList(),
+    };
   }
 
   DateTime? get _currentDate => switch (state) {

@@ -102,4 +102,11 @@ class ScheduleRecurrenceCancelRequested extends ScheduleEvent {
   List<Object?> get props => [appointmentId, cancelFuture];
 }
 
+class ScheduleFilterByProfessional extends ScheduleEvent {
+  final String? professionalId; // null = show all
+  const ScheduleFilterByProfessional(this.professionalId);
+  @override
+  List<Object?> get props => [professionalId];
+}
+
 enum ScheduleViewMode { day, week }

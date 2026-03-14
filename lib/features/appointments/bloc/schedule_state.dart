@@ -22,6 +22,8 @@ class ScheduleLoading extends ScheduleState {
 
 class ScheduleLoaded extends ScheduleState {
   final Map<String, List<AppointmentModel>> appointmentsByDate;
+  final Map<String, List<AppointmentModel>> allAppointmentsByDate;
+  final String? activeProfessionalFilter;
   final DateTime selectedDate;
   final ScheduleViewMode viewMode;
   final bool hasPartialError;
@@ -30,12 +32,20 @@ class ScheduleLoaded extends ScheduleState {
     required this.appointmentsByDate,
     required this.selectedDate,
     required this.viewMode,
+    Map<String, List<AppointmentModel>>? allAppointmentsByDate,
+    this.activeProfessionalFilter,
     this.hasPartialError = false,
-  });
+  }) : allAppointmentsByDate = allAppointmentsByDate ?? appointmentsByDate;
 
   @override
-  List<Object?> get props =>
-      [appointmentsByDate, selectedDate, viewMode, hasPartialError];
+  List<Object?> get props => [
+        appointmentsByDate,
+        allAppointmentsByDate,
+        activeProfessionalFilter,
+        selectedDate,
+        viewMode,
+        hasPartialError,
+      ];
 }
 
 class ScheduleError extends ScheduleState {
