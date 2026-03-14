@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 const _sentinel = Object();
+const _defaultColor = '#4A90E2';
 
 class ProfessionalModel extends Equatable {
   final String id;
@@ -24,7 +25,7 @@ class ProfessionalModel extends Equatable {
     this.roleName,
     this.phone,
     this.bio,
-    this.color = '#4A90E2',
+    this.color = _defaultColor,
     this.isActive = true,
     this.linkedUserId,
   });
@@ -39,7 +40,7 @@ class ProfessionalModel extends Equatable {
         roleName: json['roleName'] as String?,
         phone: json['phone'] as String?,
         bio: json['bio'] as String?,
-        color: json['color'] as String? ?? '#4A90E2',
+        color: json['color'] as String? ?? _defaultColor,
         isActive: json['isActive'] as bool? ?? true,
         linkedUserId: json['linkedUserId'] as String?,
       );
