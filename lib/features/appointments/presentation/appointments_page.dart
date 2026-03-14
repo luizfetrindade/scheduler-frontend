@@ -33,13 +33,13 @@ class AppointmentsPage extends StatelessWidget {
         }
         return bloc;
       },
-      child: const _AppointmentsBody(),
+      child: const AppointmentsBody(),
     );
   }
 }
 
-class _AppointmentsBody extends StatelessWidget {
-  const _AppointmentsBody();
+class AppointmentsBody extends StatelessWidget {
+  const AppointmentsBody({super.key});
 
   @override
   Widget build(BuildContext context) {
