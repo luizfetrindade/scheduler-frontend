@@ -27,6 +27,12 @@ import 'package:scheduler_frontend/features/services/data/service_repository.dar
 import 'package:scheduler_frontend/features/clients/bloc/clients_bloc.dart';
 import 'package:scheduler_frontend/features/clients/bloc/clients_event.dart';
 import 'package:scheduler_frontend/features/clients/data/client_repository.dart';
+import 'package:scheduler_frontend/features/professionals/bloc/professional_roles_bloc.dart';
+import 'package:scheduler_frontend/features/professionals/bloc/professional_roles_event.dart';
+import 'package:scheduler_frontend/features/professionals/bloc/professionals_bloc.dart';
+import 'package:scheduler_frontend/features/professionals/bloc/professionals_event.dart';
+import 'package:scheduler_frontend/features/professionals/data/professional_repository.dart';
+import 'package:scheduler_frontend/features/professionals/data/professional_roles_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,6 +52,8 @@ void main() async {
   final serviceRepo = ServiceRepository(apiClient);
   final clientRepo = ClientRepository(apiClient);
   final reportsRepo = ReportsRepository(apiClient);
+  final professionalRepo = ProfessionalRepository(apiClient);
+  final professionalRolesRepo = ProfessionalRolesRepository(apiClient);
 
   final authBloc = AuthBloc(authRepo)..add(const AuthUserFetched());
 
@@ -57,6 +65,8 @@ void main() async {
     serviceRepo: serviceRepo,
     clientRepo: clientRepo,
     reportsRepo: reportsRepo,
+    professionalRepo: professionalRepo,
+    professionalRolesRepo: professionalRolesRepo,
   ));
 }
 
@@ -68,6 +78,8 @@ class SchedulerApp extends StatelessWidget {
   final ServiceRepository serviceRepo;
   final ClientRepository clientRepo;
   final ReportsRepository reportsRepo;
+  final ProfessionalRepository professionalRepo;
+  final ProfessionalRolesRepository professionalRolesRepo;
 
   const SchedulerApp({
     super.key,
@@ -78,6 +90,8 @@ class SchedulerApp extends StatelessWidget {
     required this.serviceRepo,
     required this.clientRepo,
     required this.reportsRepo,
+    required this.professionalRepo,
+    required this.professionalRolesRepo,
   });
 
   @override
@@ -95,6 +109,8 @@ class SchedulerApp extends StatelessWidget {
           BlocProvider(create: (_) => AppointmentsBloc(appointmentRepo)),
           BlocProvider(create: (_) => ServicesBloc(serviceRepo)),
           BlocProvider(create: (_) => ClientsBloc(clientRepo)),
+          BlocProvider(create: (_) => ProfessionalsBloc(professionalRepo)),
+          BlocProvider(create: (_) => ProfessionalRolesBloc(professionalRolesRepo)),
         ],
         child: _AppBody(authBloc: authBloc),
       ),
@@ -133,6 +149,24 @@ class _AppBody extends StatelessWidget {
                 context
                     .read<ClientsBloc>()
                     .add(ClientsLoadRequested(state.active.id));
+              }
+            },
+          ),
+          BlocListener<BusinessBloc, BusinessState>(
+            listener: (context, state) {
+              if (state is BusinessLoaded) {
+                context
+                    .read<ProfessionalsBloc>()
+                    .add(ProfessionalsLoadRequested(state.active.id));
+              }
+            },
+          ),
+          BlocListener<BusinessBloc, BusinessState>(
+            listener: (context, state) {
+              if (state is BusinessLoaded) {
+                context
+                    .read<ProfessionalRolesBloc>()
+                    .add(ProfessionalRolesLoadRequested(state.active.id));
               }
             },
           ),
