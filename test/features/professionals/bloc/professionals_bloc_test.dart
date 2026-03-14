@@ -116,6 +116,30 @@ void main() {
         ),
       ],
     );
+
+    blocTest<ProfessionalsBloc, ProfessionalsState>(
+      'emits ActionInProgress then Error on update failure, preserving list',
+      build: () => ProfessionalsBloc(repo),
+      seed: () => ProfessionalsLoaded([_prof1]),
+      setUp: () => when(() => repo.updateProfessional(
+            businessId: 'b1',
+            professionalId: 'p1',
+            isActive: false,
+          )).thenAnswer((_) async => HttpFailure(NetworkFailure('error'))),
+      act: (bloc) => bloc.add(const ProfessionalsUpdateRequested(
+        businessId: 'b1',
+        professionalId: 'p1',
+        isActive: false,
+      )),
+      expect: () => [
+        ProfessionalsActionInProgress([_prof1]),
+        isA<ProfessionalsError>().having(
+          (e) => e.professionals,
+          'professionals preserved',
+          [_prof1],
+        ),
+      ],
+    );
   });
 
   group('ProfessionalsDeleteRequested', () {
