@@ -290,7 +290,7 @@ class _ProfessionalFormSheetState extends State<ProfessionalFormSheet> {
       _wasCreatingRole = true;
       _previousRoleIds = currentRoles.map((r) => r.id).toSet();
     });
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: context.appColors.surface,
@@ -304,7 +304,11 @@ class _ProfessionalFormSheetState extends State<ProfessionalFormSheet> {
         ],
         child: const RoleFormSheet(),
       ),
-    );
+    ).whenComplete(() {
+      if (mounted) {
+        setState(() => _wasCreatingRole = false);
+      }
+    });
   }
 
   void _submit() {
