@@ -10,6 +10,7 @@ import 'package:scheduler_frontend/features/professionals/bloc/professionals_eve
 import 'package:scheduler_frontend/features/professionals/bloc/professionals_state.dart';
 import 'package:scheduler_frontend/features/professionals/data/professional_model.dart';
 import 'package:scheduler_frontend/features/professionals/data/professional_role_model.dart';
+import 'package:scheduler_frontend/features/professionals/presentation/widgets/role_form_sheet.dart';
 
 final _hexColorRegex = RegExp(r'^#[0-9A-Fa-f]{6}$');
 
@@ -32,6 +33,8 @@ class _ProfessionalFormSheetState extends State<ProfessionalFormSheet> {
 
   String? _selectedRoleId;
   bool _wasSubmitting = false;
+  bool _wasCreatingRole = false;
+  Set<String> _previousRoleIds = {};
 
   @override
   void initState() {
@@ -57,22 +60,36 @@ class _ProfessionalFormSheetState extends State<ProfessionalFormSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<ProfessionalsBloc, ProfessionalsState>(
+    return BlocListener<ProfessionalRolesBloc, ProfessionalRolesState>(
       listener: (context, state) {
-        if (state is ProfessionalsActionInProgress) {
-          _wasSubmitting = true;
-        } else if (state is ProfessionalsLoaded && _wasSubmitting) {
-          Navigator.of(context).pop();
-        } else if (state is ProfessionalsError && _wasSubmitting) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppColors.error,
-            ),
-          );
+        if (state is ProfessionalRolesLoaded && _wasCreatingRole) {
+          final newRole = state.roles
+              .where((r) => !_previousRoleIds.contains(r.id))
+              .firstOrNull;
+          if (newRole != null) {
+            setState(() {
+              _selectedRoleId = newRole.id;
+              _wasCreatingRole = false;
+            });
+          }
         }
       },
-      child: Padding(
+      child: BlocListener<ProfessionalsBloc, ProfessionalsState>(
+        listener: (context, state) {
+          if (state is ProfessionalsActionInProgress) {
+            _wasSubmitting = true;
+          } else if (state is ProfessionalsLoaded && _wasSubmitting) {
+            Navigator.of(context).pop();
+          } else if (state is ProfessionalsError && _wasSubmitting) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          }
+        },
+        child: Padding(
         padding: EdgeInsets.only(
           left: AppSpacing.lg,
           right: AppSpacing.lg,
@@ -181,6 +198,7 @@ class _ProfessionalFormSheetState extends State<ProfessionalFormSheet> {
           ),
         ),
       ),
+    ),
     );
   }
 
@@ -216,31 +234,76 @@ class _ProfessionalFormSheetState extends State<ProfessionalFormSheet> {
 
         final roles = state is ProfessionalRolesLoaded ? state.roles : <ProfessionalRoleModel>[];
 
-        return DropdownButtonFormField<String>(
-          value: _selectedRoleId,
-          decoration: _inputDecoration(context, 'Cargo (opcional)'),
-          style: AppTypography.bodySm
-              .copyWith(color: context.appColors.textPrimary),
-          dropdownColor: context.appColors.surface,
-          items: [
-            DropdownMenuItem<String>(
-              value: null,
-              child: Text(
-                'Sem cargo',
-                style: AppTypography.bodySm
-                    .copyWith(color: context.appColors.textSecondary),
-              ),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            DropdownButtonFormField<String>(
+              value: _selectedRoleId,
+              decoration: _inputDecoration(context, 'Cargo (opcional)'),
+              style: AppTypography.bodySm
+                  .copyWith(color: context.appColors.textPrimary),
+              dropdownColor: context.appColors.surface,
+              items: [
+                DropdownMenuItem<String>(
+                  value: null,
+                  child: Text(
+                    'Sem cargo',
+                    style: AppTypography.bodySm
+                        .copyWith(color: context.appColors.textSecondary),
+                  ),
+                ),
+                ...roles.map(
+                  (r) => DropdownMenuItem<String>(
+                    value: r.id,
+                    child: Text(r.name),
+                  ),
+                ),
+              ],
+              onChanged: (v) => setState(() => _selectedRoleId = v),
             ),
-            ...roles.map(
-              (r) => DropdownMenuItem<String>(
-                value: r.id,
-                child: Text(r.name),
+            const SizedBox(height: AppSpacing.xs),
+            GestureDetector(
+              onTap: () => _openRoleForm(context, roles),
+              child: Row(
+                children: [
+                  Icon(Icons.add, size: 16, color: context.appColors.primary),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(
+                    '+ Criar cargo',
+                    style: AppTypography.bodySm
+                        .copyWith(color: context.appColors.primary),
+                  ),
+                ],
               ),
             ),
           ],
-          onChanged: (v) => setState(() => _selectedRoleId = v),
         );
       },
+    );
+  }
+
+  void _openRoleForm(
+    BuildContext context,
+    List<ProfessionalRoleModel> currentRoles,
+  ) {
+    setState(() {
+      _wasCreatingRole = true;
+      _previousRoleIds = currentRoles.map((r) => r.id).toSet();
+    });
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: context.appColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+      ),
+      builder: (_) => MultiBlocProvider(
+        providers: [
+          BlocProvider.value(value: context.read<ProfessionalRolesBloc>()),
+          BlocProvider.value(value: context.read<BusinessBloc>()),
+        ],
+        child: const RoleFormSheet(),
+      ),
     );
   }
 
