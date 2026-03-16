@@ -28,6 +28,13 @@ class ProfessionalsPage extends StatelessWidget {
           style: AppTypography.headingMd
               .copyWith(color: context.appColors.textPrimary),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.tune, color: context.appColors.textPrimary),
+            tooltip: 'Gerenciar cargos',
+            onPressed: () => context.push(AppRoutes.professionalRoles),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: context.appColors.primary,

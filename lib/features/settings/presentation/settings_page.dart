@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:scheduler_frontend/core/router/app_routes.dart';
 import 'package:scheduler_frontend/core/theme/theme_cubit.dart';
 import 'package:scheduler_frontend/core/theme/theme_state.dart';
 import 'package:scheduler_frontend/design_system/base_design_system.dart';
@@ -45,6 +47,22 @@ class SettingsPage extends StatelessWidget {
                   ),
                 );
               },
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            ListTile(
+              tileColor: context.appColors.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.md),
+              ),
+              leading: Icon(Icons.work_outline, color: context.appColors.primary),
+              title: Text(
+                'Cargos',
+                style: AppTypography.bodySm
+                    .copyWith(color: context.appColors.textPrimary),
+              ),
+              trailing: Icon(Icons.chevron_right,
+                  color: context.appColors.textSecondary),
+              onTap: () => context.push(AppRoutes.professionalRoles),
             ),
           ],
         ),
