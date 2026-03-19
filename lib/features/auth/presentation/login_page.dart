@@ -256,7 +256,7 @@ class _LoginForm extends StatelessWidget {
             onPressed: () => context.go(AppRoutes.register),
             child: Text(
               context.l10n.loginNoAccount,
-              style: AppTypography.bodySm.copyWith(color: context.appColors.primaryLight),
+              style: AppTypography.bodySm.copyWith(color: context.appColors.textSecondary),
             ),
           ),
         ),
