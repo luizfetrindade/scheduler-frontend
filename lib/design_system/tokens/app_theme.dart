@@ -46,23 +46,23 @@ abstract final class AppTheme {
             backgroundColor: AppColors.kCharcoal,
             foregroundColor: AppColors.kWhite,
             elevation: 0,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.lg)),
+            shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.zero),
           ),
         ),
         inputDecorationTheme: const InputDecorationTheme(
           filled: true,
           fillColor: AppColors.kWhite,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(AppRadius.lg)),
+            borderRadius: BorderRadius.zero,
             borderSide: BorderSide(color: AppColors.kParchment),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(AppRadius.lg)),
+            borderRadius: BorderRadius.zero,
             borderSide: BorderSide(color: AppColors.kParchment),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(AppRadius.lg)),
+            borderRadius: BorderRadius.zero,
             borderSide: BorderSide(color: AppColors.kCharcoal, width: 1.5),
           ),
           labelStyle: TextStyle(color: AppColors.kBark),
@@ -120,23 +120,23 @@ abstract final class AppTheme {
             backgroundColor: AppColors.kCream,
             foregroundColor: AppColors.kEspresso,
             elevation: 0,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.lg)),
+            shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.zero),
           ),
         ),
         inputDecorationTheme: const InputDecorationTheme(
           filled: true,
           fillColor: AppColors.kSmoke,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(AppRadius.lg)),
+            borderRadius: BorderRadius.zero,
             borderSide: BorderSide(color: AppColors.kEmber),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(AppRadius.lg)),
+            borderRadius: BorderRadius.zero,
             borderSide: BorderSide(color: AppColors.kEmber),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(AppRadius.lg)),
+            borderRadius: BorderRadius.zero,
             borderSide: BorderSide(color: AppColors.kCream, width: 1.5),
           ),
           labelStyle: TextStyle(color: AppColors.kTextWarm),  // brighter for floating label

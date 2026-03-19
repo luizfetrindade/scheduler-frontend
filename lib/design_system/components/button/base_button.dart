@@ -8,6 +8,7 @@ import 'package:scheduler_frontend/design_system/tokens/app_typography.dart';
 
 const double _kPrefixIconSize = 18;
 const double _kSplashAlpha = 0.2;
+const double _kButtonHeight = 56.0;
 
 class BaseButton extends StatelessWidget {
   final String label;
@@ -50,22 +51,19 @@ class BaseButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final borderRadius = BorderRadius.circular(AppRadius.lg);
     return Opacity(
       opacity: isDisabled ? 0.5 : 1.0,
       child: Material(
         color: _backgroundColor(context),
-        borderRadius: borderRadius,
+        borderRadius: BorderRadius.zero,
         child: InkWell(
           onTap: _isInteractive ? onPressed : null,
-          borderRadius: borderRadius,
           splashColor: context.appColors.primaryLight.withValues(alpha: _kSplashAlpha),
           child: Container(
-            height: AppSpacing.xxxl,
+            height: _kButtonHeight,
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             decoration: BoxDecoration(
               border: _border(context),
-              borderRadius: borderRadius,
             ),
             child: Center(
               child: isLoading

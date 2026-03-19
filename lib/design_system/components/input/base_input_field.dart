@@ -42,7 +42,7 @@ class _BaseInputFieldState extends State<BaseInputField> {
   @override
   Widget build(BuildContext context) {
     final hasError = widget.errorText != null;
-    const borderRadius = BorderRadius.all(Radius.circular(AppRadius.lg));
+    const borderRadius = BorderRadius.zero;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
