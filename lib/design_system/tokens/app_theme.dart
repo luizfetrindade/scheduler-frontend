@@ -1,28 +1,155 @@
 import 'package:flutter/material.dart';
+import 'package:scheduler_frontend/design_system/tokens/app_colors.dart';
 import 'package:scheduler_frontend/design_system/tokens/app_colors_extension.dart';
+import 'package:scheduler_frontend/design_system/tokens/app_radius.dart';
+import 'package:scheduler_frontend/design_system/tokens/app_typography.dart';
 
 abstract final class AppTheme {
-  static ThemeData dark() => ThemeData(
-        fontFamily: 'Lexend',
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF0D0D0D),
-        colorScheme: const ColorScheme.dark(
-          primary: Color(0xFFA855F7),
-          surface: Color(0xFF1A1A1A),
-          onSurface: Color(0xFFF5F5F5),
-        ),
-        extensions: [AppColorsExtension.dark()],
-      );
-
   static ThemeData light() => ThemeData(
+        useMaterial3: true,
         fontFamily: 'Lexend',
         brightness: Brightness.light,
-        scaffoldBackgroundColor: const Color(0xFFDAD7CD),
+        scaffoldBackgroundColor: AppColors.kLinen,
         colorScheme: const ColorScheme.light(
-          primary: Color(0xFF588157),
-          surface: Color(0xFFBEC8B2),
-          onSurface: Color(0xFF2D4A35),
+          surface: Color(0xFFFFFFFF),
+          onSurface: AppColors.kEspresso,
+          surfaceContainerHighest: AppColors.kWarmNeutral,
+          primary: AppColors.kCharcoal,
+          onPrimary: Colors.white,
+          primaryContainer: AppColors.kCharcoalContainer,
+          onPrimaryContainer: AppColors.kCharcoal,
+          secondary: AppColors.kBark,
+          onSecondary: Colors.white,
+          secondaryContainer: AppColors.kWarmNeutral,
+          onSecondaryContainer: AppColors.kEspresso,
+          tertiary: AppColors.kTaupe,
+          outline: AppColors.kParchment,
+          outlineVariant: AppColors.kParchmentDeep,
+          onSurfaceVariant: AppColors.kBark,
+        ),
+        textTheme: const TextTheme(
+          displayLarge: AppTypography.displayLg,
+          headlineLarge: AppTypography.headingMd,
+          titleLarge: AppTypography.titleLarge,
+          bodyLarge: AppTypography.bodyMd,
+          bodyMedium: AppTypography.bodySm,
+          labelLarge: AppTypography.labelLarge,
+          bodySmall: AppTypography.caption,
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: AppColors.kLinen,
+          elevation: 0,
+          foregroundColor: AppColors.kEspresso,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.kCharcoal,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.lg)),
+          ),
+        ),
+        inputDecorationTheme: const InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(AppRadius.lg)),
+            borderSide: BorderSide(color: AppColors.kParchment),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(AppRadius.lg)),
+            borderSide: BorderSide(color: AppColors.kParchment),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(AppRadius.lg)),
+            borderSide: BorderSide(color: AppColors.kCharcoal, width: 1.5),
+          ),
+          labelStyle: TextStyle(color: AppColors.kBark),
+          hintStyle: TextStyle(color: AppColors.kTaupe),
+        ),
+        cardTheme: const CardThemeData(
+          elevation: 0,
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(AppRadius.xl)),
+            side: BorderSide(color: AppColors.kParchment),
+          ),
         ),
         extensions: [AppColorsExtension.light()],
+      );
+
+  static ThemeData dark() => ThemeData(
+        useMaterial3: true,
+        fontFamily: 'Lexend',
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: AppColors.kEspresso,
+        colorScheme: const ColorScheme.dark(
+          surface: AppColors.kSmoke,
+          onSurface: AppColors.kTextWarm,
+          surfaceContainerHighest: AppColors.kSmokeDeep,
+          primary: AppColors.kCream,
+          onPrimary: AppColors.kEspresso,
+          primaryContainer: AppColors.kWarmContainer,
+          onPrimaryContainer: AppColors.kCream,
+          secondary: AppColors.kAsh,
+          onSecondary: AppColors.kEspresso,
+          secondaryContainer: AppColors.kSmokeDeep,
+          onSecondaryContainer: AppColors.kTextWarm,
+          tertiary: AppColors.kSlate,
+          outline: AppColors.kEmber,
+          outlineVariant: AppColors.kSmokeDeep,
+          onSurfaceVariant: AppColors.kAsh,
+        ),
+        textTheme: const TextTheme(
+          displayLarge: AppTypography.displayLg,
+          headlineLarge: AppTypography.headingMd,
+          titleLarge: AppTypography.titleLarge,
+          bodyLarge: AppTypography.bodyMd,
+          bodyMedium: AppTypography.bodySm,
+          labelLarge: AppTypography.labelLarge,
+          bodySmall: AppTypography.caption,
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: AppColors.kEspresso,
+          elevation: 0,
+          foregroundColor: AppColors.kTextWarm,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.kCream,
+            foregroundColor: AppColors.kEspresso,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.lg)),
+          ),
+        ),
+        inputDecorationTheme: const InputDecorationTheme(
+          filled: true,
+          fillColor: AppColors.kSmoke,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(AppRadius.lg)),
+            borderSide: BorderSide(color: AppColors.kEmber),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(AppRadius.lg)),
+            borderSide: BorderSide(color: AppColors.kEmber),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(AppRadius.lg)),
+            borderSide: BorderSide(color: AppColors.kCream, width: 1.5),
+          ),
+          labelStyle: TextStyle(color: AppColors.kAsh),
+          hintStyle: TextStyle(color: AppColors.kAsh),
+        ),
+        cardTheme: const CardThemeData(
+          elevation: 0,
+          color: AppColors.kSmoke,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(AppRadius.xl)),
+            side: BorderSide(color: AppColors.kEmber),
+          ),
+        ),
+        extensions: [AppColorsExtension.dark()],
       );
 }
