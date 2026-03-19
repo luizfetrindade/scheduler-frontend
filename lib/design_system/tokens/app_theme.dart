@@ -83,7 +83,7 @@ abstract final class AppTheme {
         useMaterial3: true,
         fontFamily: 'Lexend',
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: AppColors.kEspresso,
+        scaffoldBackgroundColor: AppColors.kNightBase,
         colorScheme: const ColorScheme.dark(
           surface: AppColors.kSmoke,
           onSurface: AppColors.kTextWarm,
@@ -111,7 +111,7 @@ abstract final class AppTheme {
           bodySmall: AppTypography.caption,
         ),
         appBarTheme: const AppBarTheme(
-          backgroundColor: AppColors.kEspresso,
+          backgroundColor: AppColors.kNightBase,
           elevation: 0,
           foregroundColor: AppColors.kTextWarm,
         ),

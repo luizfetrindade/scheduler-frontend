@@ -103,13 +103,23 @@ class ClientsPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          TextButton(
+          OutlinedButton.icon(
             onPressed: () => _openForm(context, initial: null),
-            child: Text(
-              'Adicionar cliente',
-              style: AppTypography.bodySm.copyWith(
-                color: context.appColors.primary,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: context.appColors.primary,
+              side: BorderSide(color: context.appColors.primary),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.lg),
               ),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg,
+                vertical: AppSpacing.sm,
+              ),
+            ),
+            icon: const Icon(Icons.add, size: 18),
+            label: Text(
+              'Adicionar cliente',
+              style: AppTypography.bodySm,
             ),
           ),
         ],

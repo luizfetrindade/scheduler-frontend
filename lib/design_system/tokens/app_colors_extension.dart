@@ -45,17 +45,17 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
       );
 
   static AppColorsExtension dark() => const AppColorsExtension(
-        background:        Color(0xFF1A1512), // Espresso
-        surface:           Color(0xFF251E19), // Smoke
-        surfaceHigh:       Color(0xFF2D2520), // SmokeDeep
+        background:        Color(0xFF1C1B1A), // neutralized — less reddish
+        surface:           Color(0xFF252322), // Smoke — neutralized
+        surfaceHigh:       Color(0xFF2D2B2A), // SmokeDeep — neutralized
         primary:           Color(0xFFF2EBE0), // Cream
-        primaryLight:      Color(0xFF332B25), // WarmContainer
+        primaryLight:      Color(0xFF312F2E), // WarmContainer — neutralized
         primaryDark:       Color(0xFFF0EBE5), // TextWarm
         textPrimary:       Color(0xFFF0EBE5), // TextWarm
         textSecondary:     Color(0xFFA89B8C), // Ash
         textDisabled:      Color(0xFF7A6E64), // Slate
-        outline:           Color(0xFF3A302A), // Ember
-        sidebarBackground: Color(0xFF221A14), // EspressoDeep
+        outline:           Color(0xFF383635), // Ember — neutralized
+        sidebarBackground: Color(0xFF1E1D1C), // EspressoDeep — neutralized
         sidebarForeground: Color(0xFFF0EBE5), // TextWarm
       );
 

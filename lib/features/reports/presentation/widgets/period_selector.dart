@@ -25,12 +25,16 @@ class PeriodSelector extends StatelessWidget {
             selected: isSelected,
             onSelected: (_) => onChanged(period),
             selectedColor: colors.primary,
-            backgroundColor: colors.surfaceHigh,
+            backgroundColor: colors.surface,
             labelStyle: AppTypography.bodySm.copyWith(
-              color: isSelected ? colors.textPrimary : colors.textSecondary,
+              color: isSelected
+                  ? Theme.of(context).colorScheme.onPrimary
+                  : colors.textSecondary,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
             ),
-            side: BorderSide.none,
+            side: isSelected
+                ? BorderSide.none
+                : BorderSide(color: colors.outline, width: 1),
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.md,
               vertical: AppSpacing.xs,

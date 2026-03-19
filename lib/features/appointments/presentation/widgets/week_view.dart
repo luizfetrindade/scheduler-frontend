@@ -66,36 +66,46 @@ class _WeekViewState extends State<WeekView> {
                   final isToday = day.year == today.year &&
                       day.month == today.month &&
                       day.day == today.day;
+                  final laneData = computeLanes(appointments);
                   return Expanded(
                     child: Container(
                       height: kGridTotalHeight,
                       color: isToday
                           ? context.appColors.primaryDark.withValues(alpha: 0.06)
                           : null,
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.translucent,
-                        onTapUp: widget.onSlotTap == null
-                            ? null
-                            : (details) {
-                                final tappedTime = _timeFromOffset(
-                                  details.localPosition.dy,
-                                  day,
-                                );
-                                widget.onSlotTap!(tappedTime);
-                              },
-                        child: Stack(
-                          children: [
-                            const SlotGrid(),
-                            ...appointments.map(
-                              (a) => AppointmentBlock(
-                                appointment: a,
-                                onTap: widget.onAppointmentTap == null
-                                    ? null
-                                    : () => widget.onAppointmentTap!(a),
-                              ),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final containerWidth = constraints.maxWidth;
+                          return GestureDetector(
+                            behavior: HitTestBehavior.translucent,
+                            onTapUp: widget.onSlotTap == null
+                                ? null
+                                : (details) {
+                                    final tappedTime = _timeFromOffset(
+                                      details.localPosition.dy,
+                                      day,
+                                    );
+                                    widget.onSlotTap!(tappedTime);
+                                  },
+                            child: Stack(
+                              children: [
+                                const SlotGrid(),
+                                ...laneData.map(
+                                  (item) => AppointmentBlock(
+                                    appointment: item.appointment,
+                                    containerWidth: containerWidth,
+                                    lane: item.lane,
+                                    totalLanes: item.totalLanes,
+                                    onTap: widget.onAppointmentTap == null
+                                        ? null
+                                        : () => widget.onAppointmentTap!(
+                                            item.appointment),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                          );
+                        },
                       ),
                     ),
                   );
@@ -141,7 +151,7 @@ class _WeekHeader extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
               decoration: isToday
                   ? BoxDecoration(
-                      color: context.appColors.primaryDark.withValues(alpha: 0.2),
+                      color: context.appColors.primary,
                       borderRadius: BorderRadius.circular(AppRadius.md),
                     )
                   : null,
@@ -152,7 +162,7 @@ class _WeekHeader extends StatelessWidget {
                     style: AppTypography.caption.copyWith(
                       fontSize: 10,
                       color: isToday
-                          ? context.appColors.primaryLight
+                          ? Theme.of(context).colorScheme.onPrimary
                           : context.appColors.textSecondary,
                     ),
                   ),
@@ -162,7 +172,7 @@ class _WeekHeader extends StatelessWidget {
                     style: AppTypography.bodySm.copyWith(
                       fontWeight: FontWeight.w600,
                       color: isToday
-                          ? context.appColors.primaryLight
+                          ? Theme.of(context).colorScheme.onPrimary
                           : context.appColors.textPrimary,
                     ),
                   ),
