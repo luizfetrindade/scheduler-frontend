@@ -12,38 +12,44 @@ class SummaryCards extends StatelessWidget {
   Widget build(BuildContext context) {
     final currency = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
     final pct = NumberFormat.percentPattern('pt_BR');
+    final colors = context.appColors;
 
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisSpacing: AppSpacing.sm,
-      mainAxisSpacing: AppSpacing.sm,
-      childAspectRatio: 1.4,
+    return Row(
       children: [
-        _KpiCard(
-          label: 'Agendamentos',
-          value: data.appointments.total.toString(),
-          icon: Icons.calendar_month_outlined,
-          iconColor: AppColors.purple300,
+        Expanded(
+          child: _KpiCard(
+            label: 'Agendamentos',
+            value: data.appointments.total.toString(),
+            icon: Icons.calendar_month_outlined,
+            iconColor: colors.primaryLight,
+          ),
         ),
-        _KpiCard(
-          label: 'Receita Realizada',
-          value: currency.format(data.revenue.realized),
-          icon: Icons.attach_money_outlined,
-          iconColor: AppColors.success,
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: _KpiCard(
+            label: 'Receita',
+            value: currency.format(data.revenue.realized),
+            icon: Icons.attach_money_outlined,
+            iconColor: AppColors.success,
+          ),
         ),
-        _KpiCard(
-          label: 'Cancelamentos',
-          value: pct.format(data.appointments.cancellationRate),
-          icon: Icons.cancel_outlined,
-          iconColor: AppColors.error,
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: _KpiCard(
+            label: 'Cancelamentos',
+            value: pct.format(data.appointments.cancellationRate),
+            icon: Icons.cancel_outlined,
+            iconColor: AppColors.error,
+          ),
         ),
-        _KpiCard(
-          label: 'Ocupação',
-          value: pct.format(data.occupancy.occupancyRate),
-          icon: Icons.donut_large_outlined,
-          iconColor: AppColors.purple500,
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: _KpiCard(
+            label: 'Ocupação',
+            value: pct.format(data.occupancy.occupancyRate),
+            icon: Icons.donut_large_outlined,
+            iconColor: colors.primary,
+          ),
         ),
       ],
     );
@@ -65,23 +71,29 @@ class _KpiCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return BaseCard(
+      padding: AppSpacing.md,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: iconColor, size: 22),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(value,
-                  style: AppTypography.headingMd
-                      .copyWith(color: AppColors.textPrimary)),
-              const SizedBox(height: 2),
-              Text(label,
-                  style: AppTypography.bodySm
-                      .copyWith(color: AppColors.textSecondary)),
-            ],
+          Icon(icon, color: iconColor, size: 16),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            value,
+            style: AppTypography.bodyMd.copyWith(
+                color: colors.textPrimary, fontWeight: FontWeight.w700),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: AppTypography.caption
+                .copyWith(color: colors.textSecondary),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

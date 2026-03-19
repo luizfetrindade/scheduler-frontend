@@ -10,6 +10,7 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
   final Color textPrimary;
   final Color textSecondary;
   final Color textDisabled;
+  final Color outline;
   final Color sidebarBackground;
   final Color sidebarForeground;
 
@@ -23,36 +24,39 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
     required this.textPrimary,
     required this.textSecondary,
     required this.textDisabled,
+    required this.outline,
     required this.sidebarBackground,
     required this.sidebarForeground,
   });
 
-  static AppColorsExtension dark() => const AppColorsExtension(
-        background:        Color(0xFF0D0D0D),
-        surface:           Color(0xFF1A1A1A),
-        surfaceHigh:       Color(0xFF242424),
-        primary:           Color(0xFFA855F7),
-        primaryLight:      Color(0xFFC084FC),
-        primaryDark:       Color(0xFF7E22CE),
-        textPrimary:       Color(0xFFF5F5F5),
-        textSecondary:     Color(0xFFA3A3A3),
-        textDisabled:      Color(0xFF525252),
-        sidebarBackground: Color(0xFF1A1A1A),
-        sidebarForeground: Color(0xFFA3A3A3),
+  static AppColorsExtension light() => const AppColorsExtension(
+        background:        Color(0xFFFAF8F5), // Linen
+        surface:           Color(0xFFFFFFFF), // White
+        surfaceHigh:       Color(0xFFF5F2EE), // WarmNeutral
+        primary:           Color(0xFF3D3935), // Charcoal
+        primaryLight:      Color(0xFFEDEAE7), // CharcoalContainer
+        primaryDark:       Color(0xFF1A1512), // Espresso
+        textPrimary:       Color(0xFF1A1512), // Espresso
+        textSecondary:     Color(0xFF6B5E52), // Bark
+        textDisabled:      Color(0xFFA89B8C), // Taupe
+        outline:           Color(0xFFE8E3DC), // Parchment
+        sidebarBackground: Color(0xFF3D3935), // Charcoal
+        sidebarForeground: Color(0xFFFAF8F5), // Linen
       );
 
-  static AppColorsExtension light() => const AppColorsExtension(
-        background:        Color(0xFFDAD7CD),
-        surface:           Color(0xFFBEC8B2),
-        surfaceHigh:       Color(0xFFA3B18A),
-        primary:           Color(0xFF588157),
-        primaryLight:      Color(0xFFA3B18A),
-        primaryDark:       Color(0xFF3A5A40),
-        textPrimary:       Color(0xFF2D4A35),
-        textSecondary:     Color(0xFF3A5A40),
-        textDisabled:      Color(0xFF7A9A7A),
-        sidebarBackground: Color(0xFF4A5759),
-        sidebarForeground: Color(0xFFDAD7CD),
+  static AppColorsExtension dark() => const AppColorsExtension(
+        background:        Color(0xFF1A1512), // Espresso
+        surface:           Color(0xFF251E19), // Smoke
+        surfaceHigh:       Color(0xFF2D2520), // SmokeDeep
+        primary:           Color(0xFFF2EBE0), // Cream
+        primaryLight:      Color(0xFF332B25), // WarmContainer
+        primaryDark:       Color(0xFFF0EBE5), // TextWarm
+        textPrimary:       Color(0xFFF0EBE5), // TextWarm
+        textSecondary:     Color(0xFFA89B8C), // Ash
+        textDisabled:      Color(0xFF7A6E64), // Slate
+        outline:           Color(0xFF3A302A), // Ember
+        sidebarBackground: Color(0xFF221A14), // EspressoDeep
+        sidebarForeground: Color(0xFFF0EBE5), // TextWarm
       );
 
   @override
@@ -66,6 +70,7 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
     Color? textPrimary,
     Color? textSecondary,
     Color? textDisabled,
+    Color? outline,
     Color? sidebarBackground,
     Color? sidebarForeground,
   }) =>
@@ -79,6 +84,7 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
         textPrimary:       textPrimary       ?? this.textPrimary,
         textSecondary:     textSecondary     ?? this.textSecondary,
         textDisabled:      textDisabled      ?? this.textDisabled,
+        outline:           outline           ?? this.outline,
         sidebarBackground: sidebarBackground ?? this.sidebarBackground,
         sidebarForeground: sidebarForeground ?? this.sidebarForeground,
       );
@@ -96,6 +102,7 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
       textPrimary:       Color.lerp(textPrimary,       other.textPrimary,       t)!,
       textSecondary:     Color.lerp(textSecondary,     other.textSecondary,     t)!,
       textDisabled:      Color.lerp(textDisabled,      other.textDisabled,      t)!,
+      outline:           Color.lerp(outline,           other.outline,           t)!,
       sidebarBackground: Color.lerp(sidebarBackground, other.sidebarBackground, t)!,
       sidebarForeground: Color.lerp(sidebarForeground, other.sidebarForeground, t)!,
     );

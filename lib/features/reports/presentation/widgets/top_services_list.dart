@@ -13,6 +13,7 @@ class TopServicesList extends StatelessWidget {
     if (services.isEmpty) return const SizedBox.shrink();
 
     final currency = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
+    final colors = context.appColors;
 
     return BaseCard(
       child: Column(
@@ -21,7 +22,7 @@ class TopServicesList extends StatelessWidget {
           Text(
             'Top Serviços',
             style: AppTypography.bodyMd.copyWith(
-                color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+                color: colors.textPrimary, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: AppSpacing.md),
           ...services.asMap().entries.map((entry) {
@@ -36,21 +37,21 @@ class TopServicesList extends StatelessWidget {
                     child: Text(
                       '${i + 1}.',
                       style: AppTypography.bodySm
-                          .copyWith(color: AppColors.textDisabled),
+                          .copyWith(color: colors.textDisabled),
                     ),
                   ),
                   Expanded(
                     child: Text(
                       svc.name,
                       style: AppTypography.bodySm
-                          .copyWith(color: AppColors.textPrimary),
+                          .copyWith(color: colors.textPrimary),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   Text(
                     '${svc.count}x',
                     style: AppTypography.bodySm
-                        .copyWith(color: AppColors.textSecondary),
+                        .copyWith(color: colors.textSecondary),
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Text(

@@ -14,6 +14,7 @@ class PeriodSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Row(
       children: ReportPeriod.values.map((period) {
         final isSelected = period == selected;
@@ -23,10 +24,10 @@ class PeriodSelector extends StatelessWidget {
             label: Text(period.label),
             selected: isSelected,
             onSelected: (_) => onChanged(period),
-            selectedColor: AppColors.purple500,
-            backgroundColor: AppColors.surfaceHigh,
+            selectedColor: colors.primary,
+            backgroundColor: colors.surfaceHigh,
             labelStyle: AppTypography.bodySm.copyWith(
-              color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+              color: isSelected ? colors.textPrimary : colors.textSecondary,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
             ),
             side: BorderSide.none,

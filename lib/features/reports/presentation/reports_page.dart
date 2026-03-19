@@ -23,10 +23,10 @@ class ReportsPage extends StatelessWidget {
     final bizState = context.read<BusinessBloc>().state;
 
     if (bizState is! BusinessLoaded) {
-      return const Scaffold(
-        backgroundColor: AppColors.background,
+      return Scaffold(
+        backgroundColor: context.appColors.background,
         body: Center(
-          child: CircularProgressIndicator(color: AppColors.purple500),
+          child: CircularProgressIndicator(color: context.appColors.primary),
         ),
       );
     }
@@ -49,7 +49,7 @@ class _ReportsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.appColors.background,
       body: SafeArea(
         child: BlocConsumer<ReportsBloc, ReportsState>(
           listener: (ctx, state) {
@@ -86,7 +86,7 @@ class _ReportsView extends StatelessWidget {
                         Text(
                           'Relatórios',
                           style: AppTypography.headingMd
-                              .copyWith(color: AppColors.textPrimary),
+                              .copyWith(color: ctx.appColors.textPrimary),
                         ),
                         const SizedBox(height: AppSpacing.lg),
                         PeriodSelector(
@@ -104,10 +104,10 @@ class _ReportsView extends StatelessWidget {
                   ),
                 ),
                 if (state is ReportsLoading)
-                  const SliverFillRemaining(
+                  SliverFillRemaining(
                     child: Center(
                       child: CircularProgressIndicator(
-                          color: AppColors.purple500),
+                          color: ctx.appColors.primary),
                     ),
                   ),
                 if (state is ReportsLoaded)

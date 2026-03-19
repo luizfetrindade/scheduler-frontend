@@ -17,6 +17,13 @@ abstract final class AppTypography {
     height: 1.3,
   );
 
+  static const TextStyle titleLarge = TextStyle(
+    fontFamily: _fontFamily,
+    fontSize: 22,
+    fontWeight: FontWeight.w600,
+    height: 1.3,
+  );
+
   static const TextStyle bodyMd = TextStyle(
     fontFamily: _fontFamily,
     fontSize: 16,
@@ -29,6 +36,13 @@ abstract final class AppTypography {
     fontSize: 14,
     fontWeight: FontWeight.w400,
     height: 1.5,
+  );
+
+  static const TextStyle labelLarge = TextStyle(
+    fontFamily: _fontFamily,
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
+    height: 1.4,
   );
 
   static const TextStyle caption = TextStyle(

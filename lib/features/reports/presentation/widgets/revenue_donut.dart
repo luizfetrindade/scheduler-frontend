@@ -16,6 +16,7 @@ class RevenueDonut extends StatelessWidget {
 
     if (total == 0) return const SizedBox.shrink();
 
+    final colors = context.appColors;
     final pending = revenue.confirmed - revenue.realized;
     final sections = [
       if (revenue.realized > 0)
@@ -23,21 +24,21 @@ class RevenueDonut extends StatelessWidget {
           value: revenue.realized,
           color: AppColors.success,
           title: '',
-          radius: 48,
+          radius: 34,
         ),
       if (pending > 0)
         PieChartSectionData(
           value: pending,
-          color: AppColors.purple500,
+          color: colors.primary,
           title: '',
-          radius: 48,
+          radius: 34,
         ),
       if (revenue.lost > 0)
         PieChartSectionData(
           value: revenue.lost,
           color: AppColors.error,
           title: '',
-          radius: 48,
+          radius: 34,
         ),
     ];
 
@@ -49,7 +50,7 @@ class RevenueDonut extends StatelessWidget {
             height: 120,
             child: PieChart(PieChartData(
               sections: sections,
-              centerSpaceRadius: 32,
+              centerSpaceRadius: 22,
               sectionsSpace: 2,
             )),
           ),
@@ -61,7 +62,7 @@ class RevenueDonut extends StatelessWidget {
                 Text(
                   'Receita',
                   style: AppTypography.bodyMd.copyWith(
-                      color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+                      color: colors.textPrimary, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 _LegendRow(
@@ -71,7 +72,7 @@ class RevenueDonut extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 _LegendRow(
-                  color: AppColors.purple500,
+                  color: colors.primary,
                   label: 'Confirmada',
                   value: currency.format(revenue.confirmed),
                 ),
@@ -100,6 +101,7 @@ class _LegendRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Row(
       children: [
         Container(
@@ -110,11 +112,11 @@ class _LegendRow extends StatelessWidget {
         const SizedBox(width: AppSpacing.xs),
         Text(label,
             style:
-                AppTypography.bodySm.copyWith(color: AppColors.textSecondary)),
+                AppTypography.bodySm.copyWith(color: colors.textSecondary)),
         const Spacer(),
         Text(value,
             style:
-                AppTypography.bodySm.copyWith(color: AppColors.textPrimary)),
+                AppTypography.bodySm.copyWith(color: colors.textPrimary)),
       ],
     );
   }

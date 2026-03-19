@@ -18,16 +18,20 @@ class StatusBarChart extends StatelessWidget {
     'CANCELLED': 'Cancelado',
     'NO_SHOW': 'Não comp.',
   };
-  static const _statusColors = {
-    'COMPLETED': AppColors.success,
-    'CONFIRMED': AppColors.purple300,
-    'PENDING': Color(0xFFFBBF24),
-    'CANCELLED': AppColors.error,
-    'NO_SHOW': AppColors.blocked,
-  };
+
+  Map<String, Color> _statusColors(AppColorsExtension colors) => {
+        'COMPLETED': AppColors.success,
+        'CONFIRMED': colors.primaryLight,
+        'PENDING': const Color(0xFFFBBF24),
+        'CANCELLED': AppColors.error,
+        'NO_SHOW': AppColors.blocked,
+      };
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final statusColors = _statusColors(colors);
+
     final entries = _statusOrder
         .where((s) => (appointments.byStatus[s] ?? 0) > 0)
         .toList();
@@ -42,7 +46,7 @@ class StatusBarChart extends StatelessWidget {
         barRods: [
           BarChartRodData(
             toY: count,
-            color: _statusColors[status] ?? AppColors.purple500,
+            color: statusColors[status] ?? colors.primary,
             width: 24,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
           ),
@@ -62,7 +66,7 @@ class StatusBarChart extends StatelessWidget {
           Text(
             'Por Status',
             style: AppTypography.bodyMd.copyWith(
-                color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+                color: colors.textPrimary, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: AppSpacing.lg),
           SizedBox(
@@ -74,7 +78,7 @@ class StatusBarChart extends StatelessWidget {
                   show: true,
                   drawVerticalLine: false,
                   getDrawingHorizontalLine: (_) =>
-                      FlLine(color: AppColors.surfaceHigh, strokeWidth: 1),
+                      FlLine(color: colors.surfaceHigh, strokeWidth: 1),
                 ),
                 borderData: FlBorderData(show: false),
                 titlesData: FlTitlesData(
@@ -91,7 +95,7 @@ class StatusBarChart extends StatelessWidget {
                           child: Text(
                             _statusLabels[entries[idx]] ?? entries[idx],
                             style: AppTypography.caption
-                                .copyWith(color: AppColors.textSecondary),
+                                .copyWith(color: colors.textSecondary),
                             textAlign: TextAlign.center,
                           ),
                         );

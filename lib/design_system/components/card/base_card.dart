@@ -34,7 +34,7 @@ class BaseCard extends StatelessWidget {
           padding: EdgeInsets.all(padding),
           decoration: BoxDecoration(
             borderRadius: borderRadius,
-            boxShadow: elevated ? AppShadows.card : null,
+            boxShadow: elevated ? AppShadows.card(context) : null,
           ),
           child: child,
         ),
