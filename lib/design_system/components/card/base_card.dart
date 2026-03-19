@@ -22,7 +22,7 @@ class BaseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final borderRadius = BorderRadius.circular(AppRadius.lg);
+    final borderRadius = BorderRadius.circular(AppRadius.xl);
     return Material(
       color: context.appColors.surface,
       borderRadius: borderRadius,

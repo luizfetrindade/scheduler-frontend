@@ -49,21 +49,22 @@ class BaseButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final borderRadius = BorderRadius.circular(AppRadius.lg);
     return Opacity(
       opacity: isDisabled ? 0.5 : 1.0,
       child: Material(
         color: _backgroundColor(context),
-        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderRadius: borderRadius,
         child: InkWell(
           onTap: _isInteractive ? onPressed : null,
-          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderRadius: borderRadius,
           splashColor: context.appColors.primaryLight.withValues(alpha: 0.2),
           child: Container(
             height: AppSpacing.xxxl,
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             decoration: BoxDecoration(
               border: _border(context),
-              borderRadius: BorderRadius.circular(AppRadius.md),
+              borderRadius: borderRadius,
             ),
             child: Center(
               child: isLoading

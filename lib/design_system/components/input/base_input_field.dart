@@ -42,6 +42,7 @@ class _BaseInputFieldState extends State<BaseInputField> {
   @override
   Widget build(BuildContext context) {
     final hasError = widget.errorText != null;
+    const borderRadius = BorderRadius.all(Radius.circular(AppRadius.lg));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -76,25 +77,25 @@ class _BaseInputFieldState extends State<BaseInputField> {
                 : null,
             suffixIcon: _buildSuffixIcon(context),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppRadius.md),
+              borderRadius: borderRadius,
               borderSide: BorderSide(
-                  color: hasError ? AppColors.error : context.appColors.surfaceHigh),
+                  color: hasError ? AppColors.error : context.appColors.outline),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppRadius.md),
+              borderRadius: borderRadius,
               borderSide: BorderSide(
-                  color: hasError ? AppColors.error : context.appColors.surfaceHigh),
+                  color: hasError ? AppColors.error : context.appColors.outline),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppRadius.md),
+              borderRadius: borderRadius,
               borderSide: BorderSide(
                 color: hasError ? AppColors.error : context.appColors.primary,
                 width: _kFocusedBorderWidth,
               ),
             ),
             disabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              borderSide: BorderSide(color: context.appColors.surfaceHigh),
+              borderRadius: borderRadius,
+              borderSide: BorderSide(color: context.appColors.outline),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.md,
