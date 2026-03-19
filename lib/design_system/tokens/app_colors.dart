@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 abstract final class AppColors {
   // Iron Gray (light theme palette)
+  static const Color kWhite             = Color(0xFFFFFFFF);
   static const Color kCharcoal          = Color(0xFF3D3935);
   static const Color kLinen             = Color(0xFFFAF8F5);
   static const Color kLinenDeep         = Color(0xFFF0EDE8);

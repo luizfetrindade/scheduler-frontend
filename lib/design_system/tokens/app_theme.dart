@@ -11,15 +11,15 @@ abstract final class AppTheme {
         brightness: Brightness.light,
         scaffoldBackgroundColor: AppColors.kLinen,
         colorScheme: const ColorScheme.light(
-          surface: Color(0xFFFFFFFF),
+          surface: AppColors.kWhite,
           onSurface: AppColors.kEspresso,
           surfaceContainerHighest: AppColors.kWarmNeutral,
           primary: AppColors.kCharcoal,
-          onPrimary: Colors.white,
+          onPrimary: AppColors.kWhite,
           primaryContainer: AppColors.kCharcoalContainer,
           onPrimaryContainer: AppColors.kCharcoal,
           secondary: AppColors.kBark,
-          onSecondary: Colors.white,
+          onSecondary: AppColors.kWhite,
           secondaryContainer: AppColors.kWarmNeutral,
           onSecondaryContainer: AppColors.kEspresso,
           tertiary: AppColors.kTaupe,
@@ -44,7 +44,7 @@ abstract final class AppTheme {
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.kCharcoal,
-            foregroundColor: Colors.white,
+            foregroundColor: AppColors.kWhite,
             elevation: 0,
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppRadius.lg)),
@@ -52,7 +52,7 @@ abstract final class AppTheme {
         ),
         inputDecorationTheme: const InputDecorationTheme(
           filled: true,
-          fillColor: Colors.white,
+          fillColor: AppColors.kWhite,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.all(Radius.circular(AppRadius.lg)),
             borderSide: BorderSide(color: AppColors.kParchment),
@@ -70,7 +70,7 @@ abstract final class AppTheme {
         ),
         cardTheme: const CardThemeData(
           elevation: 0,
-          color: Colors.white,
+          color: AppColors.kWhite,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(AppRadius.xl)),
             side: BorderSide(color: AppColors.kParchment),
@@ -139,8 +139,8 @@ abstract final class AppTheme {
             borderRadius: BorderRadius.all(Radius.circular(AppRadius.lg)),
             borderSide: BorderSide(color: AppColors.kCream, width: 1.5),
           ),
-          labelStyle: TextStyle(color: AppColors.kAsh),
-          hintStyle: TextStyle(color: AppColors.kAsh),
+          labelStyle: TextStyle(color: AppColors.kTextWarm),  // brighter for floating label
+          hintStyle:  TextStyle(color: AppColors.kAsh),       // muted for placeholder
         ),
         cardTheme: const CardThemeData(
           elevation: 0,

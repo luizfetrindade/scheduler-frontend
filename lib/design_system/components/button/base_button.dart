@@ -7,6 +7,7 @@ import 'package:scheduler_frontend/design_system/tokens/app_spacing.dart';
 import 'package:scheduler_frontend/design_system/tokens/app_typography.dart';
 
 const double _kPrefixIconSize = 18;
+const double _kSplashAlpha = 0.2;
 
 class BaseButton extends StatelessWidget {
   final String label;
@@ -36,7 +37,7 @@ class BaseButton extends StatelessWidget {
       };
 
   Color _foregroundColor(BuildContext context) => switch (variant) {
-        BaseButtonVariant.primary     => context.appColors.textPrimary,
+        BaseButtonVariant.primary     => Theme.of(context).colorScheme.onPrimary,
         BaseButtonVariant.secondary   => context.appColors.primary,
         BaseButtonVariant.ghost       => context.appColors.primary,
         BaseButtonVariant.destructive => context.appColors.textPrimary,
@@ -58,7 +59,7 @@ class BaseButton extends StatelessWidget {
         child: InkWell(
           onTap: _isInteractive ? onPressed : null,
           borderRadius: borderRadius,
-          splashColor: context.appColors.primaryLight.withValues(alpha: 0.2),
+          splashColor: context.appColors.primaryLight.withValues(alpha: _kSplashAlpha),
           child: Container(
             height: AppSpacing.xxxl,
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
