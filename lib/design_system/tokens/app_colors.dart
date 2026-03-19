@@ -7,7 +7,7 @@ abstract final class AppColors {
   static const Color kLinenDeep         = Color(0xFFF0EDE8);
   static const Color kEspresso          = Color(0xFF1A1512);
   static const Color kBark              = Color(0xFF6B5E52);
-  static const Color kTaupe             = Color(0xFFA89B8C);
+  static const Color kTaupe             = Color(0xFFA89B8C); // same value as kAsh — intentional, palettes coincide here
   static const Color kParchment         = Color(0xFFE8E3DC);
   static const Color kParchmentDeep     = Color(0xFFD4CCC4);
   static const Color kCharcoalContainer = Color(0xFFEDEAE7);
@@ -20,7 +20,7 @@ abstract final class AppColors {
   static const Color kEspressoDeep  = Color(0xFF221A14);
   static const Color kWarmContainer = Color(0xFF332B25);
   static const Color kTextWarm      = Color(0xFFF0EBE5);
-  static const Color kAsh           = Color(0xFFA89B8C);
+  static const Color kAsh           = Color(0xFFA89B8C); // same value as kTaupe — intentional, palettes coincide here
   static const Color kSlate         = Color(0xFF7A6E64);
   static const Color kEmber         = Color(0xFF3A302A);
 
