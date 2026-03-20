@@ -12,8 +12,11 @@ import 'package:scheduler_frontend/features/business/bloc/business_state.dart';
 import 'package:scheduler_frontend/features/home/presentation/widgets/business_selector_header.dart';
 import 'package:scheduler_frontend/features/home/presentation/widgets/greeting_row.dart';
 import 'package:scheduler_frontend/features/home/presentation/widgets/personal_appointments_list.dart';
+import 'package:scheduler_frontend/features/home/presentation/widgets/setup_card.dart';
 import 'package:scheduler_frontend/features/home/presentation/widgets/stats_summary_row.dart';
 import 'package:scheduler_frontend/features/home/presentation/widgets/team_appointments_list.dart';
+import 'package:scheduler_frontend/features/onboarding/bloc/wizard_bloc.dart';
+import 'package:scheduler_frontend/features/onboarding/bloc/wizard_state.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -58,6 +61,8 @@ class HomePage extends StatelessWidget {
                       _buildGreeting(context),
                       const SizedBox(height: AppSpacing.lg),
                       _buildStats(context),
+                      const SizedBox(height: AppSpacing.lg),
+                      _buildSetupCard(context),
                       const SizedBox(height: AppSpacing.xl),
                       Text(
                         'Agendamentos de hoje',
@@ -125,6 +130,22 @@ class HomePage extends StatelessWidget {
             );
           },
         );
+      },
+    );
+  }
+
+  Widget _buildSetupCard(BuildContext context) {
+    return BlocBuilder<WizardBloc, WizardState>(
+      builder: (context, wizardState) {
+        if (wizardState is WizardLoaded && !wizardState.isAllComplete) {
+          return Column(
+            children: [
+              SetupCard(wizardState: wizardState),
+              const SizedBox(height: AppSpacing.sm),
+            ],
+          );
+        }
+        return const SizedBox.shrink();
       },
     );
   }
