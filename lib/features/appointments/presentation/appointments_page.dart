@@ -52,7 +52,7 @@ class AppointmentsBody extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         backgroundColor: context.appColors.primary,
         onPressed: () => _showFabOptions(context),
-        child: const Icon(Icons.add, color: Colors.white),
+        child: Icon(Icons.add, color: Theme.of(context).colorScheme.onPrimary),
       ),
       body: SafeArea(
         child: MultiBlocListener(
@@ -207,8 +207,17 @@ class AppointmentsBody extends StatelessWidget {
           onNext: () => bloc.add(const ScheduleNextPeriod()),
           onDateSelected: (date) => bloc.add(ScheduleDateSelected(date)),
         ),
-        if (professionals.isNotEmpty)
-          ProfessionalFilterChips(professionals: professionals),
+        BlocBuilder<BusinessBloc, BusinessState>(
+          buildWhen: (prev, curr) => curr is BusinessLoaded,
+          builder: (context, state) {
+            if (state is BusinessLoaded &&
+                !state.policy.isSoloMode &&
+                professionals.isNotEmpty) {
+              return ProfessionalFilterChips(professionals: professionals);
+            }
+            return const SizedBox.shrink();
+          },
+        ),
         Expanded(
           child: isLoading
               ? Center(
