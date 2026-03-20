@@ -99,11 +99,7 @@ class AuthRepository {
     required String email,
     required String password,
   }) async {
-    final result = await _client.post<Map<String, dynamic>>(
-      '/auth/login',
-      fromJson: (json) => json,
-      body: {'email': email, 'password': password},
-    );
+    final result = await _client.loginWithPassword(email, password);
     return switch (result) {
       Success(:final data) => Success((
           accessToken: data['accessToken'] as String,
@@ -115,30 +111,18 @@ class AuthRepository {
   /// Checks which auth method ('totp' | 'password') the backend requires for
   /// the given email address.
   Future<Result<Map<String, dynamic>>> checkEmail(String email) =>
-      _client.post<Map<String, dynamic>>(
-        '/auth/check-email',
-        fromJson: (json) => json,
-        body: {'email': email},
-      );
+      _client.checkEmail(email);
 
   /// Sends a password-reset email to the given address.
   Future<Result<Map<String, dynamic>>> forgotPassword(String email) =>
-      _client.post<Map<String, dynamic>>(
-        '/auth/forgot-password',
-        fromJson: (json) => json,
-        body: {'email': email},
-      );
+      _client.forgotPassword(email);
 
   /// Resets the user's password using the one-time token from the email.
   Future<Result<Map<String, dynamic>>> resetPassword(
     String token,
     String newPassword,
   ) =>
-      _client.post<Map<String, dynamic>>(
-        '/auth/reset-password',
-        fromJson: (json) => json,
-        body: {'token': token, 'newPassword': newPassword},
-      );
+      _client.resetPassword(token, newPassword);
 
   /// Accepts a staff invite and creates an account with [name] and [password].
   /// Returns a token record so the user can be authenticated immediately.
@@ -147,11 +131,7 @@ class AuthRepository {
     String name,
     String password,
   ) async {
-    final result = await _client.post<Map<String, dynamic>>(
-      '/auth/accept-invite',
-      fromJson: (json) => json,
-      body: {'token': token, 'name': name, 'password': password},
-    );
+    final result = await _client.acceptInvite(token, name, password);
     return switch (result) {
       Success(:final data) => Success((
           accessToken: data['accessToken'] as String,
