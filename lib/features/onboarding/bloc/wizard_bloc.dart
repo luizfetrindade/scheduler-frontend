@@ -5,20 +5,31 @@ import 'package:scheduler_frontend/features/onboarding/bloc/wizard_state.dart';
 class WizardBloc extends Bloc<WizardEvent, WizardState> {
   final Future<bool> Function(String businessId) _hasServices;
   final Future<bool> Function(String businessId) _hasProfessionals;
-  final bool isSoloMode;
-  final String businessId;
+
+  // Mutable orchestration config — updated when the active business changes.
+  String _businessId;
+  bool _isSoloMode;
 
   WizardBloc({
     required Future<bool> Function(String) hasServices,
     required Future<bool> Function(String) hasProfessionals,
-    required this.isSoloMode,
-    required this.businessId,
+    required bool isSoloMode,
+    required String businessId,
   })  : _hasServices = hasServices,
         _hasProfessionals = hasProfessionals,
+        _isSoloMode = isSoloMode,
+        _businessId = businessId,
         super(const WizardInitial()) {
     on<WizardCheckRequested>(_onCheck);
     on<WizardStepSkipped>(_onStepSkipped);
     on<WizardStepCompleted>(_onStepCompleted);
+  }
+
+  /// Updates business context and triggers a fresh completeness check.
+  void reinitialize({required String businessId, required bool isSoloMode}) {
+    _businessId = businessId;
+    _isSoloMode = isSoloMode;
+    add(const WizardCheckRequested());
   }
 
   Future<void> _onCheck(
@@ -27,16 +38,16 @@ class WizardBloc extends Bloc<WizardEvent, WizardState> {
   ) async {
     emit(const WizardLoading());
     try {
-      final hasServices = await _hasServices(businessId);
+      final hasServices = await _hasServices(_businessId);
       final hasProfessionals =
-          isSoloMode ? true : await _hasProfessionals(businessId);
+          _isSoloMode ? true : await _hasProfessionals(_businessId);
 
       final steps = <WizardStep, WizardStepStatus>{
         WizardStep.servicos: WizardStepStatus(
           step: WizardStep.servicos,
           isComplete: hasServices,
         ),
-        if (!isSoloMode)
+        if (!_isSoloMode)
           WizardStep.equipe: WizardStepStatus(
             step: WizardStep.equipe,
             isComplete: hasProfessionals,

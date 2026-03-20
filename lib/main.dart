@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_http/flutter_http.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -32,6 +33,9 @@ import 'package:scheduler_frontend/features/professionals/bloc/professional_role
 import 'package:scheduler_frontend/features/professionals/bloc/professionals_bloc.dart';
 import 'package:scheduler_frontend/features/professionals/bloc/professionals_event.dart';
 import 'package:scheduler_frontend/features/professionals/data/professional_repository.dart';
+import 'package:scheduler_frontend/features/onboarding/bloc/wizard_bloc.dart';
+import 'package:scheduler_frontend/features/onboarding/bloc/wizard_event.dart';
+import 'package:scheduler_frontend/features/onboarding/bloc/wizard_state.dart';
 import 'package:scheduler_frontend/features/professionals/data/professional_roles_repository.dart';
 
 void main() async {
@@ -111,6 +115,28 @@ class SchedulerApp extends StatelessWidget {
           BlocProvider(create: (_) => ClientsBloc(clientRepo)),
           BlocProvider(create: (_) => ProfessionalsBloc(professionalRepo)),
           BlocProvider(create: (_) => ProfessionalRolesBloc(professionalRolesRepo)),
+          BlocProvider(
+            create: (_) => WizardBloc(
+              hasServices: (bizId) async {
+                final result = await serviceRepo.getServices(businessId: bizId);
+                return switch (result) {
+                  Success(:final data) => data.isNotEmpty,
+                  _ => false,
+                };
+              },
+              hasProfessionals: (bizId) async {
+                final result = await professionalRepo.getProfessionals(
+                  businessId: bizId,
+                );
+                return switch (result) {
+                  Success(:final data) => data.isNotEmpty,
+                  _ => false,
+                };
+              },
+              isSoloMode: true,
+              businessId: '',
+            ),
+          ),
         ],
         child: _AppBody(authBloc: authBloc),
       ),
@@ -167,6 +193,16 @@ class _AppBody extends StatelessWidget {
                 context
                     .read<ProfessionalRolesBloc>()
                     .add(ProfessionalRolesLoadRequested(state.active.id));
+              }
+            },
+          ),
+          BlocListener<BusinessBloc, BusinessState>(
+            listener: (context, state) {
+              if (state is BusinessLoaded) {
+                context.read<WizardBloc>().reinitialize(
+                      businessId: state.active.id,
+                      isSoloMode: state.policy.isSoloMode,
+                    );
               }
             },
           ),

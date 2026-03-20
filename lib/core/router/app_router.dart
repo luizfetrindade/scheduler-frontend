@@ -20,6 +20,7 @@ import 'package:scheduler_frontend/features/professionals/presentation/professio
 import 'package:scheduler_frontend/features/professionals/presentation/roles_management_page.dart';
 import 'package:scheduler_frontend/features/services/presentation/services_page.dart';
 import 'package:scheduler_frontend/core/router/uuid_validator.dart';
+import 'package:scheduler_frontend/features/onboarding/presentation/wizard_page.dart';
 import 'package:scheduler_frontend/features/settings/presentation/settings_page.dart';
 
 /// Pure redirect logic — testable without a BuildContext.
@@ -80,6 +81,10 @@ GoRouter createAppRouter(AuthBloc authBloc) => GoRouter(
             final token = state.uri.queryParameters['token'] ?? '';
             return AcceptInvitePage(token: token);
           },
+        ),
+        GoRoute(
+          path: AppRoutes.onboarding,
+          builder: (_, __) => const WizardPageWrapper(),
         ),
         ShellRoute(
           builder: (context, state, child) => AdaptiveShell(
