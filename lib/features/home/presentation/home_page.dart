@@ -6,14 +6,14 @@ import 'package:scheduler_frontend/design_system/base_design_system.dart';
 import 'package:scheduler_frontend/features/appointments/bloc/appointments_bloc.dart';
 import 'package:scheduler_frontend/features/appointments/bloc/appointments_event.dart';
 import 'package:scheduler_frontend/features/appointments/bloc/appointments_state.dart';
-import 'package:scheduler_frontend/features/appointments/data/appointment_model.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_bloc.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_event.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_state.dart';
-import 'package:scheduler_frontend/features/home/presentation/widgets/appointment_card.dart';
 import 'package:scheduler_frontend/features/home/presentation/widgets/business_selector_header.dart';
 import 'package:scheduler_frontend/features/home/presentation/widgets/greeting_row.dart';
+import 'package:scheduler_frontend/features/home/presentation/widgets/personal_appointments_list.dart';
 import 'package:scheduler_frontend/features/home/presentation/widgets/stats_summary_row.dart';
+import 'package:scheduler_frontend/features/home/presentation/widgets/team_appointments_list.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -103,94 +103,74 @@ class HomePage extends StatelessWidget {
   }
 
   Widget _buildStats(BuildContext context) {
-    return BlocBuilder<AppointmentsBloc, AppointmentsState>(
-      builder: (context, state) {
-        if (state is AppointmentsLoaded) {
-          return StatsSummaryRow(
-            total: state.total,
-            pending: state.pending,
-            confirmed: state.confirmed,
-          );
-        }
-        return const StatsSummaryRow(total: 0, pending: 0, confirmed: 0);
+    return BlocBuilder<BusinessBloc, BusinessState>(
+      builder: (context, bizState) {
+        final isAdmin =
+            bizState is BusinessLoaded ? bizState.policy.isAdmin : true;
+        return BlocBuilder<AppointmentsBloc, AppointmentsState>(
+          builder: (context, state) {
+            if (state is AppointmentsLoaded) {
+              return _StatsWithLabel(
+                total: state.total,
+                pending: state.pending,
+                confirmed: state.confirmed,
+                isAdmin: isAdmin,
+              );
+            }
+            return _StatsWithLabel(
+              total: 0,
+              pending: 0,
+              confirmed: 0,
+              isAdmin: isAdmin,
+            );
+          },
+        );
       },
     );
   }
 
   Widget _buildAppointmentList(BuildContext context) {
-    return BlocBuilder<AppointmentsBloc, AppointmentsState>(
-      builder: (context, state) {
-        return switch (state) {
-          AppointmentsLoading() => Center(
-              child: CircularProgressIndicator(color: context.appColors.primary),
-            ),
-          AppointmentsLoaded(:final appointments) when appointments.isEmpty =>
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.xl),
-                child: Text(
-                  'Nenhum agendamento hoje',
-                  style: AppTypography.bodySm
-                      .copyWith(color: context.appColors.textSecondary),
-                ),
-              ),
-            ),
-          AppointmentsLoaded(:final appointments) => Column(
-              children: appointments
-                  .map(
-                    (appt) => Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                      child: AppointmentCard(
-                        appointment: appt,
-                        onConfirm: appt.status == AppointmentStatus.pending
-                            ? () => _updateStatus(
-                                  context,
-                                  appt,
-                                  AppointmentStatus.confirmed,
-                                )
-                            : null,
-                        onNoShow: appt.status == AppointmentStatus.pending
-                            ? () => _updateStatus(
-                                  context,
-                                  appt,
-                                  AppointmentStatus.noShow,
-                                )
-                            : null,
-                      ),
-                    ),
-                  )
-                  .toList(),
-            ),
-          AppointmentsError(:final message) => Center(
-              child: Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.xl),
-                child: Text(
-                  message,
-                  style:
-                      AppTypography.bodySm.copyWith(color: AppColors.error),
-                ),
-              ),
-            ),
-          _ => const SizedBox.shrink(),
-        };
+    return BlocBuilder<BusinessBloc, BusinessState>(
+      builder: (context, businessState) {
+        if (businessState is! BusinessLoaded) return const SizedBox.shrink();
+        return businessState.policy.canViewOtherAppts
+            ? const TeamAppointmentsList()
+            : const PersonalAppointmentsList();
       },
     );
   }
+}
 
-  void _updateStatus(
-    BuildContext context,
-    AppointmentModel appt,
-    AppointmentStatus newStatus,
-  ) {
-    final bizState = context.read<BusinessBloc>().state;
-    if (bizState is! BusinessLoaded) return;
+class _StatsWithLabel extends StatelessWidget {
+  final int total;
+  final int pending;
+  final int confirmed;
+  final bool isAdmin;
 
-    context.read<AppointmentsBloc>().add(
-          AppointmentStatusChanged(
-            slug: bizState.active.slug,
-            appointmentId: appt.id,
-            status: newStatus,
-          ),
-        );
+  const _StatsWithLabel({
+    required this.total,
+    required this.pending,
+    required this.confirmed,
+    required this.isAdmin,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          isAdmin ? 'Total hoje' : 'Seus hoje',
+          style: AppTypography.bodySm
+              .copyWith(color: context.appColors.textSecondary),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        StatsSummaryRow(
+          total: total,
+          pending: pending,
+          confirmed: confirmed,
+        ),
+      ],
+    );
   }
 }
