@@ -9,4 +9,7 @@ class BusinessRepository {
 
   Future<Result<List<BusinessModel>>> getBusinesses() =>
       _client.getList('/businesses', fromJson: BusinessModel.fromJson);
+
+  Future<Result<List<BusinessModel>>> getBusinessesMine() =>
+      _client.getBusinessesMine();
 }

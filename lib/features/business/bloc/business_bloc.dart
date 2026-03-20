@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_http/flutter_http.dart';
+import 'package:scheduler_frontend/core/policy/app_policy.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_event.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_state.dart';
 import 'package:scheduler_frontend/features/business/data/business_repository.dart';
@@ -17,10 +18,12 @@ class BusinessBloc extends Bloc<BusinessEvent, BusinessState> {
     Emitter<BusinessState> emit,
   ) async {
     emit(const BusinessLoading());
-    final result = await _repository.getBusinesses();
+    final result = await _repository.getBusinessesMine();
     switch (result) {
       case Success(:final data) when data.isNotEmpty:
-        emit(BusinessLoaded(businesses: data, active: data.first));
+        final active = data.first;
+        final policy = AppPolicy.from(active.myStaffRole, active.planMaxStaff);
+        emit(BusinessLoaded(businesses: data, active: active, policy: policy));
       case Success():
         emit(const BusinessError('Nenhum negócio encontrado'));
       case HttpFailure(:final failure):
@@ -33,7 +36,9 @@ class BusinessBloc extends Bloc<BusinessEvent, BusinessState> {
     Emitter<BusinessState> emit,
   ) {
     if (state case BusinessLoaded(:final businesses)) {
-      emit(BusinessLoaded(businesses: businesses, active: event.business));
+      final active = event.business;
+      final policy = AppPolicy.from(active.myStaffRole, active.planMaxStaff);
+      emit(BusinessLoaded(businesses: businesses, active: active, policy: policy));
     }
   }
 
