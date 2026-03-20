@@ -93,6 +93,53 @@ class AuthRepository {
     };
   }
 
+  /// Authenticates a member/staff user with email + password.
+  /// Returns a token record on success.
+  Future<Result<TokenRecord>> loginWithPassword({
+    required String email,
+    required String password,
+  }) async {
+    final result = await _client.loginWithPassword(email, password);
+    return switch (result) {
+      Success(:final data) => Success((
+          accessToken: data['accessToken'] as String,
+        )),
+      HttpFailure(:final failure) => HttpFailure(failure),
+    };
+  }
+
+  /// Checks which auth method ('totp' | 'password') the backend requires for
+  /// the given email address.
+  Future<Result<Map<String, dynamic>>> checkEmail(String email) =>
+      _client.checkEmail(email);
+
+  /// Sends a password-reset email to the given address.
+  Future<Result<void>> forgotPassword(String email) =>
+      _client.forgotPassword(email);
+
+  /// Resets the user's password using the one-time token from the email.
+  Future<Result<void>> resetPassword(
+    String token,
+    String newPassword,
+  ) =>
+      _client.resetPassword(token, newPassword);
+
+  /// Accepts a staff invite and creates an account with [name] and [password].
+  /// Returns a token record so the user can be authenticated immediately.
+  Future<Result<TokenRecord>> acceptInvite(
+    String token,
+    String name,
+    String password,
+  ) async {
+    final result = await _client.acceptInvite(token, name, password);
+    return switch (result) {
+      Success(:final data) => Success((
+          accessToken: data['accessToken'] as String,
+        )),
+      HttpFailure(:final failure) => HttpFailure(failure),
+    };
+  }
+
   Future<Result<UserModel>> getMe() =>
       _client.get('/auth/me', fromJson: UserModel.fromJson);
 

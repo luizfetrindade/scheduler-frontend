@@ -6,6 +6,7 @@ import 'package:flutter_http/flutter_http.dart';
 import 'package:mutex/mutex.dart';
 import 'package:scheduler_frontend/core/config/app_config.dart';
 import 'package:scheduler_frontend/core/network/web_token_storage.dart';
+import 'package:scheduler_frontend/features/business/data/business_model.dart';
 
 /// Returns an [HttpFailure] carrying a generic, non-revealing [UnknownFailure].
 ///
@@ -118,6 +119,19 @@ class ApiClient {
         queryParams: queryParams,
       );
 
+  /// Fetches the list of businesses for the authenticated user from
+  /// `/businesses/mine`. Unwraps the backend's `{ "data": [...] }` envelope.
+  Future<Result<List<BusinessModel>>> getBusinessesMine() =>
+      _http.get<List<BusinessModel>>(
+        '/businesses/mine',
+        fromJson: (json) {
+          final data = json['data'] as List<dynamic>;
+          return data
+              .map((e) => BusinessModel.fromJson(e as Map<String, dynamic>))
+              .toList();
+        },
+      );
+
   Future<Result<T>> post<T>(
     String path, {
     required T Function(Map<String, dynamic>) fromJson,
@@ -127,6 +141,46 @@ class ApiClient {
         path,
         fromJson: (envelope) => fromJson(_unwrapObject(envelope)),
         body: body,
+      );
+
+  /// POST /auth/check-email — returns { authMethod: 'totp' | 'password' }
+  Future<Result<Map<String, dynamic>>> checkEmail(String email) =>
+      post<Map<String, dynamic>>(
+        '/auth/check-email',
+        fromJson: (json) => json,
+        body: {'email': email},
+      );
+
+  /// POST /auth/login/password — returns { accessToken }
+  Future<Result<Map<String, dynamic>>> loginWithPassword(String email, String password) =>
+      post<Map<String, dynamic>>(
+        '/auth/login/password',
+        fromJson: (json) => json,
+        body: {'email': email, 'password': password},
+      );
+
+  /// POST /auth/forgot-password — 204 No Content
+  Future<Result<void>> forgotPassword(String email) =>
+      post<void>(
+        '/auth/forgot-password',
+        fromJson: (_) {},
+        body: {'email': email},
+      );
+
+  /// POST /auth/reset-password — 204 No Content
+  Future<Result<void>> resetPassword(String token, String newPassword) =>
+      post<void>(
+        '/auth/reset-password',
+        fromJson: (_) {},
+        body: {'token': token, 'newPassword': newPassword},
+      );
+
+  /// POST /auth/accept-invite — returns { accessToken }
+  Future<Result<Map<String, dynamic>>> acceptInvite(String token, String name, String password) =>
+      post<Map<String, dynamic>>(
+        '/auth/accept-invite',
+        fromJson: (json) => json,
+        body: {'token': token, 'name': name, 'password': password},
       );
 
   /// DELETE via raw Dio. Backend returns 204 No Content — no body to unwrap.

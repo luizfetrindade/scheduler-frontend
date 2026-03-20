@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:scheduler_frontend/core/policy/app_policy.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_bloc.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_event.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_state.dart';
@@ -83,13 +84,15 @@ void main() {
 
   testWidgets('valid create dispatches ProfessionalRolesCreateRequested', (tester) async {
     when(() => rolesBloc.state).thenReturn(const ProfessionalRolesLoaded([]));
+    const _activeBiz = BusinessModel(
+      id: 'b1', slug: 'my-biz', name: 'My Business',
+      logo: null, timezone: 'America/Sao_Paulo',
+    );
     when(() => businessBloc.state).thenReturn(
       BusinessLoaded(
         businesses: const [],
-        active: const BusinessModel(
-          id: 'b1', slug: 'my-biz', name: 'My Business',
-          logo: null, timezone: 'America/Sao_Paulo',
-        ),
+        active: _activeBiz,
+        policy: AppPolicy.from(_activeBiz.myStaffRole, _activeBiz.planMaxStaff),
       ),
     );
 
@@ -108,13 +111,15 @@ void main() {
   testWidgets('valid edit dispatches ProfessionalRolesUpdateRequested', (tester) async {
     final role = ProfessionalRoleModel(id: 'r1', businessId: 'b1', name: 'Manicure');
     when(() => rolesBloc.state).thenReturn(const ProfessionalRolesLoaded([]));
+    const _activeBiz = BusinessModel(
+      id: 'b1', slug: 'my-biz', name: 'My Business',
+      logo: null, timezone: 'America/Sao_Paulo',
+    );
     when(() => businessBloc.state).thenReturn(
       BusinessLoaded(
         businesses: const [],
-        active: const BusinessModel(
-          id: 'b1', slug: 'my-biz', name: 'My Business',
-          logo: null, timezone: 'America/Sao_Paulo',
-        ),
+        active: _activeBiz,
+        policy: AppPolicy.from(_activeBiz.myStaffRole, _activeBiz.planMaxStaff),
       ),
     );
 

@@ -9,4 +9,14 @@ class BusinessRepository {
 
   Future<Result<List<BusinessModel>>> getBusinesses() =>
       _client.getList('/businesses', fromJson: BusinessModel.fromJson);
+
+  Future<Result<List<BusinessModel>>> getBusinessesMine() =>
+      _client.getBusinessesMine();
+
+  Future<Result<BusinessModel>> createBusiness({required String name}) =>
+      _client.post(
+        '/businesses',
+        fromJson: BusinessModel.fromJson,
+        body: {'name': name},
+      );
 }

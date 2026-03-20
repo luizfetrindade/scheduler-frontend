@@ -55,3 +55,29 @@ class AuthTotpSetupReady extends AuthState {
   @override
   List<Object?> get props => [qrCodeUrl, secret, tempToken];
 }
+
+/// check-email flow: email found, backend returned which auth method to use.
+class AuthEmailChecked extends AuthState {
+  final String email;
+
+  /// Either 'totp' (owner/manager) or 'password' (staff/member).
+  final String authMethod;
+  const AuthEmailChecked(this.email, this.authMethod);
+  @override
+  List<Object?> get props => [email, authMethod];
+}
+
+/// forgot-password flow: reset email has been dispatched successfully.
+class AuthForgotPasswordSent extends AuthState {
+  const AuthForgotPasswordSent();
+}
+
+/// reset-password flow: password was reset successfully.
+class AuthPasswordResetSuccess extends AuthState {
+  const AuthPasswordResetSuccess();
+}
+
+/// accept-invite flow: invite accepted, account created — ready to welcome user.
+class AuthInviteAccepted extends AuthState {
+  const AuthInviteAccepted();
+}

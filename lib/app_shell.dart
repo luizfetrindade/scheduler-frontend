@@ -6,12 +6,14 @@ import 'package:go_router/go_router.dart';
 import 'package:scheduler_frontend/core/auth/auth_bloc.dart';
 import 'package:scheduler_frontend/core/auth/auth_event.dart';
 import 'package:scheduler_frontend/core/auth/auth_state.dart';
-import 'package:scheduler_frontend/core/router/app_routes.dart';
+import 'package:scheduler_frontend/core/policy/app_policy.dart';
 import 'package:scheduler_frontend/core/theme/theme_cubit.dart';
 import 'package:scheduler_frontend/core/theme/theme_state.dart';
 import 'package:scheduler_frontend/design_system/base_design_system.dart';
+import 'package:scheduler_frontend/features/business/bloc/business_bloc.dart';
+import 'package:scheduler_frontend/features/business/bloc/business_state.dart';
 
-// ─── Nav item descriptor ─────────────────────────────────────────────────────
+// ─── Nav item descriptor (internal rendering struct) ─────────────────────────
 
 class _NavItem {
   final IconData icon;
@@ -20,24 +22,12 @@ class _NavItem {
   const _NavItem({required this.icon, required this.label, required this.route});
 }
 
-const _mobileItems = [
-  _NavItem(icon: Icons.home_outlined,          label: 'Home',           route: AppRoutes.home),
-  _NavItem(icon: Icons.calendar_month_outlined, label: 'Agendamentos',  route: AppRoutes.appointments),
-  _NavItem(icon: Icons.people_outline,          label: 'Clientes',      route: AppRoutes.clients),
-  _NavItem(icon: Icons.content_cut,             label: 'Serviços',      route: AppRoutes.services),
-  _NavItem(icon: Icons.badge_outlined,          label: 'Profissionais', route: AppRoutes.professionals),
-];
-
-const _desktopItems = [
-  _NavItem(icon: Icons.home_outlined,          label: 'Home',           route: AppRoutes.home),
-  _NavItem(icon: Icons.calendar_month_outlined, label: 'Agendamentos',  route: AppRoutes.appointments),
-  _NavItem(icon: Icons.people_outline,          label: 'Clientes',      route: AppRoutes.clients),
-  _NavItem(icon: Icons.content_cut,             label: 'Serviços',      route: AppRoutes.services),
-  _NavItem(icon: Icons.badge_outlined,          label: 'Profissionais', route: AppRoutes.professionals),
-  _NavItem(icon: Icons.work_outline,            label: 'Cargos',        route: AppRoutes.professionalRoles),
-  _NavItem(icon: Icons.bar_chart,               label: 'Relatórios',    route: AppRoutes.reports),
-  _NavItem(icon: Icons.settings_outlined,       label: 'Configurações', route: AppRoutes.settings),
-];
+/// Converts an [AppPolicy] [NavItem] to the internal [_NavItem] rendering struct.
+_NavItem _toInternalNavItem(NavItem item) => _NavItem(
+      icon: item.icon,
+      label: item.label,
+      route: item.route,
+    );
 
 // ─── Floating nav bar (mobile) ────────────────────────────────────────────────
 
@@ -161,11 +151,9 @@ class _NavItemButton extends StatelessWidget {
 
 // ─── Helper exported for tests ────────────────────────────────────────────────
 
-/// Returns the nav index that matches [location].
-/// Pass [isMobile] to select the correct item list.
+/// Returns the nav index that matches [location] within the provided [items].
 /// Falls back to 0 if no match is found.
-int indexForLocation(String location, {required bool isMobile}) {
-  final items = isMobile ? _mobileItems : _desktopItems;
+int indexForLocation(String location, {required List<NavItem> items}) {
   final i = items.indexWhere(
     (item) => location == item.route || location.startsWith('${item.route}/'),
   );
@@ -188,26 +176,59 @@ class AdaptiveShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isMobile = constraints.maxWidth < _kBreakpoint;
-        final index = indexForLocation(currentLocation, isMobile: isMobile);
-
-        if (isMobile) {
-          return _MobileLayout(
-            selectedIndex: index,
-            items: _mobileItems,
-            child: child,
+    return BlocBuilder<BusinessBloc, BusinessState>(
+      builder: (context, state) {
+        if (state is! BusinessLoaded) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
           );
         }
 
-        return _DesktopLayout(
-          selectedIndex: index,
-          items: _desktopItems,
-          child: child,
+        final mobileNavItems =
+            state.policy.mobileNavItems.map(_toInternalNavItem).toList();
+        final desktopNavItems =
+            state.policy.desktopNavItems.map(_toInternalNavItem).toList();
+
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final isMobile = constraints.maxWidth < _kBreakpoint;
+
+            if (isMobile) {
+              final index = _indexForInternalItems(
+                currentLocation,
+                items: mobileNavItems,
+              );
+              return _MobileLayout(
+                selectedIndex: index,
+                items: mobileNavItems,
+                child: child,
+              );
+            }
+
+            final index = _indexForInternalItems(
+              currentLocation,
+              items: desktopNavItems,
+            );
+            return _DesktopLayout(
+              selectedIndex: index,
+              items: desktopNavItems,
+              child: child,
+            );
+          },
         );
       },
     );
+  }
+
+  /// Internal helper that works with [_NavItem] lists (used inside [AdaptiveShell]).
+  static int _indexForInternalItems(
+    String location, {
+    required List<_NavItem> items,
+  }) {
+    final i = items.indexWhere(
+      (item) => location == item.route || location.startsWith('${item.route}/'),
+    );
+    return i < 0 ? 0 : i;
   }
 }
 

@@ -14,6 +14,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthRegisterRequested>(_onRegisterRequested);
     on<AuthTotpSetupConfirmed>(_onTotpSetupConfirmed);
     on<AuthLogoutRequested>(_onLogoutRequested);
+    on<AuthCheckEmailRequested>(_onCheckEmailRequested);
+    on<AuthPasswordLoginRequested>(_onPasswordLoginRequested);
+    on<AuthForgotPasswordRequested>(_onForgotPasswordRequested);
+    on<AuthResetPasswordRequested>(_onResetPasswordRequested);
+    on<AuthAcceptInviteRequested>(_onAcceptInviteRequested);
   }
 
   /// Checks if there is a stored token and fetches the current user.
@@ -128,6 +133,101 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     await _repository.clearTokens();
     emit(const AuthUnauthenticated());
+  }
+
+  /// Checks which auth method the backend requires for the given email.
+  Future<void> _onCheckEmailRequested(
+    AuthCheckEmailRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    final result = await _repository.checkEmail(event.email);
+    switch (result) {
+      case Success(:final data):
+        final authMethod = data['authMethod'];
+        if (authMethod is! String) {
+          emit(const AuthError('Algo deu errado. Tente novamente'));
+          return;
+        }
+        emit(AuthEmailChecked(event.email, authMethod));
+      case HttpFailure(:final failure):
+        emit(AuthError(_message(failure)));
+    }
+  }
+
+  /// Authenticates a member/staff user with email + password.
+  Future<void> _onPasswordLoginRequested(
+    AuthPasswordLoginRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    final loginResult = await _repository.loginWithPassword(
+      email: event.email,
+      password: event.password,
+    );
+    switch (loginResult) {
+      case Success(:final data):
+        await _repository.saveTokens(data.accessToken);
+        final meResult = await _repository.getMe();
+        switch (meResult) {
+          case Success(:final data):
+            emit(AuthAuthenticated(data));
+          case HttpFailure(:final failure):
+            emit(AuthError(_message(failure)));
+        }
+      case HttpFailure(:final failure):
+        emit(AuthError(_message(failure)));
+    }
+  }
+
+  /// Sends a password-reset email to the given address.
+  Future<void> _onForgotPasswordRequested(
+    AuthForgotPasswordRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    final result = await _repository.forgotPassword(event.email);
+    switch (result) {
+      case Success():
+        emit(const AuthForgotPasswordSent());
+      case HttpFailure(:final failure):
+        emit(AuthError(_message(failure)));
+    }
+  }
+
+  /// Resets the user's password using the one-time token from the email.
+  Future<void> _onResetPasswordRequested(
+    AuthResetPasswordRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    final result = await _repository.resetPassword(event.token, event.newPassword);
+    switch (result) {
+      case Success():
+        emit(const AuthPasswordResetSuccess());
+      case HttpFailure(:final failure):
+        emit(AuthError(_message(failure)));
+    }
+  }
+
+  /// Accepts a staff invite and sets up the account.
+  Future<void> _onAcceptInviteRequested(
+    AuthAcceptInviteRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    final result = await _repository.acceptInvite(
+      event.token,
+      event.name,
+      event.password,
+    );
+    switch (result) {
+      case Success(:final data):
+        await _repository.saveTokens(data.accessToken);
+        emit(const AuthInviteAccepted());
+      case HttpFailure(:final failure):
+        emit(AuthError(_message(failure)));
+    }
   }
 
   String _message(AppFailure failure) => switch (failure) {

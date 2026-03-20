@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:scheduler_frontend/core/policy/app_policy.dart';
 import 'package:scheduler_frontend/design_system/tokens/app_theme.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_bloc.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_event.dart';
@@ -92,13 +93,15 @@ void main() {
 
   testWidgets('delete fires immediately when count == 0 (no dialog)', (tester) async {
     when(() => rolesBloc.state).thenReturn(ProfessionalRolesLoaded([role2]));
+    const _activeBiz = BusinessModel(
+      id: 'b1', slug: 'my-biz', name: 'My Business',
+      logo: null, timezone: 'America/Sao_Paulo',
+    );
     when(() => businessBloc.state).thenReturn(
       BusinessLoaded(
         businesses: const [],
-        active: const BusinessModel(
-          id: 'b1', slug: 'my-biz', name: 'My Business',
-          logo: null, timezone: 'America/Sao_Paulo',
-        ),
+        active: _activeBiz,
+        policy: AppPolicy.from(_activeBiz.myStaffRole, _activeBiz.planMaxStaff),
       ),
     );
 

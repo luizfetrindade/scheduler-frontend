@@ -35,6 +35,51 @@ void main() {
     });
   });
 
+  group('computeRedirect — new public paths (unauthenticated)', () {
+    test('no redirect when on /reset-password', () {
+      expect(
+        computeRedirect(isLoggedIn: false, location: '/reset-password'),
+        isNull,
+      );
+    });
+
+    test('no redirect when on /reset-password with query param', () {
+      expect(
+        computeRedirect(
+            isLoggedIn: false, location: '/reset-password?token=abc'),
+        isNull,
+      );
+    });
+
+    test('no redirect when on /accept-invite', () {
+      expect(
+        computeRedirect(isLoggedIn: false, location: '/accept-invite'),
+        isNull,
+      );
+    });
+
+    test('no redirect when on /forgot-password', () {
+      expect(
+        computeRedirect(isLoggedIn: false, location: '/forgot-password'),
+        isNull,
+      );
+    });
+
+    test('no redirect when on /login/totp', () {
+      expect(
+        computeRedirect(isLoggedIn: false, location: '/login/totp'),
+        isNull,
+      );
+    });
+
+    test('no redirect when on /login/password', () {
+      expect(
+        computeRedirect(isLoggedIn: false, location: '/login/password'),
+        isNull,
+      );
+    });
+  });
+
   group('computeRedirect — authenticated', () {
     test('no redirect when on home route', () {
       expect(
@@ -60,6 +105,30 @@ void main() {
     test('redirects to home when on register route (already authenticated)', () {
       expect(
         computeRedirect(isLoggedIn: true, location: AppRoutes.register),
+        equals(AppRoutes.home),
+      );
+    });
+
+    test('redirects to home when on /reset-password (already authenticated)',
+        () {
+      expect(
+        computeRedirect(isLoggedIn: true, location: '/reset-password'),
+        equals(AppRoutes.home),
+      );
+    });
+
+    test('redirects to home when on /accept-invite (already authenticated)',
+        () {
+      expect(
+        computeRedirect(isLoggedIn: true, location: '/accept-invite'),
+        equals(AppRoutes.home),
+      );
+    });
+
+    test('redirects to home when on /forgot-password (already authenticated)',
+        () {
+      expect(
+        computeRedirect(isLoggedIn: true, location: '/forgot-password'),
         equals(AppRoutes.home),
       );
     });

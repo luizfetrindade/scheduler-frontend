@@ -55,3 +55,47 @@ class AuthTotpSetupConfirmed extends AuthEvent {
 class AuthLogoutRequested extends AuthEvent {
   const AuthLogoutRequested();
 }
+
+/// Checks which auth method (totp | password) is required for the given email.
+class AuthCheckEmailRequested extends AuthEvent {
+  final String email;
+  const AuthCheckEmailRequested({required this.email});
+  @override
+  List<Object?> get props => [email];
+}
+
+/// Login with email + password (for staff/member personas).
+class AuthPasswordLoginRequested extends AuthEvent {
+  final String email;
+  final String password;
+  const AuthPasswordLoginRequested({required this.email, required this.password});
+  @override
+  List<Object?> get props => [email, password];
+}
+
+/// Triggers a forgot-password email to be sent.
+class AuthForgotPasswordRequested extends AuthEvent {
+  final String email;
+  const AuthForgotPasswordRequested({required this.email});
+  @override
+  List<Object?> get props => [email];
+}
+
+/// Submits a new password using the reset token received by email.
+class AuthResetPasswordRequested extends AuthEvent {
+  final String token;
+  final String newPassword;
+  const AuthResetPasswordRequested({required this.token, required this.newPassword});
+  @override
+  List<Object?> get props => [token, newPassword];
+}
+
+/// Accepts a staff invite and sets up the account with name + password.
+class AuthAcceptInviteRequested extends AuthEvent {
+  final String token;
+  final String name;
+  final String password;
+  const AuthAcceptInviteRequested({required this.token, required this.name, required this.password});
+  @override
+  List<Object?> get props => [token, name, password];
+}

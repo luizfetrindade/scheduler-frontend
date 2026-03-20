@@ -4,32 +4,37 @@ import 'package:go_router/go_router.dart';
 import 'package:scheduler_frontend/core/auth/auth_bloc.dart';
 import 'package:scheduler_frontend/core/auth/auth_event.dart';
 import 'package:scheduler_frontend/core/auth/auth_state.dart';
-import 'package:scheduler_frontend/core/l10n/l10n.dart';
-import 'package:scheduler_frontend/core/router/app_routes.dart';
 import 'package:scheduler_frontend/design_system/base_design_system.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class PasswordLoginPage extends StatefulWidget {
+  final String email;
+
+  const PasswordLoginPage({super.key, required this.email});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<PasswordLoginPage> createState() => _PasswordLoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
-  final _emailController = TextEditingController();
+class _PasswordLoginPageState extends State<PasswordLoginPage> {
+  final _passwordController = TextEditingController();
 
   static const _kBreakpoint = 720.0;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
-  void _submitEmail() {
-    final email = _emailController.text.trim();
-    if (email.isEmpty) return;
-    context.read<AuthBloc>().add(AuthCheckEmailRequested(email: email));
+  void _submit() {
+    final password = _passwordController.text.trim();
+    if (password.isEmpty) return;
+    context.read<AuthBloc>().add(
+          AuthPasswordLoginRequested(
+            email: widget.email,
+            password: password,
+          ),
+        );
   }
 
   @override
@@ -38,13 +43,6 @@ class _LoginPageState extends State<LoginPage> {
       backgroundColor: context.appColors.background,
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
-          if (state is AuthEmailChecked) {
-            if (state.authMethod == 'totp') {
-              context.push('/login/totp', extra: state.email);
-            } else {
-              context.push('/login/password', extra: state.email);
-            }
-          }
           if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -57,18 +55,21 @@ class _LoginPageState extends State<LoginPage> {
         builder: (context, state) {
           final isLoading = state is AuthLoading;
 
-          final formWidget = _EmailStep(
-            emailController: _emailController,
+          final formWidget = _PasswordForm(
+            email: widget.email,
+            passwordController: _passwordController,
             isLoading: isLoading,
-            onSubmit: _submitEmail,
+            onSubmit: _submit,
+            onForgotPassword: () => context.push('/forgot-password'),
+            onBack: () => context.pop(),
           );
 
           return LayoutBuilder(
             builder: (context, constraints) {
               if (constraints.maxWidth < _kBreakpoint) {
-                return _MobileLogin(formWidget: formWidget);
+                return _MobilePasswordLayout(formWidget: formWidget);
               }
-              return _DesktopLogin(formWidget: formWidget);
+              return _DesktopPasswordLayout(formWidget: formWidget);
             },
           );
         },
@@ -79,10 +80,10 @@ class _LoginPageState extends State<LoginPage> {
 
 // ─── Mobile layout ────────────────────────────────────────────────────────────
 
-class _MobileLogin extends StatelessWidget {
+class _MobilePasswordLayout extends StatelessWidget {
   final Widget formWidget;
 
-  const _MobileLogin({required this.formWidget});
+  const _MobilePasswordLayout({required this.formWidget});
 
   @override
   Widget build(BuildContext context) {
@@ -132,7 +133,7 @@ class _MobileLogin extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: AppSpacing.md),
-                  const _StepHeader(),
+                  const _PasswordStepHeader(),
                   const SizedBox(height: AppSpacing.xl),
                   formWidget,
                 ],
@@ -147,10 +148,10 @@ class _MobileLogin extends StatelessWidget {
 
 // ─── Desktop layout ───────────────────────────────────────────────────────────
 
-class _DesktopLogin extends StatelessWidget {
+class _DesktopPasswordLayout extends StatelessWidget {
   final Widget formWidget;
 
-  const _DesktopLogin({required this.formWidget});
+  const _DesktopPasswordLayout({required this.formWidget});
 
   @override
   Widget build(BuildContext context) {
@@ -231,7 +232,7 @@ class _DesktopLogin extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const _StepHeader(),
+                      const _PasswordStepHeader(),
                       const SizedBox(height: AppSpacing.xxl),
                       formWidget,
                     ],
@@ -248,8 +249,8 @@ class _DesktopLogin extends StatelessWidget {
 
 // ─── Step header ──────────────────────────────────────────────────────────────
 
-class _StepHeader extends StatelessWidget {
-  const _StepHeader();
+class _PasswordStepHeader extends StatelessWidget {
+  const _PasswordStepHeader();
 
   @override
   Widget build(BuildContext context) {
@@ -257,14 +258,14 @@ class _StepHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          context.l10n.loginTitle,
+          'Entrar com senha',
           style: AppTypography.headingMd.copyWith(
             color: context.appColors.textPrimary,
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
-          'Informe seu e-mail para continuar.',
+          'Insira sua senha para continuar.',
           style: AppTypography.bodySm.copyWith(
             color: context.appColors.textSecondary,
           ),
@@ -274,17 +275,23 @@ class _StepHeader extends StatelessWidget {
   }
 }
 
-// ─── Email step ───────────────────────────────────────────────────────────────
+// ─── Password form ────────────────────────────────────────────────────────────
 
-class _EmailStep extends StatelessWidget {
-  final TextEditingController emailController;
+class _PasswordForm extends StatelessWidget {
+  final String email;
+  final TextEditingController passwordController;
   final bool isLoading;
   final VoidCallback onSubmit;
+  final VoidCallback onForgotPassword;
+  final VoidCallback onBack;
 
-  const _EmailStep({
-    required this.emailController,
+  const _PasswordForm({
+    required this.email,
+    required this.passwordController,
     required this.isLoading,
     required this.onSubmit,
+    required this.onForgotPassword,
+    required this.onBack,
   });
 
   @override
@@ -292,25 +299,43 @@ class _EmailStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        BaseInputField(
-          label: context.l10n.loginEmailLabel,
-          controller: emailController,
-          keyboardType: TextInputType.emailAddress,
-          prefixIcon: Icons.email_outlined,
+        Text(
+          email,
+          style: AppTypography.bodySm.copyWith(
+            color: context.appColors.textSecondary,
+          ),
         ),
-        const SizedBox(height: AppSpacing.xl),
+        const SizedBox(height: AppSpacing.md),
+        BaseInputField(
+          label: 'Senha',
+          controller: passwordController,
+          isPassword: true,
+          prefixIcon: Icons.lock_outline,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: isLoading ? null : onForgotPassword,
+            child: Text(
+              'Esqueceu a senha?',
+              style: AppTypography.bodySm.copyWith(
+                color: context.appColors.primary,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
         BaseButton(
-          label: context.l10n.loginContinueButton,
+          label: 'Entrar',
           isLoading: isLoading,
           onPressed: isLoading ? null : onSubmit,
         ),
-        const SizedBox(height: AppSpacing.md),
-        _OrDivider(),
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: AppSpacing.sm),
         BaseButton(
-          label: context.l10n.loginNoAccount,
-          variant: BaseButtonVariant.secondary,
-          onPressed: () => context.go(AppRoutes.register),
+          label: 'Voltar',
+          variant: BaseButtonVariant.ghost,
+          onPressed: isLoading ? null : onBack,
         ),
       ],
     );
@@ -336,31 +361,6 @@ class _AppMark extends StatelessWidget {
         color: iconColor,
         size: 22,
       ),
-    );
-  }
-}
-
-class _OrDivider extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Divider(color: context.appColors.outline, thickness: 1),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-          child: Text(
-            'ou',
-            style: AppTypography.caption.copyWith(
-              color: context.appColors.textDisabled,
-            ),
-          ),
-        ),
-        Expanded(
-          child: Divider(color: context.appColors.outline, thickness: 1),
-        ),
-      ],
     );
   }
 }
