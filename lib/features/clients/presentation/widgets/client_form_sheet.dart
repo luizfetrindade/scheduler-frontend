@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:scheduler_frontend/design_system/base_design_system.dart';
 import 'package:scheduler_frontend/features/clients/bloc/clients_bloc.dart';
@@ -29,7 +30,9 @@ class _ClientFormSheetState extends State<ClientFormSheet> {
   void initState() {
     super.initState();
     _nameCtrl = TextEditingController(text: widget.initial?.name ?? '');
-    _phoneCtrl = TextEditingController(text: widget.initial?.phone ?? '');
+    _phoneCtrl = TextEditingController(
+      text: _PhoneInputFormatter.format(widget.initial?.phone ?? ''),
+    );
     _emailCtrl = TextEditingController(text: widget.initial?.email ?? '');
   }
 
@@ -65,8 +68,9 @@ class _ClientFormSheetState extends State<ClientFormSheet> {
             padding: EdgeInsets.only(
               left: AppSpacing.lg,
               right: AppSpacing.lg,
-              top: AppSpacing.lg,
-              bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.lg,
+              top: AppSpacing.md,
+              bottom:
+                  MediaQuery.of(context).viewInsets.bottom + AppSpacing.lg,
             ),
             child: Form(
               key: _formKey,
@@ -75,14 +79,56 @@ class _ClientFormSheetState extends State<ClientFormSheet> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      _isEditing ? 'Editar cliente' : 'Novo cliente',
-                      style: AppTypography.headingMd
-                          .copyWith(color: context.appColors.textPrimary),
+                    // ── Drag handle ──
+                    Center(
+                      child: Container(
+                        width: 36,
+                        height: 3,
+                        margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+                        color: context.appColors.outline,
+                      ),
                     ),
-                    const SizedBox(height: AppSpacing.lg),
 
-                    // Nome
+                    // ── Title ──
+                    Row(
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          color: context.appColors.primary
+                              .withValues(alpha: 0.08),
+                          child: Icon(
+                            _isEditing
+                                ? Icons.edit_outlined
+                                : Icons.person_add_outlined,
+                            size: 16,
+                            color: context.appColors.primary,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Text(
+                          _isEditing ? 'Editar cliente' : 'Novo cliente',
+                          style: AppTypography.headingMd.copyWith(
+                            color: context.appColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 40),
+                      child: Text(
+                        _isEditing
+                            ? 'Atualize os dados do cliente.'
+                            : 'Preencha os dados para cadastrar um novo cliente.',
+                        style: AppTypography.bodySm.copyWith(
+                          color: context.appColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+
+                    // ── Nome ──
                     TextFormField(
                       controller: _nameCtrl,
                       decoration: _inputDecoration(context, 'Nome'),
@@ -101,23 +147,32 @@ class _ClientFormSheetState extends State<ClientFormSheet> {
                     ),
                     const SizedBox(height: AppSpacing.md),
 
-                    // Telefone
+                    // ── Telefone ──
                     TextFormField(
                       controller: _phoneCtrl,
-                      decoration: _inputDecoration(context, 'Telefone'),
+                      decoration: _inputDecoration(
+                        context,
+                        'Celular',
+                        hintText: '(XX) XXXXX-XXXX',
+                      ),
                       style: AppTypography.bodySm
                           .copyWith(color: context.appColors.textPrimary),
                       keyboardType: TextInputType.phone,
+                      inputFormatters: [_PhoneInputFormatter()],
                       validator: (v) {
                         if (v == null || v.trim().isEmpty) {
-                          return 'Telefone é obrigatório';
+                          return 'Celular é obrigatório';
+                        }
+                        final digits = v.replaceAll(RegExp(r'\D'), '');
+                        if (digits.length < 10) {
+                          return 'Celular inválido';
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: AppSpacing.md),
 
-                    // E-mail (opcional)
+                    // ── E-mail (opcional) ──
                     TextFormField(
                       controller: _emailCtrl,
                       decoration:
@@ -134,31 +189,21 @@ class _ClientFormSheetState extends State<ClientFormSheet> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: AppSpacing.lg),
+                    const SizedBox(height: AppSpacing.xl),
 
-                    // Submit
-                    ElevatedButton(
+                    // ── Submit ──
+                    BaseButton(
+                      label: _isEditing ? 'Salvar alterações' : 'Criar cliente',
+                      isLoading: isLoading,
                       onPressed: isLoading ? null : _submit,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: context.appColors.primary,
-                        foregroundColor: context.appColors.background,
-                        padding: const EdgeInsets.symmetric(
-                            vertical: AppSpacing.md),
-                        shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(AppRadius.md),
-                        ),
-                      ),
-                      child: isLoading
-                          ? SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: context.appColors.background,
-                              ),
-                            )
-                          : Text(_isEditing ? 'Salvar' : 'Criar cliente'),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    BaseButton(
+                      label: 'Cancelar',
+                      variant: BaseButtonVariant.secondary,
+                      onPressed: isLoading
+                          ? null
+                          : () => Navigator.of(context).pop(),
                     ),
                   ],
                 ),
@@ -174,7 +219,7 @@ class _ClientFormSheetState extends State<ClientFormSheet> {
     if (!_formKey.currentState!.validate()) return;
 
     final name = _nameCtrl.text.trim();
-    final phone = _phoneCtrl.text.trim();
+    final phone = _phoneDigits();
     final email =
         _emailCtrl.text.trim().isEmpty ? null : _emailCtrl.text.trim();
 
@@ -196,28 +241,83 @@ class _ClientFormSheetState extends State<ClientFormSheet> {
     }
   }
 
-  InputDecoration _inputDecoration(BuildContext context, String label) =>
+  /// Strips mask before sending to backend.
+  String _phoneDigits() =>
+      _phoneCtrl.text.replaceAll(RegExp(r'\D'), '');
+
+  InputDecoration _inputDecoration(
+    BuildContext context,
+    String label, {
+    String? hintText,
+  }) =>
       InputDecoration(
         labelText: label,
+        hintText: hintText,
+        hintStyle: AppTypography.bodySm
+            .copyWith(color: context.appColors.textSecondary),
         labelStyle: AppTypography.bodySm
             .copyWith(color: context.appColors.textSecondary),
+        floatingLabelStyle: AppTypography.caption
+            .copyWith(color: context.appColors.primary),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: BorderSide(color: context.appColors.surfaceHigh),
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(color: context.appColors.outline),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: BorderSide(color: context.appColors.primary),
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(
+            color: context.appColors.primary,
+            width: 1.5,
+          ),
         ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: const BorderSide(color: AppColors.error),
+        errorBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(color: AppColors.error),
         ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: const BorderSide(color: AppColors.error),
+        focusedErrorBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(color: AppColors.error, width: 1.5),
         ),
         filled: true,
         fillColor: context.appColors.surface,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.md,
+        ),
       );
+}
+
+// ── Phone input formatter ─────────────────────────────────────────────────────
+
+/// Aplica máscara brasileira de telefone:
+/// - 10 dígitos → (XX) XXXX-XXXX (fixo)
+/// - 11 dígitos → (XX) XXXXX-XXXX (celular)
+class _PhoneInputFormatter extends TextInputFormatter {
+  static String format(String raw) {
+    final digits = raw.replaceAll(RegExp(r'\D'), '');
+    if (digits.isEmpty) return '';
+    final capped = digits.length > 11 ? digits.substring(0, 11) : digits;
+    final isMobile = capped.length > 10;
+    final buf = StringBuffer();
+    for (var i = 0; i < capped.length; i++) {
+      if (i == 0) buf.write('(');
+      if (i == 2) buf.write(') ');
+      if (isMobile && i == 7) buf.write('-');
+      if (!isMobile && i == 6) buf.write('-');
+      buf.write(capped[i]);
+    }
+    return buf.toString();
+  }
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final formatted = format(newValue.text);
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
 }

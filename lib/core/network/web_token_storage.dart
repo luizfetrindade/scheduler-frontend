@@ -1,45 +1,44 @@
 import 'package:flutter_http/flutter_http.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 /// Token storage implementation for Flutter Web.
 ///
-/// flutter_secure_storage uses WebCrypto under the hood and throws
-/// [OperationError] in certain browser contexts. SharedPreferences
-/// (backed by localStorage on web) is simpler and works reliably for dev.
+/// Uses [FlutterSecureStorage] (WebCrypto + IndexedDB) for the access token.
+///
+/// The refresh token is no longer stored locally — it is managed as an httpOnly
+/// cookie by the backend and sent automatically by the browser on every request
+/// to `/auth/*`. Passing an empty string to [saveTokens] is intentional.
 class WebTokenStorage extends TokenStorage {
+  WebTokenStorage({FlutterSecureStorage? storage})
+      : _storage = storage ??
+            const FlutterSecureStorage(
+              webOptions: WebOptions(
+                dbName: 'scheduler_secure_storage',
+                publicKey: 'scheduler_auth_key',
+              ),
+            );
+
   static const _accessKey = 'access_token';
-  static const _refreshKey = 'refresh_token';
+
+  final FlutterSecureStorage _storage;
 
   @override
-  Future<String?> getAccessToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_accessKey);
-  }
+  Future<String?> getAccessToken() => _storage.read(key: _accessKey);
 
+  /// Refresh token is managed as httpOnly cookie — always returns null.
   @override
-  Future<String?> getRefreshToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_refreshKey);
-  }
+  Future<String?> getRefreshToken() async => null;
 
+  /// Only persists [accessToken]. The [refreshToken] param is kept for
+  /// interface compatibility but is intentionally ignored — the refresh token
+  /// lives exclusively in the httpOnly cookie set by the backend.
   @override
   Future<void> saveTokens({
     required String accessToken,
     required String refreshToken,
-  }) async {
-    final prefs = await SharedPreferences.getInstance();
-    await Future.wait([
-      prefs.setString(_accessKey, accessToken),
-      prefs.setString(_refreshKey, refreshToken),
-    ]);
-  }
+  }) =>
+      _storage.write(key: _accessKey, value: accessToken);
 
   @override
-  Future<void> clearTokens() async {
-    final prefs = await SharedPreferences.getInstance();
-    await Future.wait([
-      prefs.remove(_accessKey),
-      prefs.remove(_refreshKey),
-    ]);
-  }
+  Future<void> clearTokens() => _storage.delete(key: _accessKey);
 }

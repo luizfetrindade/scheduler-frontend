@@ -70,23 +70,12 @@ class AppointmentDetailSheet extends StatelessWidget {
               ),
             if (canCancel) ...[
               const SizedBox(height: AppSpacing.lg),
-              OutlinedButton(
+              BaseButton(
+                label: appointment.isBlock
+                    ? 'Remover Bloqueio'
+                    : 'Cancelar Agendamento',
                 onPressed: () => _handleCancel(context),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.error,
-                  side: const BorderSide(color: AppColors.error),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: AppSpacing.md,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                  ),
-                ),
-                child: Text(
-                  appointment.isBlock
-                      ? 'Remover Bloqueio'
-                      : 'Cancelar Agendamento',
-                ),
+                variant: BaseButtonVariant.destructive,
               ),
             ],
           ],

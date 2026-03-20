@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:scheduler_frontend/design_system/base_design_system.dart';
 import 'package:scheduler_frontend/features/appointments/data/appointment_model.dart';
 import 'package:scheduler_frontend/features/appointments/presentation/widgets/appointment_block.dart';
 import 'package:scheduler_frontend/features/appointments/presentation/widgets/time_grid.dart';
+
 
 const double _kInitialScrollHour = 7;
 
@@ -45,44 +47,64 @@ class _DayViewState extends State<DayView> {
   Widget build(BuildContext context) {
     final key = DateFormat('yyyy-MM-dd').format(widget.date);
     final appointments = widget.appointmentsByDate[key] ?? [];
+    final laneData = computeLanes(appointments);
+    final today = DateTime.now();
+    final isToday = widget.date.year == today.year &&
+        widget.date.month == today.month &&
+        widget.date.day == today.day;
 
     return SingleChildScrollView(
       controller: _scrollController,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const TimeColumn(),
-          Expanded(
-            child: SizedBox(
-              height: kGridTotalHeight,
-              child: GestureDetector(
-                behavior: HitTestBehavior.translucent,
-                onTapUp: widget.onSlotTap == null
-                    ? null
-                    : (details) {
-                        final tappedTime = _timeFromOffset(
-                          details.localPosition.dy,
-                          widget.date,
-                        );
-                        widget.onSlotTap!(tappedTime);
-                      },
-                child: Stack(
-                  children: [
-                    const SlotGrid(),
-                    ...appointments.map(
-                      (a) => AppointmentBlock(
-                        appointment: a,
-                        onTap: widget.onAppointmentTap == null
+      padding: const EdgeInsets.only(top: AppSpacing.md),
+      child: SizedBox(
+        height: kGridTotalHeight,
+        child: Stack(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const TimeColumn(),
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final containerWidth = constraints.maxWidth;
+                      return GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onTapUp: widget.onSlotTap == null
                             ? null
-                            : () => widget.onAppointmentTap!(a),
-                      ),
-                    ),
-                  ],
+                            : (details) {
+                                final tappedTime = _timeFromOffset(
+                                  details.localPosition.dy,
+                                  widget.date,
+                                );
+                                widget.onSlotTap!(tappedTime);
+                              },
+                        child: Stack(
+                          children: [
+                            const SlotGrid(),
+                            ...laneData.map(
+                              (item) => AppointmentBlock(
+                                appointment: item.appointment,
+                                containerWidth: containerWidth,
+                                lane: item.lane,
+                                totalLanes: item.totalLanes,
+                                onTap: widget.onAppointmentTap == null
+                                    ? null
+                                    : () => widget.onAppointmentTap!(
+                                        item.appointment),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
                 ),
-              ),
+              ],
             ),
-          ),
-        ],
+            if (isToday) const CurrentTimeLine(),
+          ],
+        ),
       ),
     );
   }

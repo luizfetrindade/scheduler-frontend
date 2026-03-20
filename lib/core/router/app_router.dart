@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:scheduler_frontend/app_shell.dart';
 import 'package:scheduler_frontend/core/auth/auth_bloc.dart';
@@ -12,7 +13,9 @@ import 'package:scheduler_frontend/features/home/presentation/home_page.dart';
 import 'package:scheduler_frontend/features/reports/presentation/reports_page.dart';
 import 'package:scheduler_frontend/features/professionals/presentation/professional_profile_page.dart';
 import 'package:scheduler_frontend/features/professionals/presentation/professionals_page.dart';
+import 'package:scheduler_frontend/features/professionals/presentation/roles_management_page.dart';
 import 'package:scheduler_frontend/features/services/presentation/services_page.dart';
+import 'package:scheduler_frontend/core/router/uuid_validator.dart';
 import 'package:scheduler_frontend/features/settings/presentation/settings_page.dart';
 
 /// Pure redirect logic — testable without a BuildContext.
@@ -56,11 +59,20 @@ GoRouter createAppRouter(AuthBloc authBloc) => GoRouter(
               routes: [
                 GoRoute(
                   path: ':id',
+                  redirect: (_, state) {
+                    final id = state.pathParameters['id'] ?? '';
+                    if (!isValidUuid(id)) return AppRoutes.professionals;
+                    return null;
+                  },
                   builder: (_, state) => ProfessionalProfilePage(
                     professionalId: state.pathParameters['id']!,
                   ),
                 ),
               ],
+            ),
+            GoRoute(
+              path: AppRoutes.professionalRoles,
+              builder: (_, __) => const RolesManagementPage(),
             ),
             GoRoute(path: AppRoutes.reports,      builder: (context, _) => const ReportsPage()),
             GoRoute(path: AppRoutes.settings,     builder: (context, _) => const SettingsPage()),

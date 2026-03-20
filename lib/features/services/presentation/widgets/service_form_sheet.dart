@@ -9,9 +9,8 @@ import 'package:scheduler_frontend/features/services/bloc/services_event.dart';
 import 'package:scheduler_frontend/features/services/bloc/services_state.dart';
 import 'package:scheduler_frontend/features/services/data/service_model.dart';
 
-// ---------------------------------------------------------------------------
-// Duration picker options: 5 min increments from 5 to 480
-// ---------------------------------------------------------------------------
+// ── Duration picker options: 5 min increments from 5 to 480 ──────────────────
+
 const _kDurationStep = 5;
 const _kDurationMax = 480;
 final _kDurationOptions = List.generate(
@@ -19,9 +18,8 @@ final _kDurationOptions = List.generate(
   (i) => (i + 1) * _kDurationStep,
 );
 
-// ---------------------------------------------------------------------------
-// BRL currency input formatter — "1" → "R$ 0,01", "123" → "R$ 1,23"
-// ---------------------------------------------------------------------------
+// ── BRL currency input formatter ──────────────────────────────────────────────
+
 class _BrlCurrencyFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
@@ -31,7 +29,8 @@ class _BrlCurrencyFormatter extends TextInputFormatter {
     final digits = newValue.text.replaceAll(RegExp(r'[^\d]'), '');
     if (digits.isEmpty) return const TextEditingValue();
 
-    final cents = int.parse(digits.length > 12 ? digits.substring(digits.length - 12) : digits);
+    final cents = int.parse(
+        digits.length > 12 ? digits.substring(digits.length - 12) : digits);
     final formatted = _centsToBrl(cents);
 
     return TextEditingValue(
@@ -57,11 +56,8 @@ class _BrlCurrencyFormatter extends TextInputFormatter {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-/// Parses a BRL-formatted string like "R$ 1.234,56" to a double (1234.56).
 double? _parseBrl(String text) {
   final digits = text.replaceAll(RegExp(r'[^\d]'), '');
   if (digits.isEmpty) return null;
@@ -70,19 +66,15 @@ double? _parseBrl(String text) {
   return cents / 100.0;
 }
 
-/// Formats duration minutes for display — e.g. 90 → "1h 30min".
 String _formatDuration(int min) {
   if (min < 60) return '${min}min';
   if (min % 60 == 0) return '${min ~/ 60}h';
   return '${min ~/ 60}h ${min % 60}min';
 }
 
-// ---------------------------------------------------------------------------
-// Widget
-// ---------------------------------------------------------------------------
+// ── Widget ────────────────────────────────────────────────────────────────────
 
 class ServiceFormSheet extends StatefulWidget {
-  /// If non-null, edit mode — pre-fills fields.
   final ServiceModel? initial;
 
   const ServiceFormSheet({super.key, this.initial});
@@ -96,15 +88,15 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
   late final TextEditingController _nameCtrl;
   late final TextEditingController _priceCtrl;
 
-  /// null means "sem duração"
   int? _selectedDuration;
+
+  bool get _isEditing => widget.initial != null;
 
   @override
   void initState() {
     super.initState();
     _nameCtrl = TextEditingController(text: widget.initial?.name ?? '');
 
-    // Pre-fill price as BRL format
     final initialPrice = widget.initial?.price;
     _priceCtrl = TextEditingController(
       text: initialPrice != null
@@ -121,8 +113,6 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
     _priceCtrl.dispose();
     super.dispose();
   }
-
-  bool get _isEditing => widget.initial != null;
 
   @override
   Widget build(BuildContext context) {
@@ -143,8 +133,9 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
         padding: EdgeInsets.only(
           left: AppSpacing.lg,
           right: AppSpacing.lg,
-          top: AppSpacing.lg,
-          bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.lg,
+          top: AppSpacing.md,
+          bottom:
+              MediaQuery.of(context).viewInsets.bottom + AppSpacing.lg,
         ),
         child: Form(
           key: _formKey,
@@ -153,15 +144,55 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  _isEditing ? 'Editar Serviço' : 'Novo Serviço',
-                  style: AppTypography.headingMd.copyWith(
-                    color: context.appColors.textPrimary,
+                // ── Drag handle ──
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 3,
+                    margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+                    color: context.appColors.outline,
                   ),
                 ),
-                const SizedBox(height: AppSpacing.lg),
 
-                // Name
+                // ── Title ──
+                Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      color: context.appColors.primary.withValues(alpha: 0.08),
+                      child: Icon(
+                        _isEditing
+                            ? Icons.edit_outlined
+                            : Icons.add_circle_outline,
+                        size: 16,
+                        color: context.appColors.primary,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Text(
+                      _isEditing ? 'Editar serviço' : 'Novo serviço',
+                      style: AppTypography.headingMd.copyWith(
+                        color: context.appColors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Padding(
+                  padding: const EdgeInsets.only(left: 40),
+                  child: Text(
+                    _isEditing
+                        ? 'Atualize os dados do serviço.'
+                        : 'Preencha os dados para criar um novo serviço.',
+                    style: AppTypography.bodySm.copyWith(
+                      color: context.appColors.textSecondary,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xl),
+
+                // ── Nome ──
                 TextFormField(
                   controller: _nameCtrl,
                   decoration: _inputDecoration(context, 'Nome do serviço'),
@@ -180,10 +211,11 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
                 ),
                 const SizedBox(height: AppSpacing.md),
 
-                // Price — BRL mask
+                // ── Preço ──
                 TextFormField(
                   controller: _priceCtrl,
-                  decoration: _inputDecoration(context, 'Preço (opcional)'),
+                  decoration:
+                      _inputDecoration(context, 'Preço (opcional)'),
                   keyboardType: TextInputType.number,
                   inputFormatters: [_BrlCurrencyFormatter()],
                   style: AppTypography.bodySm.copyWith(
@@ -198,36 +230,33 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
                 ),
                 const SizedBox(height: AppSpacing.md),
 
-                // Duration — picker
+                // ── Duração ──
                 _buildDurationTile(context),
-                const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.xl),
 
-                // Submit button
+                // ── Submit ──
                 BlocBuilder<ServicesBloc, ServicesState>(
                   builder: (context, state) {
                     final isLoading = state is ServicesActionInProgress;
-                    return ElevatedButton(
-                      onPressed: isLoading ? null : _submit,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: context.appColors.primary,
-                        foregroundColor: context.appColors.background,
-                        padding: const EdgeInsets.symmetric(
-                          vertical: AppSpacing.md,
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        BaseButton(
+                          label: _isEditing
+                              ? 'Salvar alterações'
+                              : 'Criar serviço',
+                          isLoading: isLoading,
+                          onPressed: isLoading ? null : _submit,
                         ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.md),
+                        const SizedBox(height: AppSpacing.sm),
+                        BaseButton(
+                          label: 'Cancelar',
+                          variant: BaseButtonVariant.secondary,
+                          onPressed: isLoading
+                              ? null
+                              : () => Navigator.of(context).pop(),
                         ),
-                      ),
-                      child: isLoading
-                          ? SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: context.appColors.background,
-                              ),
-                            )
-                          : Text(_isEditing ? 'Salvar' : 'Criar Serviço'),
+                      ],
                     );
                   },
                 ),
@@ -239,9 +268,7 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Duration tile — tappable, opens scrollable list
-  // ---------------------------------------------------------------------------
+  // ── Duration tile ──────────────────────────────────────────────────────────
 
   Widget _buildDurationTile(BuildContext context) {
     final label = _selectedDuration != null
@@ -254,16 +281,19 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
       child: Container(
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
+          vertical: AppSpacing.md,
         ),
         decoration: BoxDecoration(
           color: context.appColors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(color: context.appColors.surfaceHigh),
+          border: Border.all(color: context.appColors.outline),
         ),
         child: Row(
           children: [
-            Icon(Icons.timer_outlined, size: 18, color: context.appColors.primary),
+            Icon(
+              Icons.timer_outlined,
+              size: 18,
+              color: context.appColors.textSecondary,
+            ),
             const SizedBox(width: AppSpacing.sm),
             Text(
               'Duração',
@@ -275,7 +305,9 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
             Text(
               label,
               style: AppTypography.bodySm.copyWith(
-                color: hasValue ? context.appColors.textPrimary : context.appColors.textDisabled,
+                color: hasValue
+                    ? context.appColors.textPrimary
+                    : context.appColors.textDisabled,
               ),
             ),
             const SizedBox(width: AppSpacing.xs),
@@ -302,7 +334,8 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
       context: context,
       backgroundColor: context.appColors.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
       ),
       builder: (ctx) {
         return SafeArea(
@@ -310,20 +343,18 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
             height: 360,
             child: Column(
               children: [
-                const SizedBox(height: AppSpacing.sm),
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: ctx.appColors.surfaceHigh,
-                    borderRadius: BorderRadius.circular(2),
+                const SizedBox(height: AppSpacing.md),
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 3,
+                    color: ctx.appColors.outline,
                   ),
                 ),
-                const SizedBox(height: AppSpacing.xs),
-
+                const SizedBox(height: AppSpacing.sm),
                 Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
+                    horizontal: AppSpacing.lg,
                     vertical: AppSpacing.xs,
                   ),
                   child: Row(
@@ -331,9 +362,8 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
                     children: [
                       Text(
                         'Duração do serviço',
-                        style: AppTypography.bodySm.copyWith(
+                        style: AppTypography.labelLarge.copyWith(
                           color: ctx.appColors.textPrimary,
-                          fontWeight: FontWeight.w600,
                         ),
                       ),
                       TextButton(
@@ -351,9 +381,7 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
                     ],
                   ),
                 ),
-
-                Divider(height: 1, color: ctx.appColors.surfaceHigh),
-
+                Divider(height: 1, color: ctx.appColors.outline),
                 Expanded(
                   child: StatefulBuilder(
                     builder: (ctx, setPickerState) {
@@ -374,10 +402,12 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
                                 horizontal: AppSpacing.lg,
                               ),
                               color: isSelected
-                                  ? ctx.appColors.primary.withValues(alpha: 0.12)
+                                  ? ctx.appColors.primary
+                                      .withValues(alpha: 0.08)
                                   : Colors.transparent,
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     _formatDuration(min),
@@ -415,9 +445,7 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
     scrollController.dispose();
   }
 
-  // ---------------------------------------------------------------------------
-  // Submit
-  // ---------------------------------------------------------------------------
+  // ── Submit ─────────────────────────────────────────────────────────────────
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
@@ -447,30 +475,37 @@ class _ServiceFormSheetState extends State<ServiceFormSheet> {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Helpers
-  // ---------------------------------------------------------------------------
+  // ── Input decoration ───────────────────────────────────────────────────────
 
-  InputDecoration _inputDecoration(BuildContext context, String label) => InputDecoration(
+  InputDecoration _inputDecoration(BuildContext context, String label) =>
+      InputDecoration(
         labelText: label,
-        labelStyle: AppTypography.bodySm.copyWith(color: context.appColors.textSecondary),
+        labelStyle: AppTypography.bodySm
+            .copyWith(color: context.appColors.textSecondary),
+        floatingLabelStyle: AppTypography.caption
+            .copyWith(color: context.appColors.primary),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: BorderSide(color: context.appColors.surfaceHigh),
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(color: context.appColors.outline),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: BorderSide(color: context.appColors.primary),
+          borderRadius: BorderRadius.zero,
+          borderSide:
+              BorderSide(color: context.appColors.primary, width: 1.5),
         ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: const BorderSide(color: AppColors.error),
+        errorBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(color: AppColors.error),
         ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: const BorderSide(color: AppColors.error),
+        focusedErrorBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(color: AppColors.error, width: 1.5),
         ),
         filled: true,
         fillColor: context.appColors.surface,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.md,
+        ),
       );
 }

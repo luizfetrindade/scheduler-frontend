@@ -17,32 +17,50 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _otpController = TextEditingController();
+
+  int _step = 0;
+  String? _emailForTotp;
 
   static const _kBreakpoint = 720.0;
 
   @override
   void dispose() {
     _emailController.dispose();
-    _passwordController.dispose();
+    _otpController.dispose();
     super.dispose();
   }
 
-  void _submit() {
+  void _submitEmail() {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) return;
+    context.read<AuthBloc>().add(AuthEmailSubmitted(email: email));
+  }
+
+  void _submitTotp(String code) {
+    if (_emailForTotp == null) return;
     context.read<AuthBloc>().add(
-          AuthLoginRequested(
-            email: _emailController.text.trim(),
-            password: _passwordController.text,
-          ),
+          AuthTotpLoginSubmitted(email: _emailForTotp!, code: code),
         );
+  }
+
+  void _goBack() {
+    _otpController.clear();
+    setState(() => _step = 0);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: context.appColors.background,
-      body: BlocListener<AuthBloc, AuthState>(
+      body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
+          if (state is AuthTotpChallengeReady) {
+            setState(() {
+              _emailForTotp = state.email;
+              _step = 1;
+            });
+          }
           if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -52,22 +70,42 @@ class _LoginPageState extends State<LoginPage> {
             );
           }
         },
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            if (constraints.maxWidth < _kBreakpoint) {
-              return _MobileLogin(
-                emailController: _emailController,
-                passwordController: _passwordController,
-                onSubmit: _submit,
-              );
-            }
-            return _DesktopLogin(
-              emailController: _emailController,
-              passwordController: _passwordController,
-              onSubmit: _submit,
-            );
-          },
-        ),
+        builder: (context, state) {
+          final isLoading = state is AuthLoading;
+          final hasOtpError = state is AuthError && _step == 1;
+
+          final formWidget = AnimatedSwitcher(
+            duration: const Duration(milliseconds: 280),
+            transitionBuilder: (child, animation) =>
+                FadeTransition(opacity: animation, child: child),
+            child: _step == 0
+                ? _EmailStep(
+                    key: const ValueKey(0),
+                    emailController: _emailController,
+                    isLoading: isLoading,
+                    onSubmit: _submitEmail,
+                  )
+                : _TotpStep(
+                    key: const ValueKey(1),
+                    email: _emailForTotp ?? '',
+                    otpController: _otpController,
+                    isLoading: isLoading,
+                    hasError: hasOtpError,
+                    onCompleted: _submitTotp,
+                    onSubmit: () => _submitTotp(_otpController.text),
+                    onBack: _goBack,
+                  ),
+          );
+
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth < _kBreakpoint) {
+                return _MobileLogin(formWidget: formWidget, step: _step);
+              }
+              return _DesktopLogin(formWidget: formWidget, step: _step);
+            },
+          );
+        },
       ),
     );
   }
@@ -76,15 +114,10 @@ class _LoginPageState extends State<LoginPage> {
 // ─── Mobile layout ────────────────────────────────────────────────────────────
 
 class _MobileLogin extends StatelessWidget {
-  final TextEditingController emailController;
-  final TextEditingController passwordController;
-  final VoidCallback onSubmit;
+  final Widget formWidget;
+  final int step;
 
-  const _MobileLogin({
-    required this.emailController,
-    required this.passwordController,
-    required this.onSubmit,
-  });
+  const _MobileLogin({required this.formWidget, required this.step});
 
   @override
   Widget build(BuildContext context) {
@@ -93,7 +126,6 @@ class _MobileLogin extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ── Header band ──
             Container(
               color: context.appColors.primary,
               padding: const EdgeInsets.symmetric(
@@ -129,32 +161,15 @@ class _MobileLogin extends StatelessWidget {
                 ],
               ),
             ),
-            // ── Form ──
             Padding(
               padding: const EdgeInsets.all(AppSpacing.lg),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: AppSpacing.md),
-                  Text(
-                    context.l10n.loginTitle,
-                    style: AppTypography.headingMd.copyWith(
-                      color: context.appColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    'Entre com suas credenciais para continuar.',
-                    style: AppTypography.bodySm.copyWith(
-                      color: context.appColors.textSecondary,
-                    ),
-                  ),
+                  _StepHeader(step: step),
                   const SizedBox(height: AppSpacing.xl),
-                  _LoginForm(
-                    emailController: emailController,
-                    passwordController: passwordController,
-                    onSubmit: onSubmit,
-                  ),
+                  formWidget,
                 ],
               ),
             ),
@@ -168,21 +183,15 @@ class _MobileLogin extends StatelessWidget {
 // ─── Desktop layout ───────────────────────────────────────────────────────────
 
 class _DesktopLogin extends StatelessWidget {
-  final TextEditingController emailController;
-  final TextEditingController passwordController;
-  final VoidCallback onSubmit;
+  final Widget formWidget;
+  final int step;
 
-  const _DesktopLogin({
-    required this.emailController,
-    required this.passwordController,
-    required this.onSubmit,
-  });
+  const _DesktopLogin({required this.formWidget, required this.step});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        // ── Left: brand panel ──
         SizedBox(
           width: 420,
           child: Container(
@@ -226,7 +235,6 @@ class _DesktopLogin extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                // ── bottom accent strip ──
                 Row(
                   children: List.generate(
                     4,
@@ -245,7 +253,6 @@ class _DesktopLogin extends StatelessWidget {
             ),
           ),
         ),
-        // ── Right: form panel ──
         Expanded(
           child: Container(
             color: context.appColors.background,
@@ -260,26 +267,9 @@ class _DesktopLogin extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(
-                        context.l10n.loginTitle,
-                        style: AppTypography.displayLg.copyWith(
-                          color: context.appColors.textPrimary,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        'Entre com suas credenciais para continuar.',
-                        style: AppTypography.bodyMd.copyWith(
-                          color: context.appColors.textSecondary,
-                        ),
-                      ),
+                      _StepHeader(step: step),
                       const SizedBox(height: AppSpacing.xxl),
-                      _LoginForm(
-                        emailController: emailController,
-                        passwordController: passwordController,
-                        onSubmit: onSubmit,
-                      ),
+                      formWidget,
                     ],
                   ),
                 ),
@@ -292,7 +282,147 @@ class _DesktopLogin extends StatelessWidget {
   }
 }
 
-// ─── App mark (logo icon) ─────────────────────────────────────────────────────
+// ─── Step header ──────────────────────────────────────────────────────────────
+
+class _StepHeader extends StatelessWidget {
+  final int step;
+  const _StepHeader({required this.step});
+
+  @override
+  Widget build(BuildContext context) {
+    final title = step == 0
+        ? context.l10n.loginTitle
+        : context.l10n.loginTotpTitle;
+    final subtitle = step == 0
+        ? 'Informe seu e-mail para continuar.'
+        : 'Use o Google Authenticator para confirmar sua identidade.';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: AppTypography.headingMd.copyWith(
+            color: context.appColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          subtitle,
+          style: AppTypography.bodySm.copyWith(
+            color: context.appColors.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Step 0: email ────────────────────────────────────────────────────────────
+
+class _EmailStep extends StatelessWidget {
+  final TextEditingController emailController;
+  final bool isLoading;
+  final VoidCallback onSubmit;
+
+  const _EmailStep({
+    super.key,
+    required this.emailController,
+    required this.isLoading,
+    required this.onSubmit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        BaseInputField(
+          label: context.l10n.loginEmailLabel,
+          controller: emailController,
+          keyboardType: TextInputType.emailAddress,
+          prefixIcon: Icons.email_outlined,
+        ),
+        const SizedBox(height: AppSpacing.xl),
+        BaseButton(
+          label: context.l10n.loginContinueButton,
+          isLoading: isLoading,
+          onPressed: isLoading ? null : onSubmit,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _OrDivider(),
+        const SizedBox(height: AppSpacing.md),
+        BaseButton(
+          label: context.l10n.loginNoAccount,
+          variant: BaseButtonVariant.secondary,
+          onPressed: () => context.go(AppRoutes.register),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Step 1: TOTP code ────────────────────────────────────────────────────────
+
+class _TotpStep extends StatelessWidget {
+  final String email;
+  final TextEditingController otpController;
+  final bool isLoading;
+  final bool hasError;
+  final void Function(String) onCompleted;
+  final VoidCallback onSubmit;
+  final VoidCallback onBack;
+
+  const _TotpStep({
+    super.key,
+    required this.email,
+    required this.otpController,
+    required this.isLoading,
+    required this.hasError,
+    required this.onCompleted,
+    required this.onSubmit,
+    required this.onBack,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          context.l10n.loginTotpInstruction(email),
+          style: AppTypography.bodySm.copyWith(
+            color: context.appColors.textSecondary,
+            height: 1.6,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xl),
+        Center(
+          child: OtpInputField(
+            controller: otpController,
+            hasError: hasError,
+            isDisabled: isLoading,
+            onCompleted: onCompleted,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xl),
+        BaseButton(
+          label: context.l10n.loginButton,
+          isLoading: isLoading,
+          onPressed: isLoading ? null : onSubmit,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        BaseButton(
+          label: context.l10n.loginBackButton,
+          variant: BaseButtonVariant.ghost,
+          onPressed: isLoading ? null : onBack,
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Shared widgets ───────────────────────────────────────────────────────────
 
 class _AppMark extends StatelessWidget {
   final Color iconColor;
@@ -315,83 +445,25 @@ class _AppMark extends StatelessWidget {
   }
 }
 
-// ─── Shared form ──────────────────────────────────────────────────────────────
-
-class _LoginForm extends StatelessWidget {
-  final TextEditingController emailController;
-  final TextEditingController passwordController;
-  final VoidCallback onSubmit;
-
-  const _LoginForm({
-    required this.emailController,
-    required this.passwordController,
-    required this.onSubmit,
-  });
-
+class _OrDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Row(
       children: [
-        BaseInputField(
-          label: context.l10n.loginEmailLabel,
-          controller: emailController,
-          keyboardType: TextInputType.emailAddress,
-          prefixIcon: Icons.email_outlined,
+        Expanded(
+          child: Divider(color: context.appColors.outline, thickness: 1),
         ),
-        const SizedBox(height: AppSpacing.md),
-        BaseInputField(
-          label: context.l10n.loginPasswordLabel,
-          controller: passwordController,
-          isPassword: true,
-          prefixIcon: Icons.lock_outlined,
-        ),
-        const SizedBox(height: AppSpacing.xl),
-        BlocBuilder<AuthBloc, AuthState>(
-          builder: (context, state) => BaseButton(
-            label: context.l10n.loginButton,
-            isLoading: state is AuthLoading,
-            onPressed: state is AuthLoading ? null : onSubmit,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          child: Text(
+            'ou',
+            style: AppTypography.caption.copyWith(
+              color: context.appColors.textDisabled,
+            ),
           ),
         ),
-        const SizedBox(height: AppSpacing.md),
-        // ── divider + link ──
-        Row(
-          children: [
-            Expanded(
-              child: Divider(
-                color: context.appColors.outline,
-                thickness: 1,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: Text(
-                'ou',
-                style: AppTypography.caption.copyWith(
-                  color: context.appColors.textDisabled,
-                ),
-              ),
-            ),
-            Expanded(
-              child: Divider(
-                color: context.appColors.outline,
-                thickness: 1,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.md),
-        OutlinedButton(
-          onPressed: () => context.go(AppRoutes.register),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: context.appColors.textPrimary,
-            side: BorderSide(color: context.appColors.outline, width: 1.5),
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-            minimumSize: const Size.fromHeight(56),
-            textStyle: AppTypography.bodySm,
-          ),
-          child: Text(context.l10n.loginNoAccount),
+        Expanded(
+          child: Divider(color: context.appColors.outline, thickness: 1),
         ),
       ],
     );

@@ -8,13 +8,37 @@
   "workoutNewButton": "Novo Treino",
   "searchLabel": "Buscar treino",
   "searchHint": "Ex: Peito, Costas, Pernas...",
+
   "loginTitle": "Bem-vindo de volta",
   "loginEmailLabel": "E-mail",
-  "loginPasswordLabel": "Senha",
-  "loginButton": "Entrar",
+  "loginContinueButton": "Continuar",
   "loginNoAccount": "Não tem conta? Criar conta",
+
+  "loginTotpTitle": "Verificação em dois fatores",
+  "loginTotpInstruction": "Abra o Google Authenticator e insira o código de 6 dígitos para {email}",
+  "@loginTotpInstruction": {
+    "placeholders": {
+      "email": { "type": "String" }
+    }
+  },
+  "loginTotpCodeLabel": "Código do autenticador",
+  "loginButton": "Entrar",
+  "loginBackButton": "Voltar",
+
   "registerTitle": "Criar conta",
   "registerNameLabel": "Nome completo",
   "registerButton": "Criar conta",
-  "registerHaveAccount": "Já tem conta? Entrar"
+  "registerHaveAccount": "Já tem conta? Entrar",
+
+  "registerQrTitle": "Configure o autenticador",
+  "registerQrInstruction": "Abra o Google Authenticator, toque em + e escaneie o QR code abaixo para configurar seu autenticador.",
+  "registerManualEntry": "Não consigo escanear",
+  "registerManualSecretLabel": "Digite esta chave manualmente no app:",
+  "registerContinueAfterQr": "Já escaneei, continuar",
+
+  "registerConfirmTitle": "Confirme o código",
+  "registerConfirmInstruction": "Insira o código de 6 dígitos gerado pelo Google Authenticator para confirmar a configuração.",
+  "registerConfirmCodeLabel": "Código do autenticador",
+  "registerConfirmButton": "Confirmar",
+  "registerBackButton": "Voltar"
 }

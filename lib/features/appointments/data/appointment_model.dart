@@ -82,8 +82,8 @@ class AppointmentModel extends Equatable {
     return AppointmentModel(
       id: json['id'] as String,
       type: AppointmentTypeX.fromString(json['type'] as String? ?? 'APPOINTMENT'),
-      startsAt: DateTime.parse(json['startsAt'] as String),
-      endsAt: DateTime.parse(json['endsAt'] as String),
+      startsAt: DateTime.parse(json['startsAt'] as String).toLocal(),
+      endsAt: DateTime.parse(json['endsAt'] as String).toLocal(),
       status: AppointmentStatusX.fromString(json['status'] as String? ?? 'PENDING'),
       clientName: client?['name'] as String? ?? 'Cliente',
       title: json['title'] as String?,

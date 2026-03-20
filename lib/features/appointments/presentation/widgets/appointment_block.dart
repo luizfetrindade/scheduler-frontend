@@ -6,11 +6,17 @@ import 'package:scheduler_frontend/features/appointments/presentation/widgets/ti
 class AppointmentBlock extends StatelessWidget {
   final AppointmentModel appointment;
   final VoidCallback? onTap;
+  final int lane;
+  final int totalLanes;
+  final double containerWidth;
 
   const AppointmentBlock({
     super.key,
     required this.appointment,
+    required this.containerWidth,
     this.onTap,
+    this.lane = 0,
+    this.totalLanes = 1,
   });
 
   @override
@@ -22,10 +28,16 @@ class AppointmentBlock extends StatelessWidget {
     );
     final clampedHeight = height.clamp(20.0, double.infinity);
 
+    const outerGap = 2.0;
+    const innerGap = 2.0;
+    final laneWidth = (containerWidth - outerGap * 2) / totalLanes;
+    final left = outerGap + lane * laneWidth;
+    final width = laneWidth - (lane < totalLanes - 1 ? innerGap : 0);
+
     return Positioned(
       top: top,
-      left: 2,
-      right: 2,
+      left: left,
+      width: width,
       height: clampedHeight,
       child: GestureDetector(
         onTap: onTap,

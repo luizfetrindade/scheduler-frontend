@@ -34,7 +34,6 @@ class AppointmentRepository {
   Future<Result<AppointmentModel>> createAppointment({
     required String slug,
     required String clientName,
-    required String clientEmail,
     required DateTime startsAt,
     int durationMinutes = 60,
     String? notes,
@@ -48,7 +47,6 @@ class AppointmentRepository {
           'startsAt': startsAt.toUtc().toIso8601String(),
           'durationMinutes': durationMinutes,
           'clientName': clientName,
-          'clientEmail': clientEmail,
           'bookedBy': 'BUSINESS',
           if (notes != null && notes.isNotEmpty) 'notes': notes,
           if (recurrenceRule != null) 'recurrenceRule': recurrenceRule,

@@ -111,8 +111,8 @@ class _CreateBlockSheetState extends State<CreateBlockSheet> {
                     padding: const EdgeInsets.symmetric(
                       vertical: AppSpacing.md,
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.md),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.zero,
                     ),
                   ),
                   child: _isSubmitting
@@ -142,8 +142,7 @@ class _CreateBlockSheetState extends State<CreateBlockSheet> {
       ),
       decoration: BoxDecoration(
         color: context.appColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: context.appColors.surfaceHigh),
+        border: Border.all(color: context.appColors.outline),
       ),
       child: Row(
         children: [
@@ -214,14 +213,12 @@ class _CreateBlockSheetState extends State<CreateBlockSheet> {
                         color: context.appColors.textDisabled,
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
-                        borderSide:
-                            BorderSide(color: context.appColors.surfaceHigh),
+                        borderRadius: BorderRadius.zero,
+                        borderSide: BorderSide(color: context.appColors.outline),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
-                        borderSide:
-                            BorderSide(color: context.appColors.primary),
+                        borderRadius: BorderRadius.zero,
+                        borderSide: BorderSide(color: context.appColors.primary),
                       ),
                       filled: true,
                       fillColor: context.appColors.surface,
@@ -290,8 +287,7 @@ class _CreateBlockSheetState extends State<CreateBlockSheet> {
       ),
       decoration: BoxDecoration(
         color: context.appColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: context.appColors.surfaceHigh),
+        border: Border.all(color: context.appColors.outline),
       ),
       child: Row(
         children: [
@@ -371,26 +367,13 @@ class _CreateBlockSheetState extends State<CreateBlockSheet> {
   InputDecoration _inputDecoration(BuildContext context, String label) =>
       InputDecoration(
         labelText: label,
-        labelStyle: AppTypography.bodySm.copyWith(
-          color: context.appColors.textSecondary,
+        errorBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(color: AppColors.error),
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: BorderSide(color: context.appColors.surfaceHigh),
+        focusedErrorBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(color: AppColors.error),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: BorderSide(color: context.appColors.primary),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: const BorderSide(color: AppColors.error),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: const BorderSide(color: AppColors.error),
-        ),
-        filled: true,
-        fillColor: context.appColors.surface,
       );
 }

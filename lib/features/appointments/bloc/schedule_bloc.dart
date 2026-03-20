@@ -175,7 +175,6 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
     final result = await _repository.createAppointment(
       slug: _slug,
       clientName: event.clientName,
-      clientEmail: event.clientEmail,
       startsAt: event.startsAt,
       durationMinutes: event.durationMinutes,
       notes: event.notes,
@@ -353,6 +352,7 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
 
   String _mutationMessage(AppFailure failure) => switch (failure) {
         NetworkFailure() => 'Sem conexão com a internet',
+        ServerFailure(:final message) => message,
         _ => 'Não foi possível completar a ação. Tente novamente.',
       };
 }

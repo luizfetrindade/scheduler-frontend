@@ -33,4 +33,30 @@ void main() {
       expect(a, equals(b));
     });
   });
+
+  group('ProfessionalRoleModel.fromJson with professionalCount', () {
+    test('parses professionalCount from _count.professionals', () {
+      final json = {
+        'id': 'r1',
+        'businessId': 'b1',
+        'name': 'Cabeleireira',
+        '_count': {'professionals': 3},
+      };
+      final model = ProfessionalRoleModel.fromJson(json);
+      expect(model.professionalCount, 3);
+    });
+
+    test('professionalCount is null when _count absent', () {
+      final json = {'id': 'r1', 'businessId': 'b1', 'name': 'Cabeleireira'};
+      final model = ProfessionalRoleModel.fromJson(json);
+      expect(model.professionalCount, isNull);
+    });
+  });
+
+  group('ProfessionalRoleModel.copyWith with professionalCount', () {
+    test('copies professionalCount', () {
+      final base = ProfessionalRoleModel(id: 'r1', businessId: 'b1', name: 'X', professionalCount: 2);
+      expect(base.copyWith(professionalCount: 5).professionalCount, 5);
+    });
+  });
 }

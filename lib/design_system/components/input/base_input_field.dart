@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:scheduler_frontend/design_system/tokens/app_colors.dart';
 import 'package:scheduler_frontend/design_system/tokens/app_colors_extension.dart';
 import 'package:scheduler_frontend/design_system/tokens/app_radius.dart';
@@ -18,6 +19,7 @@ class BaseInputField extends StatefulWidget {
   final bool isPassword;
   final bool isDisabled;
   final TextInputType keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
 
   const BaseInputField({
     super.key,
@@ -30,6 +32,7 @@ class BaseInputField extends StatefulWidget {
     this.isPassword = false,
     this.isDisabled = false,
     this.keyboardType = TextInputType.text,
+    this.inputFormatters,
   });
 
   @override
@@ -62,6 +65,7 @@ class _BaseInputFieldState extends State<BaseInputField> {
           enabled: !widget.isDisabled,
           obscureText: widget.isPassword && _obscureText,
           keyboardType: widget.keyboardType,
+          inputFormatters: widget.inputFormatters,
           style: AppTypography.bodyMd.copyWith(color: context.appColors.textPrimary),
           decoration: InputDecoration(
             hintText: widget.hint,

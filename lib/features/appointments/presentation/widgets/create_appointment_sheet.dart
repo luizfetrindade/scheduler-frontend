@@ -6,6 +6,9 @@ import 'package:scheduler_frontend/features/appointments/bloc/schedule_bloc.dart
 import 'package:scheduler_frontend/features/appointments/bloc/schedule_event.dart';
 import 'package:scheduler_frontend/features/appointments/bloc/schedule_state.dart';
 import 'package:scheduler_frontend/features/appointments/presentation/widgets/recurrence_selector.dart';
+import 'package:scheduler_frontend/features/clients/bloc/clients_bloc.dart';
+import 'package:scheduler_frontend/features/clients/bloc/clients_state.dart';
+import 'package:scheduler_frontend/features/clients/data/client_model.dart';
 import 'package:scheduler_frontend/features/services/bloc/services_bloc.dart';
 import 'package:scheduler_frontend/features/services/bloc/services_state.dart';
 import 'package:scheduler_frontend/features/services/data/service_model.dart';
@@ -22,7 +25,7 @@ class CreateAppointmentSheet extends StatefulWidget {
 class _CreateAppointmentSheetState extends State<CreateAppointmentSheet> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
+  final _nameFocusNode = FocusNode();
   final _notesController = TextEditingController();
   final _customDurationController = TextEditingController();
   late DateTime _selectedDateTime;
@@ -43,7 +46,7 @@ class _CreateAppointmentSheetState extends State<CreateAppointmentSheet> {
   @override
   void dispose() {
     _nameController.dispose();
-    _emailController.dispose();
+    _nameFocusNode.dispose();
     _notesController.dispose();
     _customDurationController.dispose();
     super.dispose();
@@ -84,39 +87,15 @@ class _CreateAppointmentSheetState extends State<CreateAppointmentSheet> {
                 const SizedBox(height: AppSpacing.md),
                 _buildDurationSelector(),
                 const SizedBox(height: AppSpacing.md),
-                TextFormField(
-                  controller: _nameController,
-                  decoration: _inputDecoration(context, 'Nome do cliente'),
-                  style: AppTypography.bodySm.copyWith(
-                    color: context.appColors.textPrimary,
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().length < 2) {
-                      return 'Nome deve ter pelo menos 2 caracteres';
-                    }
-                    if (value.trim().length > 100) {
-                      return 'Nome deve ter no máximo 100 caracteres';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: AppSpacing.md),
-                TextFormField(
-                  controller: _emailController,
-                  decoration: _inputDecoration(context, 'Email do cliente'),
-                  keyboardType: TextInputType.emailAddress,
-                  style: AppTypography.bodySm.copyWith(
-                    color: context.appColors.textPrimary,
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Email é obrigatório';
-                    }
-                    final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-                    if (!emailRegex.hasMatch(value.trim())) {
-                      return 'Email inválido';
-                    }
-                    return null;
+                BlocBuilder<ClientsBloc, ClientsState>(
+                  builder: (context, clientsState) {
+                    final clients = switch (clientsState) {
+                      ClientsLoaded(:final clients) => clients,
+                      ClientsActionInProgress(:final clients) => clients,
+                      ClientsError(:final clients) => clients,
+                      _ => <ClientModel>[],
+                    };
+                    return _buildClientNameField(context, clients);
                   },
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -133,34 +112,106 @@ class _CreateAppointmentSheetState extends State<CreateAppointmentSheet> {
                   onChanged: (rrule) => _recurrenceRule = rrule,
                 ),
                 const SizedBox(height: AppSpacing.lg),
-                ElevatedButton(
-                  onPressed: _isSubmitting ? null : _submit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: context.appColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppSpacing.md,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.md),
-                    ),
-                  ),
-                  child: _isSubmitting
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text('Criar Agendamento'),
+                BaseButton(
+                  label: 'Criar Agendamento',
+                  onPressed: _submit,
+                  isLoading: _isSubmitting,
                 ),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildClientNameField(BuildContext context, List<ClientModel> clients) {
+    return RawAutocomplete<ClientModel>(
+      textEditingController: _nameController,
+      focusNode: _nameFocusNode,
+      displayStringForOption: (c) => c.name,
+      optionsBuilder: (textEditingValue) {
+        final query = textEditingValue.text.toLowerCase().trim();
+        if (query.isEmpty) return const [];
+        return clients.where((c) => c.name.toLowerCase().contains(query));
+      },
+      onSelected: (_) {},
+      fieldViewBuilder: (ctx, textCtrl, focusNode, onFieldSubmitted) {
+        return TextFormField(
+          controller: textCtrl,
+          focusNode: focusNode,
+          decoration: _inputDecoration(context, 'Nome do cliente'),
+          style: AppTypography.bodySm.copyWith(
+            color: context.appColors.textPrimary,
+          ),
+          validator: (value) {
+            if (value == null || value.trim().length < 2) {
+              return 'Nome deve ter pelo menos 2 caracteres';
+            }
+            if (value.trim().length > 100) {
+              return 'Nome deve ter no máximo 100 caracteres';
+            }
+            return null;
+          },
+        );
+      },
+      optionsViewBuilder: (ctx, onSelected, options) {
+        return Align(
+          alignment: Alignment.topLeft,
+          child: Material(
+            elevation: 4,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            color: context.appColors.surface,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 200),
+              child: ListView.builder(
+                padding: EdgeInsets.zero,
+                shrinkWrap: true,
+                itemCount: options.length,
+                itemBuilder: (ctx, i) {
+                  final client = options.elementAt(i);
+                  final subtitle = [
+                    if (client.email != null) client.email!,
+                    if (client.phone.isNotEmpty) client.phone,
+                  ].join(' · ');
+                  return InkWell(
+                    onTap: () => onSelected(client),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.sm,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            client.name,
+                            style: AppTypography.bodySm.copyWith(
+                              color: context.appColors.textPrimary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          if (subtitle.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              subtitle,
+                              style: AppTypography.bodySm.copyWith(
+                                color: context.appColors.textSecondary,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -186,8 +237,7 @@ class _CreateAppointmentSheetState extends State<CreateAppointmentSheet> {
             ),
             decoration: BoxDecoration(
               color: context.appColors.surface,
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border.all(color: context.appColors.surfaceHigh),
+              border: Border.all(color: context.appColors.outline),
             ),
             child: Row(
               children: [
@@ -406,8 +456,7 @@ class _CreateAppointmentSheetState extends State<CreateAppointmentSheet> {
       ),
       decoration: BoxDecoration(
         color: context.appColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: context.appColors.surfaceHigh),
+        border: Border.all(color: context.appColors.outline),
       ),
       child: Row(
         children: [
@@ -478,11 +527,11 @@ class _CreateAppointmentSheetState extends State<CreateAppointmentSheet> {
                         color: context.appColors.textDisabled,
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
-                        borderSide: BorderSide(color: context.appColors.surfaceHigh),
+                        borderRadius: BorderRadius.zero,
+                        borderSide: BorderSide(color: context.appColors.outline),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                        borderRadius: BorderRadius.zero,
                         borderSide: BorderSide(color: context.appColors.primary),
                       ),
                       filled: true,
@@ -602,7 +651,6 @@ class _CreateAppointmentSheetState extends State<CreateAppointmentSheet> {
     context.read<ScheduleBloc>().add(
           ScheduleAppointmentCreateRequested(
             clientName: _nameController.text.trim(),
-            clientEmail: _emailController.text.trim(),
             startsAt: _selectedDateTime,
             durationMinutes: duration,
             notes: _notesController.text.trim().isEmpty
@@ -617,27 +665,14 @@ class _CreateAppointmentSheetState extends State<CreateAppointmentSheet> {
   InputDecoration _inputDecoration(BuildContext context, String label) =>
       InputDecoration(
         labelText: label,
-        labelStyle: AppTypography.bodySm.copyWith(
-          color: context.appColors.textSecondary,
+        errorBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(color: AppColors.error),
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: BorderSide(color: context.appColors.surfaceHigh),
+        focusedErrorBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(color: AppColors.error),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: BorderSide(color: context.appColors.primary),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: const BorderSide(color: AppColors.error),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: const BorderSide(color: AppColors.error),
-        ),
-        filled: true,
-        fillColor: context.appColors.surface,
       );
 }
 
@@ -663,8 +698,7 @@ class _DateTimeTile extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: context.appColors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(color: context.appColors.surfaceHigh),
+          border: Border.all(color: context.appColors.outline),
         ),
         child: Row(
           children: [

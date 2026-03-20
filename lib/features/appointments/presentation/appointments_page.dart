@@ -52,7 +52,7 @@ class AppointmentsBody extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         backgroundColor: context.appColors.primary,
         onPressed: () => _showFabOptions(context),
-        child: const Icon(Icons.add, color: Colors.white),
+        child: Icon(Icons.add, color: Theme.of(context).colorScheme.onPrimary),
       ),
       body: SafeArea(
         child: MultiBlocListener(

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:scheduler_frontend/design_system/base_design_system.dart';
 import 'package:scheduler_frontend/features/appointments/data/appointment_model.dart';
@@ -76,7 +78,7 @@ class TimeColumn extends StatelessWidget {
           final label =
               '${hour.toString().padLeft(2, '0')}:00';
           return Positioned(
-            top: i * kSlotHeight - 7,
+            top: i * kSlotHeight + 2,
             left: 0,
             right: 4,
             child: Text(
@@ -112,6 +114,65 @@ class SlotGrid extends StatelessWidget {
             ),
           );
         }),
+      ),
+    );
+  }
+}
+
+/// Horizontal indicator of the current time. Must be placed inside a [Stack]
+/// that spans [kGridTotalHeight]. Refreshes every minute automatically.
+class CurrentTimeLine extends StatefulWidget {
+  const CurrentTimeLine({super.key});
+
+  @override
+  State<CurrentTimeLine> createState() => _CurrentTimeLineState();
+}
+
+class _CurrentTimeLineState extends State<CurrentTimeLine> {
+  late DateTime _now;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _now = DateTime.now();
+    _timer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted) setState(() => _now = DateTime.now());
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final top = TimeGridPositioner.topOffset(_now);
+    return Positioned(
+      // center the 8px dot on the hour line
+      top: top - 4,
+      left: 0,
+      right: 0,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: const BoxDecoration(
+              color: AppColors.error,
+              shape: BoxShape.circle,
+            ),
+          ),
+          Expanded(
+            child: Container(
+              height: 1.5,
+              color: AppColors.error,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -10,29 +10,38 @@ import 'package:scheduler_frontend/features/clients/data/client_model.dart';
 import 'package:scheduler_frontend/features/clients/presentation/widgets/client_card.dart';
 import 'package:scheduler_frontend/features/clients/presentation/widgets/client_form_sheet.dart';
 
-class ClientsPage extends StatelessWidget {
+class ClientsPage extends StatefulWidget {
   const ClientsPage({super.key});
+
+  @override
+  State<ClientsPage> createState() => _ClientsPageState();
+}
+
+class _ClientsPageState extends State<ClientsPage> {
+  final _searchCtrl = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  List<ClientModel> _filtered(List<ClientModel> clients) {
+    if (_query.isEmpty) return clients;
+    final q = _query.toLowerCase();
+    return clients
+        .where((c) =>
+            c.name.toLowerCase().contains(q) ||
+            c.phone.contains(q) ||
+            (c.email?.toLowerCase().contains(q) ?? false))
+        .toList();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: context.appColors.background,
-      appBar: AppBar(
-        backgroundColor: context.appColors.background,
-        elevation: 0,
-        title: Text(
-          'Clientes',
-          style: AppTypography.headingMd
-              .copyWith(color: context.appColors.textPrimary),
-        ),
-      ),
-      // TODO: hide FAB for staff role
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: context.appColors.primary,
-        foregroundColor: context.appColors.background,
-        onPressed: () => _openForm(context, initial: null),
-        child: const Icon(Icons.add),
-      ),
       body: BlocConsumer<ClientsBloc, ClientsState>(
         listener: (context, state) {
           if (state is ClientsError && state.clients.isNotEmpty) {
@@ -47,90 +56,115 @@ class ClientsPage extends StatelessWidget {
         builder: (context, state) {
           if (state is ClientsLoading) {
             return Center(
-              child: CircularProgressIndicator(
-                  color: context.appColors.primary),
+              child: CircularProgressIndicator(color: context.appColors.primary),
             );
           }
 
-          final clients = switch (state) {
+          final allClients = switch (state) {
             ClientsLoaded(:final clients) => clients,
             ClientsActionInProgress(:final clients) => clients,
             ClientsError(:final clients) => clients,
             _ => <ClientModel>[],
           };
 
-          if (clients.isEmpty) {
-            return _buildEmptyState(context);
-          }
+          final clients = _filtered(allClients);
 
           final businessState = context.read<BusinessBloc>().state;
           final businessId = businessState is BusinessLoaded
               ? businessState.active.id
               : '';
 
-          return ListView.separated(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            itemCount: clients.length,
-            separatorBuilder: (context, index) =>
-                const SizedBox(height: AppSpacing.sm),
-            itemBuilder: (_, i) {
-              final client = clients[i];
-              return ClientCard(
-                client: client,
-                businessId: businessId,
-                onEdit: () => _openForm(context, initial: client),
-                onDelete: () => _confirmDelete(context, client),
-              );
-            },
+          return SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // ── Header ──────────────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                    AppSpacing.sm,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Clientes',
+                        style: AppTypography.headingMd.copyWith(
+                          color: context.appColors.textPrimary,
+                        ),
+                      ),
+                      if (allClients.isNotEmpty) ...[
+                        const SizedBox(width: AppSpacing.sm),
+                        _CountBadge(count: allClients.length),
+                      ],
+                      const Spacer(),
+                      // TODO: hide for staff role
+                      BaseButton(
+                        label: 'Novo cliente',
+                        prefixIcon: Icons.add,
+                        onPressed: () => _openForm(context, initial: null),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // ── Search ──────────────────────────────────────────────
+                if (allClients.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.lg,
+                      0,
+                      AppSpacing.lg,
+                      AppSpacing.sm,
+                    ),
+                    child: _SearchField(
+                      controller: _searchCtrl,
+                      onChanged: (v) => setState(() => _query = v),
+                    ),
+                  ),
+
+                Divider(height: 1, color: context.appColors.outline),
+
+                // ── Body ────────────────────────────────────────────────
+                Expanded(
+                  child: allClients.isEmpty
+                      ? _EmptyState(
+                          isFirstTime: true,
+                          onAdd: () => _openForm(context, initial: null),
+                        )
+                      : clients.isEmpty
+                          ? const _EmptyState(isFirstTime: false)
+                          : ListView.separated(
+                              padding: const EdgeInsets.all(AppSpacing.lg),
+                              itemCount: clients.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(height: AppSpacing.sm),
+                              itemBuilder: (_, i) {
+                                final client = clients[i];
+                                return ClientCard(
+                                  client: client,
+                                  businessId: businessId,
+                                  onEdit: () =>
+                                      _openForm(context, initial: client),
+                                  onDelete: () =>
+                                      _confirmDelete(context, client),
+                                );
+                              },
+                            ),
+                ),
+              ],
+            ),
           );
         },
       ),
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.people_outline,
-              size: 48, color: context.appColors.textDisabled),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            'Nenhum cliente cadastrado',
-            style: AppTypography.bodySm.copyWith(
-              color: context.appColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          OutlinedButton.icon(
-            onPressed: () => _openForm(context, initial: null),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: context.appColors.primary,
-              side: BorderSide(color: context.appColors.primary),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.lg),
-              ),
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.lg,
-                vertical: AppSpacing.sm,
-              ),
-            ),
-            icon: const Icon(Icons.add, size: 18),
-            label: Text(
-              'Adicionar cliente',
-              style: AppTypography.bodySm,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _openForm(BuildContext context, {required ClientModel? initial}) {
     final businessState = context.read<BusinessBloc>().state;
-    if (businessState is! BusinessLoaded) return; // guard: no-op if business not loaded
-    final businessId = businessState.active.id;
+    if (businessState is! BusinessLoaded) return;
 
     showModalBottomSheet(
       context: context,
@@ -142,7 +176,10 @@ class ClientsPage extends StatelessWidget {
       ),
       builder: (_) => BlocProvider.value(
         value: context.read<ClientsBloc>(),
-        child: ClientFormSheet(initial: initial, businessId: businessId),
+        child: ClientFormSheet(
+          initial: initial,
+          businessId: businessState.active.id,
+        ),
       ),
     );
   }
@@ -151,38 +188,71 @@ class ClientsPage extends StatelessWidget {
       BuildContext context, ClientModel client) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => Dialog(
         backgroundColor: ctx.appColors.surface,
-        title: Text(
-          'Excluir cliente',
-          style: AppTypography.bodySm
-              .copyWith(color: ctx.appColors.textPrimary),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
         ),
-        content: Text(
-          'Tem certeza que deseja excluir "${client.name}"? '
-          'O vínculo com este negócio será removido, '
-          'mas a conta do cliente será preservada.',
-          style: AppTypography.bodySm
-              .copyWith(color: ctx.appColors.textSecondary),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    color: AppColors.error.withValues(alpha: 0.1),
+                    child: const Icon(
+                      Icons.delete_outline,
+                      color: AppColors.error,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Text(
+                    'Excluir cliente',
+                    style: AppTypography.labelLarge.copyWith(
+                      color: ctx.appColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                'Tem certeza que deseja excluir "${client.name}"? '
+                'O vínculo com este negócio será removido, '
+                'mas a conta do cliente será preservada.',
+                style: AppTypography.bodySm.copyWith(
+                  color: ctx.appColors.textSecondary,
+                  height: 1.6,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              Row(
+                children: [
+                  Expanded(
+                    child: BaseButton(
+                      label: 'Cancelar',
+                      variant: BaseButtonVariant.secondary,
+                      onPressed: () => Navigator.of(ctx).pop(false),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: BaseButton(
+                      label: 'Excluir',
+                      variant: BaseButtonVariant.destructive,
+                      onPressed: () => Navigator.of(ctx).pop(true),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(
-              'Cancelar',
-              style: AppTypography.bodySm.copyWith(
-                  color: ctx.appColors.textSecondary),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(
-              'Excluir',
-              style:
-                  AppTypography.bodySm.copyWith(color: AppColors.error),
-            ),
-          ),
-        ],
       ),
     );
 
@@ -195,5 +265,161 @@ class ClientsPage extends StatelessWidget {
             clientId: client.id,
           ));
     }
+  }
+}
+
+// ── Count badge ───────────────────────────────────────────────────────────────
+
+class _CountBadge extends StatelessWidget {
+  final int count;
+  const _CountBadge({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: 2,
+      ),
+      color: context.appColors.surfaceHigh,
+      child: Text(
+        '$count',
+        style: AppTypography.caption.copyWith(
+          color: context.appColors.textSecondary,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+// ── Search field ──────────────────────────────────────────────────────────────
+
+class _SearchField extends StatelessWidget {
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+
+  const _SearchField({required this.controller, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: controller,
+      builder: (context, value, _) {
+        return TextField(
+          controller: controller,
+          onChanged: onChanged,
+          style: AppTypography.bodySm.copyWith(
+            color: context.appColors.textPrimary,
+          ),
+          decoration: InputDecoration(
+            hintText: 'Buscar por nome, telefone ou e-mail…',
+            hintStyle: AppTypography.bodySm.copyWith(
+              color: context.appColors.textDisabled,
+            ),
+            prefixIcon: Icon(
+              Icons.search,
+              size: 18,
+              color: context.appColors.textSecondary,
+            ),
+            suffixIcon: value.text.isNotEmpty
+                ? IconButton(
+                    icon: Icon(
+                      Icons.close,
+                      size: 16,
+                      color: context.appColors.textSecondary,
+                    ),
+                    onPressed: () {
+                      controller.clear();
+                      onChanged('');
+                    },
+                  )
+                : null,
+            filled: true,
+            fillColor: context.appColors.surface,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.zero,
+              borderSide: BorderSide(color: context.appColors.outline),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.zero,
+              borderSide: BorderSide(color: context.appColors.outline),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.zero,
+              borderSide: BorderSide(
+                color: context.appColors.primary,
+                width: 1.5,
+              ),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.md,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+
+class _EmptyState extends StatelessWidget {
+  final bool isFirstTime;
+  final VoidCallback? onAdd;
+
+  const _EmptyState({required this.isFirstTime, this.onAdd});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xxxl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              color: context.appColors.surfaceHigh,
+              child: Icon(
+                isFirstTime ? Icons.people_outline : Icons.search_off_outlined,
+                size: 24,
+                color: context.appColors.textDisabled,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              isFirstTime
+                  ? 'Nenhum cliente cadastrado'
+                  : 'Nenhum resultado encontrado',
+              style: AppTypography.labelLarge.copyWith(
+                color: context.appColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              isFirstTime
+                  ? 'Adicione seu primeiro cliente para começar a\ngerenciar agendamentos.'
+                  : 'Tente buscar por outro nome, telefone ou e-mail.',
+              style: AppTypography.bodySm.copyWith(
+                color: context.appColors.textSecondary,
+                height: 1.6,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            if (isFirstTime && onAdd != null) ...[
+              const SizedBox(height: AppSpacing.xl),
+              BaseButton(
+                label: 'Adicionar cliente',
+                prefixIcon: Icons.add,
+                onPressed: onAdd,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 }

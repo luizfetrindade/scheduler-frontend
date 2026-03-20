@@ -56,61 +56,77 @@ class _WeekViewState extends State<WeekView> {
         Expanded(
           child: SingleChildScrollView(
             controller: _scrollController,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const TimeColumn(),
-                ...days.map((day) {
-                  final key = DateFormat('yyyy-MM-dd').format(day);
-                  final appointments = widget.appointmentsByDate[key] ?? [];
-                  final isToday = day.year == today.year &&
-                      day.month == today.month &&
-                      day.day == today.day;
-                  final laneData = computeLanes(appointments);
-                  return Expanded(
-                    child: Container(
-                      height: kGridTotalHeight,
-                      color: isToday
-                          ? context.appColors.primaryDark.withValues(alpha: 0.06)
-                          : null,
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          final containerWidth = constraints.maxWidth;
-                          return GestureDetector(
-                            behavior: HitTestBehavior.translucent,
-                            onTapUp: widget.onSlotTap == null
-                                ? null
-                                : (details) {
-                                    final tappedTime = _timeFromOffset(
-                                      details.localPosition.dy,
-                                      day,
-                                    );
-                                    widget.onSlotTap!(tappedTime);
-                                  },
-                            child: Stack(
-                              children: [
-                                const SlotGrid(),
-                                ...laneData.map(
-                                  (item) => AppointmentBlock(
-                                    appointment: item.appointment,
-                                    containerWidth: containerWidth,
-                                    lane: item.lane,
-                                    totalLanes: item.totalLanes,
-                                    onTap: widget.onAppointmentTap == null
-                                        ? null
-                                        : () => widget.onAppointmentTap!(
-                                            item.appointment),
+            padding: const EdgeInsets.only(top: AppSpacing.md),
+            child: SizedBox(
+              height: kGridTotalHeight,
+              child: Stack(
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const TimeColumn(),
+                      ...days.map((day) {
+                        final key = DateFormat('yyyy-MM-dd').format(day);
+                        final appointments =
+                            widget.appointmentsByDate[key] ?? [];
+                        final isToday = day.year == today.year &&
+                            day.month == today.month &&
+                            day.day == today.day;
+                        final laneData = computeLanes(appointments);
+                        return Expanded(
+                          child: Container(
+                            height: kGridTotalHeight,
+                            color: isToday
+                                ? context.appColors.primaryDark
+                                    .withValues(alpha: 0.06)
+                                : null,
+                            child: LayoutBuilder(
+                              builder: (context, constraints) {
+                                final containerWidth = constraints.maxWidth;
+                                return GestureDetector(
+                                  behavior: HitTestBehavior.translucent,
+                                  onTapUp: widget.onSlotTap == null
+                                      ? null
+                                      : (details) {
+                                          final tappedTime = _timeFromOffset(
+                                            details.localPosition.dy,
+                                            day,
+                                          );
+                                          widget.onSlotTap!(tappedTime);
+                                        },
+                                  child: Stack(
+                                    children: [
+                                      const SlotGrid(),
+                                      ...laneData.map(
+                                        (item) => AppointmentBlock(
+                                          appointment: item.appointment,
+                                          containerWidth: containerWidth,
+                                          lane: item.lane,
+                                          totalLanes: item.totalLanes,
+                                          onTap: widget.onAppointmentTap == null
+                                              ? null
+                                              : () =>
+                                                  widget.onAppointmentTap!(
+                                                      item.appointment),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ],
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
-                    ),
-                  );
-                }),
-              ],
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                  if (days.any((d) =>
+                      d.year == today.year &&
+                      d.month == today.month &&
+                      d.day == today.day))
+                    const CurrentTimeLine(),
+                ],
+              ),
             ),
           ),
         ),

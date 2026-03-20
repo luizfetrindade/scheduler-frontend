@@ -11,25 +11,45 @@ class ClientHistoryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateStr = DateFormat('dd MMM', 'pt_BR').format(item.startsAt.toLocal());
+    final dateStr =
+        DateFormat('dd MMM', 'pt_BR').format(item.startsAt.toLocal());
     final timeStr = DateFormat('HH:mm').format(item.startsAt.toLocal());
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Date + time
-          SizedBox(
-            width: 80,
-            child: Text(
-              '$dateStr · $timeStr',
-              style: AppTypography.caption.copyWith(
-                color: context.appColors.textSecondary,
-              ),
+          // ── Date + time block ──
+          Container(
+            width: 72,
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.xs,
+              vertical: 3,
+            ),
+            color: context.appColors.surfaceHigh,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  dateStr,
+                  style: AppTypography.caption.copyWith(
+                    color: context.appColors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  timeStr,
+                  style: AppTypography.caption.copyWith(
+                    color: context.appColors.textDisabled,
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
-          // Service name
+
+          // ── Service name ──
           Expanded(
             child: Text(
               item.serviceName ?? '—',
@@ -42,7 +62,8 @@ class ClientHistoryTile extends StatelessWidget {
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
-          // Status badge
+
+          // ── Status badge ──
           _StatusBadge(status: item.status),
         ],
       ),
@@ -65,11 +86,11 @@ class _StatusBadge extends StatelessWidget {
     };
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(AppRadius.sm),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: 2,
       ),
+      color: color.withValues(alpha: 0.15),
       child: Text(
         status.label,
         style: AppTypography.caption.copyWith(color: color),

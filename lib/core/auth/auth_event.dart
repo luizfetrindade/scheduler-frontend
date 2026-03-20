@@ -11,26 +11,44 @@ class AuthUserFetched extends AuthEvent {
   const AuthUserFetched();
 }
 
-/// Dispatched when the user submits the login form.
-class AuthLoginRequested extends AuthEvent {
+/// Step 1 of login: validate that the email exists on the backend.
+class AuthEmailSubmitted extends AuthEvent {
   final String email;
-  final String password;
-  const AuthLoginRequested({required this.email, required this.password});
+  const AuthEmailSubmitted({required this.email});
   @override
-  List<Object?> get props => [email, password];
+  List<Object?> get props => [email];
 }
 
+/// Step 2 of login: submit the 6-digit TOTP code from Google Authenticator.
+class AuthTotpLoginSubmitted extends AuthEvent {
+  final String email;
+  final String code;
+  const AuthTotpLoginSubmitted({required this.email, required this.code});
+  @override
+  List<Object?> get props => [email, code];
+}
+
+/// Step 1 of registration: submit profile fields (no password).
 class AuthRegisterRequested extends AuthEvent {
   final String name;
   final String email;
-  final String password;
+  final String phone;
   const AuthRegisterRequested({
     required this.name,
     required this.email,
-    required this.password,
+    required this.phone,
   });
   @override
-  List<Object?> get props => [name, email, password];
+  List<Object?> get props => [name, email, phone];
+}
+
+/// Step 3 of registration: confirm TOTP setup with the 6-digit code.
+class AuthTotpSetupConfirmed extends AuthEvent {
+  final String tempToken;
+  final String code;
+  const AuthTotpSetupConfirmed({required this.tempToken, required this.code});
+  @override
+  List<Object?> get props => [tempToken, code];
 }
 
 /// Dispatched when the user taps logout.

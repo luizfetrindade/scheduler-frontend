@@ -34,6 +34,7 @@ const _desktopItems = [
   _NavItem(icon: Icons.people_outline,          label: 'Clientes',      route: AppRoutes.clients),
   _NavItem(icon: Icons.content_cut,             label: 'Serviços',      route: AppRoutes.services),
   _NavItem(icon: Icons.badge_outlined,          label: 'Profissionais', route: AppRoutes.professionals),
+  _NavItem(icon: Icons.work_outline,            label: 'Cargos',        route: AppRoutes.professionalRoles),
   _NavItem(icon: Icons.bar_chart,               label: 'Relatórios',    route: AppRoutes.reports),
   _NavItem(icon: Icons.settings_outlined,       label: 'Configurações', route: AppRoutes.settings),
 ];

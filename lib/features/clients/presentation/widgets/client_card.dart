@@ -8,6 +8,21 @@ import 'package:scheduler_frontend/features/clients/bloc/clients_state.dart';
 import 'package:scheduler_frontend/features/clients/data/client_model.dart';
 import 'package:scheduler_frontend/features/clients/presentation/widgets/client_history_tile.dart';
 
+String _formatPhone(String digits) {
+  if (digits.isEmpty) return '';
+  final d = digits.length > 11 ? digits.substring(0, 11) : digits;
+  final isMobile = d.length > 10;
+  final buf = StringBuffer();
+  for (var i = 0; i < d.length; i++) {
+    if (i == 0) buf.write('(');
+    if (i == 2) buf.write(') ');
+    if (isMobile && i == 7) buf.write('-');
+    if (!isMobile && i == 6) buf.write('-');
+    buf.write(d[i]);
+  }
+  return buf.toString();
+}
+
 class ClientCard extends StatefulWidget {
   final ClientModel client;
   final String businessId;
@@ -52,76 +67,103 @@ class _ClientCardState extends State<ClientCard> {
           decoration: BoxDecoration(
             color: context.appColors.surface,
             borderRadius: BorderRadius.circular(AppRadius.md),
-            border: Border.all(color: context.appColors.surfaceHigh),
+            border: Border.all(color: context.appColors.outline),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // ── Collapsed header ──────────────────────────────────────
+              // ── Header row ────────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.md,
                   vertical: AppSpacing.sm,
                 ),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Avatar
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundColor: context.appColors.primary.withValues(alpha: 0.15),
-                      child: Text(
-                        widget.client.name.isNotEmpty
-                            ? widget.client.name[0].toUpperCase()
-                            : '?',
-                        style: AppTypography.bodyMd.copyWith(
-                          color: context.appColors.primary,
-                          fontWeight: FontWeight.w600,
+                    // Square avatar
+                    Container(
+                      width: 40,
+                      height: 40,
+                      color: context.appColors.primary.withValues(alpha: 0.08),
+                      child: Center(
+                        child: Text(
+                          widget.client.name.isNotEmpty
+                              ? widget.client.name[0].toUpperCase()
+                              : '?',
+                          style: AppTypography.bodyMd.copyWith(
+                            color: context.appColors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.md),
-                    // Name + phone
+
+                    // Name + contact info
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             widget.client.name,
-                            style: AppTypography.bodyMd.copyWith(
+                            style: AppTypography.labelLarge.copyWith(
                               color: context.appColors.textPrimary,
-                              fontWeight: FontWeight.w500,
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
+                          const SizedBox(height: 2),
                           Text(
-                            widget.client.phone,
+                            _formatPhone(widget.client.phone),
                             style: AppTypography.caption.copyWith(
                               color: context.appColors.textSecondary,
                             ),
                           ),
+                          if (widget.client.email != null)
+                            Text(
+                              widget.client.email!,
+                              style: AppTypography.caption.copyWith(
+                                color: context.appColors.textDisabled,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                         ],
                       ),
                     ),
-                    // Actions
+
+                    // Action icons
                     IconButton(
-                      icon: Icon(Icons.edit_outlined,
-                          size: 18, color: context.appColors.textSecondary),
+                      icon: Icon(
+                        Icons.edit_outlined,
+                        size: 17,
+                        color: context.appColors.textSecondary,
+                      ),
                       onPressed: widget.onEdit,
                       tooltip: 'Editar',
+                      visualDensity: VisualDensity.compact,
                     ),
                     IconButton(
-                      icon: Icon(Icons.delete_outline,
-                          size: 18, color: AppColors.error),
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        size: 17,
+                        color: AppColors.error,
+                      ),
                       onPressed: widget.onDelete,
                       tooltip: 'Excluir',
+                      visualDensity: VisualDensity.compact,
                     ),
                     AnimatedRotation(
                       turns: _expanded ? 0.5 : 0,
                       duration: const Duration(milliseconds: 200),
                       child: IconButton(
-                        icon: Icon(Icons.keyboard_arrow_down,
-                            size: 20, color: context.appColors.textSecondary),
+                        icon: Icon(
+                          Icons.keyboard_arrow_down,
+                          size: 20,
+                          color: context.appColors.textDisabled,
+                        ),
                         onPressed: () => _toggleExpand(context, state),
                         tooltip: _expanded ? 'Recolher' : 'Ver histórico',
+                        visualDensity: VisualDensity.compact,
                       ),
                     ),
                   ],
@@ -136,15 +178,19 @@ class _ClientCardState extends State<ClientCard> {
                     ? Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Divider(height: 1, color: context.appColors.surfaceHigh),
+                          Divider(
+                            height: 1,
+                            color: context.appColors.outline,
+                          ),
                           if (isLoading)
                             LinearProgressIndicator(
+                              minHeight: 2,
                               color: context.appColors.primary,
                               backgroundColor: context.appColors.surfaceHigh,
                             )
                           else if (history != null && history.isEmpty)
                             Padding(
-                              padding: const EdgeInsets.all(AppSpacing.md),
+                              padding: const EdgeInsets.all(AppSpacing.lg),
                               child: Center(
                                 child: Text(
                                   'Nenhum agendamento encontrado',
@@ -167,7 +213,7 @@ class _ClientCardState extends State<ClientCard> {
                             Padding(
                               padding: const EdgeInsets.fromLTRB(
                                 AppSpacing.md,
-                                0,
+                                AppSpacing.xs,
                                 AppSpacing.md,
                                 AppSpacing.sm,
                               ),
@@ -192,6 +238,8 @@ class _ClientCardState extends State<ClientCard> {
   }
 }
 
+// ── Stats row ─────────────────────────────────────────────────────────────────
+
 class _StatsRow extends StatelessWidget {
   final List<ClientHistoryItem> history;
   const _StatsRow({required this.history});
@@ -199,20 +247,35 @@ class _StatsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final total = history.length;
-    final confirmed = history.where((h) => h.status == AppointmentStatus.confirmed).length;
-    final cancelled = history.where((h) => h.status == AppointmentStatus.cancelled).length;
-    final noShow = history.where((h) => h.status == AppointmentStatus.noShow).length;
-    final completed = history.where((h) => h.status == AppointmentStatus.completed).length;
+    final confirmed =
+        history.where((h) => h.status == AppointmentStatus.confirmed).length;
+    final cancelled =
+        history.where((h) => h.status == AppointmentStatus.cancelled).length;
+    final noShow =
+        history.where((h) => h.status == AppointmentStatus.noShow).length;
+    final completed =
+        history.where((h) => h.status == AppointmentStatus.completed).length;
 
     return Wrap(
       spacing: AppSpacing.xs,
       runSpacing: AppSpacing.xs,
       children: [
-        _StatChip(label: 'Total', value: total, color: context.appColors.textPrimary),
-        _StatChip(label: 'Confirmados', value: confirmed, color: AppColors.success),
-        _StatChip(label: 'Cancelados', value: cancelled, color: AppColors.error),
-        _StatChip(label: 'Não compareceu', value: noShow, color: context.appColors.textDisabled),
-        _StatChip(label: 'Concluídos', value: completed, color: context.appColors.textSecondary),
+        _StatChip(
+            label: 'Total',
+            value: total,
+            color: context.appColors.textPrimary),
+        _StatChip(
+            label: 'Confirmados', value: confirmed, color: AppColors.success),
+        _StatChip(
+            label: 'Cancelados', value: cancelled, color: AppColors.error),
+        _StatChip(
+            label: 'Não compareceu',
+            value: noShow,
+            color: context.appColors.textDisabled),
+        _StatChip(
+            label: 'Concluídos',
+            value: completed,
+            color: context.appColors.textSecondary),
       ],
     );
   }
@@ -232,11 +295,11 @@ class _StatChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(AppRadius.sm),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: 2,
       ),
+      color: color.withValues(alpha: 0.1),
       child: Text(
         '$label: $value',
         style: AppTypography.caption.copyWith(color: color),
@@ -245,19 +308,20 @@ class _StatChip extends StatelessWidget {
   }
 }
 
-// ── State extension helpers ────────────────────────────────────────────────
+// ── State extension helpers ───────────────────────────────────────────────────
+
 extension _ClientsStateX on ClientsState {
   List<ClientHistoryItem>? _historyFor(String clientId) => switch (this) {
-    ClientsLoaded(:final history) => history[clientId],
-    ClientsActionInProgress(:final history) => history[clientId],
-    ClientsError(:final history) => history[clientId],
-    _ => null,
-  };
+        ClientsLoaded(:final history) => history[clientId],
+        ClientsActionInProgress(:final history) => history[clientId],
+        ClientsError(:final history) => history[clientId],
+        _ => null,
+      };
 
   bool _historyContainsKey(String clientId) => switch (this) {
-    ClientsLoaded(:final history) => history.containsKey(clientId),
-    ClientsActionInProgress(:final history) => history.containsKey(clientId),
-    ClientsError(:final history) => history.containsKey(clientId),
-    _ => false,
-  };
+        ClientsLoaded(:final history) => history.containsKey(clientId),
+        ClientsActionInProgress(:final history) => history.containsKey(clientId),
+        ClientsError(:final history) => history.containsKey(clientId),
+        _ => false,
+      };
 }

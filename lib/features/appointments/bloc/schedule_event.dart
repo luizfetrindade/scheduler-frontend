@@ -38,7 +38,6 @@ class ScheduleViewModeChanged extends ScheduleEvent {
 
 class ScheduleAppointmentCreateRequested extends ScheduleEvent {
   final String clientName;
-  final String clientEmail;
   final DateTime startsAt;
   final int durationMinutes;
   final String? notes;
@@ -47,7 +46,6 @@ class ScheduleAppointmentCreateRequested extends ScheduleEvent {
 
   const ScheduleAppointmentCreateRequested({
     required this.clientName,
-    required this.clientEmail,
     required this.startsAt,
     this.durationMinutes = 60,
     this.notes,
@@ -57,7 +55,7 @@ class ScheduleAppointmentCreateRequested extends ScheduleEvent {
 
   @override
   List<Object?> get props =>
-      [clientName, clientEmail, startsAt, durationMinutes, notes, recurrenceRule, serviceId];
+      [clientName, startsAt, durationMinutes, notes, recurrenceRule, serviceId];
 }
 
 class ScheduleBlockCreateRequested extends ScheduleEvent {

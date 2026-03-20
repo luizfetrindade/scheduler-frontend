@@ -33,3 +33,25 @@ class AuthError extends AuthState {
   @override
   List<Object?> get props => [message];
 }
+
+/// Login flow: email validated, waiting for the user to enter their TOTP code.
+class AuthTotpChallengeReady extends AuthState {
+  final String email;
+  const AuthTotpChallengeReady({required this.email});
+  @override
+  List<Object?> get props => [email];
+}
+
+/// Register flow: registration accepted, QR code ready to display for setup.
+class AuthTotpSetupReady extends AuthState {
+  final String qrCodeUrl;
+  final String secret;
+  final String tempToken;
+  const AuthTotpSetupReady({
+    required this.qrCodeUrl,
+    required this.secret,
+    required this.tempToken,
+  });
+  @override
+  List<Object?> get props => [qrCodeUrl, secret, tempToken];
+}
