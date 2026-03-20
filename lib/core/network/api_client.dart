@@ -160,18 +160,18 @@ class ApiClient {
       );
 
   /// POST /auth/forgot-password — 204 No Content
-  Future<Result<Map<String, dynamic>>> forgotPassword(String email) =>
-      post<Map<String, dynamic>>(
+  Future<Result<void>> forgotPassword(String email) =>
+      post<void>(
         '/auth/forgot-password',
-        fromJson: (json) => json,
+        fromJson: (_) {},
         body: {'email': email},
       );
 
   /// POST /auth/reset-password — 204 No Content
-  Future<Result<Map<String, dynamic>>> resetPassword(String token, String newPassword) =>
-      post<Map<String, dynamic>>(
+  Future<Result<void>> resetPassword(String token, String newPassword) =>
+      post<void>(
         '/auth/reset-password',
-        fromJson: (json) => json,
+        fromJson: (_) {},
         body: {'token': token, 'newPassword': newPassword},
       );
 

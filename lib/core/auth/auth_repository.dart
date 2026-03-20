@@ -114,11 +114,11 @@ class AuthRepository {
       _client.checkEmail(email);
 
   /// Sends a password-reset email to the given address.
-  Future<Result<Map<String, dynamic>>> forgotPassword(String email) =>
+  Future<Result<void>> forgotPassword(String email) =>
       _client.forgotPassword(email);
 
   /// Resets the user's password using the one-time token from the email.
-  Future<Result<Map<String, dynamic>>> resetPassword(
+  Future<Result<void>> resetPassword(
     String token,
     String newPassword,
   ) =>

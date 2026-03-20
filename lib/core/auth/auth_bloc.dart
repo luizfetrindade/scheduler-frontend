@@ -144,7 +144,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final result = await _repository.checkEmail(event.email);
     switch (result) {
       case Success(:final data):
-        emit(AuthEmailChecked(event.email, data['authMethod'] as String));
+        final authMethod = data['authMethod'];
+        if (authMethod is! String) {
+          emit(const AuthError('Algo deu errado. Tente novamente'));
+          return;
+        }
+        emit(AuthEmailChecked(event.email, authMethod));
       case HttpFailure(:final failure):
         emit(AuthError(_message(failure)));
     }

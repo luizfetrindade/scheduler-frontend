@@ -243,6 +243,17 @@ void main() {
         const AuthError('Código inválido ou expirado. Tente novamente.'),
       ],
     );
+
+    blocTest<AuthBloc, AuthState>(
+      'AuthTotpSetupConfirmed emits [Loading, Error] on network failure',
+      build: () {
+        when(() => mockRepo.confirmTotpSetup(tempToken: any(named: 'tempToken'), code: any(named: 'code')))
+            .thenAnswer((_) async => const HttpFailure(NetworkFailure('offline')));
+        return AuthBloc(mockRepo);
+      },
+      act: (bloc) => bloc.add(const AuthTotpSetupConfirmed(tempToken: 'tmp', code: '000000')),
+      expect: () => [isA<AuthLoading>(), isA<AuthError>()],
+    );
   });
 
   // ─── AuthLogoutRequested ────────────────────────────────────────────────────
@@ -271,7 +282,7 @@ void main() {
         );
         return AuthBloc(mockRepo);
       },
-      act: (bloc) => bloc.add(const AuthCheckEmailRequested('owner@test.com')),
+      act: (bloc) => bloc.add(const AuthCheckEmailRequested(email: 'owner@test.com')),
       expect: () => [
         const AuthLoading(),
         isA<AuthEmailChecked>()
@@ -288,7 +299,7 @@ void main() {
         );
         return AuthBloc(mockRepo);
       },
-      act: (bloc) => bloc.add(const AuthCheckEmailRequested('member@test.com')),
+      act: (bloc) => bloc.add(const AuthCheckEmailRequested(email: 'member@test.com')),
       expect: () => [
         const AuthLoading(),
         isA<AuthEmailChecked>()
@@ -305,7 +316,7 @@ void main() {
         );
         return AuthBloc(mockRepo);
       },
-      act: (bloc) => bloc.add(const AuthCheckEmailRequested('x@x.com')),
+      act: (bloc) => bloc.add(const AuthCheckEmailRequested(email: 'x@x.com')),
       expect: () => [
         const AuthLoading(),
         const AuthError('Sem conexão com a internet'),
@@ -329,7 +340,7 @@ void main() {
         return AuthBloc(mockRepo);
       },
       act: (bloc) => bloc.add(
-          const AuthPasswordLoginRequested('member@test.com', 'correctPass')),
+          const AuthPasswordLoginRequested(email: 'member@test.com', password: 'correctPass')),
       expect: () => [const AuthLoading(), const AuthAuthenticated(_user)],
     );
 
@@ -344,7 +355,7 @@ void main() {
         return AuthBloc(mockRepo);
       },
       act: (bloc) => bloc.add(
-          const AuthPasswordLoginRequested('member@test.com', 'wrongPass')),
+          const AuthPasswordLoginRequested(email: 'member@test.com', password: 'wrongPass')),
       expect: () => [
         const AuthLoading(),
         const AuthError('Código inválido ou expirado. Tente novamente.'),
@@ -359,12 +370,12 @@ void main() {
       'emits [Loading, AuthForgotPasswordSent] on success',
       build: () {
         when(() => mockRepo.forgotPassword(any())).thenAnswer(
-          (_) async => const Success({}),
+          (_) async => const Success(null),
         );
         return AuthBloc(mockRepo);
       },
       act: (bloc) =>
-          bloc.add(const AuthForgotPasswordRequested('member@test.com')),
+          bloc.add(const AuthForgotPasswordRequested(email: 'member@test.com')),
       expect: () => [const AuthLoading(), const AuthForgotPasswordSent()],
     );
 
@@ -377,7 +388,7 @@ void main() {
         return AuthBloc(mockRepo);
       },
       act: (bloc) =>
-          bloc.add(const AuthForgotPasswordRequested('member@test.com')),
+          bloc.add(const AuthForgotPasswordRequested(email: 'member@test.com')),
       expect: () => [
         const AuthLoading(),
         const AuthError('Sem conexão com a internet'),
@@ -392,12 +403,12 @@ void main() {
       'emits [Loading, AuthPasswordResetSuccess] on success',
       build: () {
         when(() => mockRepo.resetPassword(any(), any())).thenAnswer(
-          (_) async => const Success({}),
+          (_) async => const Success(null),
         );
         return AuthBloc(mockRepo);
       },
       act: (bloc) => bloc.add(
-          const AuthResetPasswordRequested('valid-token', 'novaSenha456')),
+          const AuthResetPasswordRequested(token: 'valid-token', newPassword: 'novaSenha456')),
       expect: () => [const AuthLoading(), const AuthPasswordResetSuccess()],
     );
 
@@ -411,7 +422,7 @@ void main() {
         return AuthBloc(mockRepo);
       },
       act: (bloc) => bloc
-          .add(const AuthResetPasswordRequested('expired-token', 'newPass')),
+          .add(const AuthResetPasswordRequested(token: 'expired-token', newPassword: 'newPass')),
       expect: () => [
         const AuthLoading(),
         const AuthError('Código inválido ou expirado. Tente novamente.'),
@@ -432,8 +443,9 @@ void main() {
         return AuthBloc(mockRepo);
       },
       act: (bloc) => bloc.add(
-          const AuthAcceptInviteRequested('invite-token', 'Carlos', 'pass123')),
+          const AuthAcceptInviteRequested(token: 'invite-token', name: 'Carlos', password: 'pass123')),
       expect: () => [const AuthLoading(), const AuthInviteAccepted()],
+      verify: (bloc) => verifyNever(() => mockRepo.getMe()),
     );
 
     blocTest<AuthBloc, AuthState>(
@@ -446,7 +458,7 @@ void main() {
         return AuthBloc(mockRepo);
       },
       act: (bloc) => bloc.add(
-          const AuthAcceptInviteRequested('bad-token', 'Carlos', 'pass123')),
+          const AuthAcceptInviteRequested(token: 'bad-token', name: 'Carlos', password: 'pass123')),
       expect: () => [
         const AuthLoading(),
         const AuthError('Código inválido ou expirado. Tente novamente.'),
