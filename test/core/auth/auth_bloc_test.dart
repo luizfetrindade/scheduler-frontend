@@ -19,6 +19,8 @@ void main() {
     mockRepo = MockAuthRepository();
   });
 
+  // ─── AuthUserFetched ────────────────────────────────────────────────────────
+
   group('AuthBloc — AuthUserFetched', () {
     blocTest<AuthBloc, AuthState>(
       'emits [Loading, Authenticated] when getMe succeeds',
@@ -43,60 +45,207 @@ void main() {
     );
   });
 
-  group('AuthBloc — AuthLoginRequested', () {
+  // ─── AuthEmailSubmitted ─────────────────────────────────────────────────────
+
+  group('AuthBloc — AuthEmailSubmitted', () {
     blocTest<AuthBloc, AuthState>(
-      'emits [Loading, Authenticated] on successful login',
+      'emits [Loading, TotpChallengeReady] when email exists',
       build: () {
-        when(() => mockRepo.login(email: 'j@j.com', password: '123'))
-            .thenAnswer((_) async =>
-                const Success((accessToken: 'acc', refreshToken: 'ref')));
-        when(() => mockRepo.saveTokens('acc', 'ref'))
-            .thenAnswer((_) async {});
-        when(() => mockRepo.getMe())
-            .thenAnswer((_) async => const Success(_user));
+        when(() => mockRepo.verifyEmail(email: 'j@j.com'))
+            .thenAnswer((_) async => const Success(true));
         return AuthBloc(mockRepo);
       },
-      act: (bloc) =>
-          bloc.add(const AuthLoginRequested(email: 'j@j.com', password: '123')),
-      expect: () => [const AuthLoading(), const AuthAuthenticated(_user)],
+      act: (bloc) => bloc.add(const AuthEmailSubmitted(email: 'j@j.com')),
+      expect: () => [
+        const AuthLoading(),
+        const AuthTotpChallengeReady(email: 'j@j.com'),
+      ],
     );
 
     blocTest<AuthBloc, AuthState>(
-      'emits [Loading, AuthError] on wrong credentials',
+      'emits [Loading, AuthError] when email is not found',
       build: () {
-        when(() => mockRepo.login(
-              email: any(named: 'email'),
-              password: any(named: 'password'),
-            )).thenAnswer((_) async =>
-            const HttpFailure(UnauthorizedFailure('wrong credentials')));
+        when(() => mockRepo.verifyEmail(email: any(named: 'email')))
+            .thenAnswer((_) async => const Success(false));
         return AuthBloc(mockRepo);
       },
-      act: (bloc) => bloc.add(
-          const AuthLoginRequested(email: 'x@x.com', password: 'bad')),
+      act: (bloc) => bloc.add(const AuthEmailSubmitted(email: 'x@x.com')),
       expect: () => [
         const AuthLoading(),
-        const AuthError('Email ou senha incorretos'),
+        const AuthError('E-mail não encontrado. Verifique e tente novamente.'),
       ],
     );
 
     blocTest<AuthBloc, AuthState>(
       'emits [Loading, AuthError] on network failure',
       build: () {
-        when(() => mockRepo.login(
-              email: any(named: 'email'),
-              password: any(named: 'password'),
-            )).thenAnswer((_) async =>
-            const HttpFailure(NetworkFailure('no internet')));
+        when(() => mockRepo.verifyEmail(email: any(named: 'email')))
+            .thenAnswer((_) async =>
+                const HttpFailure(NetworkFailure('no internet')));
         return AuthBloc(mockRepo);
       },
-      act: (bloc) => bloc.add(
-          const AuthLoginRequested(email: 'x@x.com', password: '123')),
+      act: (bloc) => bloc.add(const AuthEmailSubmitted(email: 'x@x.com')),
       expect: () => [
         const AuthLoading(),
         const AuthError('Sem conexão com a internet'),
       ],
     );
   });
+
+  // ─── AuthTotpLoginSubmitted ─────────────────────────────────────────────────
+
+  group('AuthBloc — AuthTotpLoginSubmitted', () {
+    blocTest<AuthBloc, AuthState>(
+      'emits [Loading, Authenticated] on valid TOTP code',
+      build: () {
+        when(() => mockRepo.loginWithTotp(email: 'j@j.com', code: '123456'))
+            .thenAnswer((_) async => const Success((accessToken: 'acc')));
+        when(() => mockRepo.saveTokens('acc')).thenAnswer((_) async {});
+        when(() => mockRepo.getMe())
+            .thenAnswer((_) async => const Success(_user));
+        return AuthBloc(mockRepo);
+      },
+      act: (bloc) => bloc.add(
+          const AuthTotpLoginSubmitted(email: 'j@j.com', code: '123456')),
+      expect: () => [const AuthLoading(), const AuthAuthenticated(_user)],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'emits [Loading, AuthError] on invalid TOTP code',
+      build: () {
+        when(() => mockRepo.loginWithTotp(
+              email: any(named: 'email'),
+              code: any(named: 'code'),
+            )).thenAnswer((_) async =>
+            const HttpFailure(UnauthorizedFailure('invalid code')));
+        return AuthBloc(mockRepo);
+      },
+      act: (bloc) => bloc.add(
+          const AuthTotpLoginSubmitted(email: 'j@j.com', code: '000000')),
+      expect: () => [
+        const AuthLoading(),
+        const AuthError('Código inválido ou expirado. Tente novamente.'),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'emits [Loading, AuthError] on network failure',
+      build: () {
+        when(() => mockRepo.loginWithTotp(
+              email: any(named: 'email'),
+              code: any(named: 'code'),
+            )).thenAnswer((_) async =>
+            const HttpFailure(NetworkFailure('no internet')));
+        return AuthBloc(mockRepo);
+      },
+      act: (bloc) => bloc.add(
+          const AuthTotpLoginSubmitted(email: 'j@j.com', code: '123456')),
+      expect: () => [
+        const AuthLoading(),
+        const AuthError('Sem conexão com a internet'),
+      ],
+    );
+  });
+
+  // ─── AuthRegisterRequested ──────────────────────────────────────────────────
+
+  group('AuthBloc — AuthRegisterRequested', () {
+    blocTest<AuthBloc, AuthState>(
+      'emits [Loading, TotpSetupReady] on successful registration',
+      build: () {
+        when(() => mockRepo.register(
+              name: 'Ana',
+              email: 'a@a.com',
+              phone: '11999990000',
+            )).thenAnswer((_) async => const Success((
+              qrCodeUrl: 'otpauth://totp/Scheduler:a@a.com',
+              secret: 'BASE32SECRET',
+              tempToken: 'tmp-token',
+            )));
+        return AuthBloc(mockRepo);
+      },
+      act: (bloc) => bloc.add(const AuthRegisterRequested(
+        name: 'Ana',
+        email: 'a@a.com',
+        phone: '11999990000',
+      )),
+      expect: () => [
+        const AuthLoading(),
+        const AuthTotpSetupReady(
+          qrCodeUrl: 'otpauth://totp/Scheduler:a@a.com',
+          secret: 'BASE32SECRET',
+          tempToken: 'tmp-token',
+        ),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'emits [Loading, AuthError] on registration failure',
+      build: () {
+        when(() => mockRepo.register(
+              name: any(named: 'name'),
+              email: any(named: 'email'),
+              phone: any(named: 'phone'),
+            )).thenAnswer((_) async =>
+            const HttpFailure(NetworkFailure('no internet')));
+        return AuthBloc(mockRepo);
+      },
+      act: (bloc) => bloc.add(const AuthRegisterRequested(
+        name: 'X',
+        email: 'x@x.com',
+        phone: '11000000000',
+      )),
+      expect: () => [
+        const AuthLoading(),
+        const AuthError('Sem conexão com a internet'),
+      ],
+    );
+  });
+
+  // ─── AuthTotpSetupConfirmed ─────────────────────────────────────────────────
+
+  group('AuthBloc — AuthTotpSetupConfirmed', () {
+    blocTest<AuthBloc, AuthState>(
+      'emits [Loading, Authenticated] on valid confirmation code',
+      build: () {
+        when(() => mockRepo.confirmTotpSetup(
+              tempToken: 'tmp-token',
+              code: '654321',
+            )).thenAnswer((_) async => const Success((accessToken: 'acc')));
+        when(() => mockRepo.saveTokens('acc')).thenAnswer((_) async {});
+        when(() => mockRepo.getMe())
+            .thenAnswer((_) async => const Success(_user));
+        return AuthBloc(mockRepo);
+      },
+      act: (bloc) => bloc.add(const AuthTotpSetupConfirmed(
+        tempToken: 'tmp-token',
+        code: '654321',
+      )),
+      expect: () => [const AuthLoading(), const AuthAuthenticated(_user)],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'emits [Loading, AuthError] on invalid confirmation code',
+      build: () {
+        when(() => mockRepo.confirmTotpSetup(
+              tempToken: any(named: 'tempToken'),
+              code: any(named: 'code'),
+            )).thenAnswer((_) async =>
+            const HttpFailure(UnauthorizedFailure('invalid code')));
+        return AuthBloc(mockRepo);
+      },
+      act: (bloc) => bloc.add(const AuthTotpSetupConfirmed(
+        tempToken: 'tmp-token',
+        code: '000000',
+      )),
+      expect: () => [
+        const AuthLoading(),
+        const AuthError('Código inválido ou expirado. Tente novamente.'),
+      ],
+    );
+  });
+
+  // ─── AuthLogoutRequested ────────────────────────────────────────────────────
 
   group('AuthBloc — AuthLogoutRequested', () {
     blocTest<AuthBloc, AuthState>(
@@ -108,6 +257,200 @@ void main() {
       act: (bloc) => bloc.add(const AuthLogoutRequested()),
       expect: () => [const AuthUnauthenticated()],
       verify: (_) => verify(() => mockRepo.clearTokens()).called(1),
+    );
+  });
+
+  // ─── AuthCheckEmailRequested ─────────────────────────────────────────────────
+
+  group('AuthBloc — AuthCheckEmailRequested', () {
+    blocTest<AuthBloc, AuthState>(
+      'emits [Loading, AuthEmailChecked(totp)] when backend returns totp',
+      build: () {
+        when(() => mockRepo.checkEmail(any())).thenAnswer(
+          (_) async => const Success({'authMethod': 'totp'}),
+        );
+        return AuthBloc(mockRepo);
+      },
+      act: (bloc) => bloc.add(const AuthCheckEmailRequested('owner@test.com')),
+      expect: () => [
+        const AuthLoading(),
+        isA<AuthEmailChecked>()
+            .having((s) => s.authMethod, 'authMethod', 'totp')
+            .having((s) => s.email, 'email', 'owner@test.com'),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'emits [Loading, AuthEmailChecked(password)] when backend returns password',
+      build: () {
+        when(() => mockRepo.checkEmail(any())).thenAnswer(
+          (_) async => const Success({'authMethod': 'password'}),
+        );
+        return AuthBloc(mockRepo);
+      },
+      act: (bloc) => bloc.add(const AuthCheckEmailRequested('member@test.com')),
+      expect: () => [
+        const AuthLoading(),
+        isA<AuthEmailChecked>()
+            .having((s) => s.authMethod, 'authMethod', 'password')
+            .having((s) => s.email, 'email', 'member@test.com'),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'emits [Loading, AuthError] on network failure',
+      build: () {
+        when(() => mockRepo.checkEmail(any())).thenAnswer(
+          (_) async => const HttpFailure(NetworkFailure('no internet')),
+        );
+        return AuthBloc(mockRepo);
+      },
+      act: (bloc) => bloc.add(const AuthCheckEmailRequested('x@x.com')),
+      expect: () => [
+        const AuthLoading(),
+        const AuthError('Sem conexão com a internet'),
+      ],
+    );
+  });
+
+  // ─── AuthPasswordLoginRequested ──────────────────────────────────────────────
+
+  group('AuthBloc — AuthPasswordLoginRequested', () {
+    blocTest<AuthBloc, AuthState>(
+      'emits [Loading, Authenticated] on valid credentials',
+      build: () {
+        when(() => mockRepo.loginWithPassword(
+              email: 'member@test.com',
+              password: 'correctPass',
+            )).thenAnswer((_) async => const Success((accessToken: 'acc')));
+        when(() => mockRepo.saveTokens('acc')).thenAnswer((_) async {});
+        when(() => mockRepo.getMe())
+            .thenAnswer((_) async => const Success(_user));
+        return AuthBloc(mockRepo);
+      },
+      act: (bloc) => bloc.add(
+          const AuthPasswordLoginRequested('member@test.com', 'correctPass')),
+      expect: () => [const AuthLoading(), const AuthAuthenticated(_user)],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'emits [Loading, AuthError] on invalid credentials',
+      build: () {
+        when(() => mockRepo.loginWithPassword(
+              email: any(named: 'email'),
+              password: any(named: 'password'),
+            )).thenAnswer((_) async =>
+            const HttpFailure(UnauthorizedFailure('invalid credentials')));
+        return AuthBloc(mockRepo);
+      },
+      act: (bloc) => bloc.add(
+          const AuthPasswordLoginRequested('member@test.com', 'wrongPass')),
+      expect: () => [
+        const AuthLoading(),
+        const AuthError('Código inválido ou expirado. Tente novamente.'),
+      ],
+    );
+  });
+
+  // ─── AuthForgotPasswordRequested ─────────────────────────────────────────────
+
+  group('AuthBloc — AuthForgotPasswordRequested', () {
+    blocTest<AuthBloc, AuthState>(
+      'emits [Loading, AuthForgotPasswordSent] on success',
+      build: () {
+        when(() => mockRepo.forgotPassword(any())).thenAnswer(
+          (_) async => const Success({}),
+        );
+        return AuthBloc(mockRepo);
+      },
+      act: (bloc) =>
+          bloc.add(const AuthForgotPasswordRequested('member@test.com')),
+      expect: () => [const AuthLoading(), const AuthForgotPasswordSent()],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'emits [Loading, AuthError] on network failure',
+      build: () {
+        when(() => mockRepo.forgotPassword(any())).thenAnswer(
+          (_) async => const HttpFailure(NetworkFailure('no internet')),
+        );
+        return AuthBloc(mockRepo);
+      },
+      act: (bloc) =>
+          bloc.add(const AuthForgotPasswordRequested('member@test.com')),
+      expect: () => [
+        const AuthLoading(),
+        const AuthError('Sem conexão com a internet'),
+      ],
+    );
+  });
+
+  // ─── AuthResetPasswordRequested ──────────────────────────────────────────────
+
+  group('AuthBloc — AuthResetPasswordRequested', () {
+    blocTest<AuthBloc, AuthState>(
+      'emits [Loading, AuthPasswordResetSuccess] on success',
+      build: () {
+        when(() => mockRepo.resetPassword(any(), any())).thenAnswer(
+          (_) async => const Success({}),
+        );
+        return AuthBloc(mockRepo);
+      },
+      act: (bloc) => bloc.add(
+          const AuthResetPasswordRequested('valid-token', 'novaSenha456')),
+      expect: () => [const AuthLoading(), const AuthPasswordResetSuccess()],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'emits [Loading, AuthError] on invalid/expired token',
+      build: () {
+        when(() => mockRepo.resetPassword(any(), any())).thenAnswer(
+          (_) async =>
+              const HttpFailure(UnauthorizedFailure('token expired')),
+        );
+        return AuthBloc(mockRepo);
+      },
+      act: (bloc) => bloc
+          .add(const AuthResetPasswordRequested('expired-token', 'newPass')),
+      expect: () => [
+        const AuthLoading(),
+        const AuthError('Código inválido ou expirado. Tente novamente.'),
+      ],
+    );
+  });
+
+  // ─── AuthAcceptInviteRequested ───────────────────────────────────────────────
+
+  group('AuthBloc — AuthAcceptInviteRequested', () {
+    blocTest<AuthBloc, AuthState>(
+      'emits [Loading, AuthInviteAccepted] on success',
+      build: () {
+        when(() => mockRepo.acceptInvite(any(), any(), any())).thenAnswer(
+          (_) async => const Success((accessToken: 'acc')),
+        );
+        when(() => mockRepo.saveTokens('acc')).thenAnswer((_) async {});
+        return AuthBloc(mockRepo);
+      },
+      act: (bloc) => bloc.add(
+          const AuthAcceptInviteRequested('invite-token', 'Carlos', 'pass123')),
+      expect: () => [const AuthLoading(), const AuthInviteAccepted()],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'emits [Loading, AuthError] on invalid invite token',
+      build: () {
+        when(() => mockRepo.acceptInvite(any(), any(), any())).thenAnswer(
+          (_) async =>
+              const HttpFailure(UnauthorizedFailure('invite expired')),
+        );
+        return AuthBloc(mockRepo);
+      },
+      act: (bloc) => bloc.add(
+          const AuthAcceptInviteRequested('bad-token', 'Carlos', 'pass123')),
+      expect: () => [
+        const AuthLoading(),
+        const AuthError('Código inválido ou expirado. Tente novamente.'),
+      ],
     );
   });
 }

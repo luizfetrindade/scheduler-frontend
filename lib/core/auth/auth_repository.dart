@@ -2,14 +2,100 @@ import 'package:flutter_http/flutter_http.dart';
 import 'package:scheduler_frontend/core/models/user_model.dart';
 import 'package:scheduler_frontend/core/network/api_client.dart';
 
-typedef _TokenRecord = ({String accessToken, String refreshToken});
+/// The refresh token is managed as an httpOnly cookie by the backend.
+/// The frontend only stores and sends the short-lived access token.
+typedef TokenRecord = ({String accessToken});
+
+/// Returned after a successful registration, before TOTP confirmation.
+/// tempToken is short-lived (5 min) and only used to confirm TOTP setup.
+typedef TotpSetupRecord = ({
+  String qrCodeUrl,
+  String secret,
+  String tempToken
+});
 
 class AuthRepository {
   final ApiClient _client;
 
   AuthRepository(this._client);
 
-  Future<Result<_TokenRecord>> login({
+  /// Checks whether the given email is registered.
+  /// Returns Success(true) if found, Success(false) if not found (404).
+  Future<Result<bool>> verifyEmail({required String email}) async {
+    final result = await _client.post<Map<String, dynamic>>(
+      '/auth/verify-email',
+      fromJson: (json) => json,
+      body: {'email': email},
+    );
+    return switch (result) {
+      Success() => const Success(true),
+      HttpFailure(:final failure) when failure is NotFoundFailure =>
+        const Success(false),
+      HttpFailure(:final failure) => HttpFailure(failure),
+    };
+  }
+
+  /// Verifies the TOTP code for an existing user and returns an access token.
+  Future<Result<TokenRecord>> loginWithTotp({
+    required String email,
+    required String code,
+  }) async {
+    final result = await _client.post<Map<String, dynamic>>(
+      '/auth/login/totp',
+      fromJson: (json) => json,
+      body: {'email': email, 'code': code},
+    );
+    return switch (result) {
+      Success(:final data) => Success((
+          accessToken: data['accessToken'] as String,
+        )),
+      HttpFailure(:final failure) => HttpFailure(failure),
+    };
+  }
+
+  /// Creates a new account (no password). Returns TOTP setup data with a
+  /// QR code URL, the raw secret, and a short-lived tempToken.
+  Future<Result<TotpSetupRecord>> register({
+    required String name,
+    required String email,
+    required String phone,
+  }) async {
+    final result = await _client.post<Map<String, dynamic>>(
+      '/auth/register',
+      fromJson: (json) => json,
+      body: {'name': name, 'email': email, 'phone': phone},
+    );
+    return switch (result) {
+      Success(:final data) => Success((
+          qrCodeUrl: data['qrCodeUrl'] as String,
+          secret: data['secret'] as String,
+          tempToken: data['tempToken'] as String,
+        )),
+      HttpFailure(:final failure) => HttpFailure(failure),
+    };
+  }
+
+  /// Confirms TOTP setup with the first code scanned from Google Authenticator.
+  Future<Result<TokenRecord>> confirmTotpSetup({
+    required String tempToken,
+    required String code,
+  }) async {
+    final result = await _client.post<Map<String, dynamic>>(
+      '/auth/register/confirm-totp',
+      fromJson: (json) => json,
+      body: {'tempToken': tempToken, 'code': code},
+    );
+    return switch (result) {
+      Success(:final data) => Success((
+          accessToken: data['accessToken'] as String,
+        )),
+      HttpFailure(:final failure) => HttpFailure(failure),
+    };
+  }
+
+  /// Authenticates a member/staff user with email + password.
+  /// Returns a token record on success.
+  Future<Result<TokenRecord>> loginWithPassword({
     required String email,
     required String password,
   }) async {
@@ -21,26 +107,54 @@ class AuthRepository {
     return switch (result) {
       Success(:final data) => Success((
           accessToken: data['accessToken'] as String,
-          refreshToken: data['refreshToken'] as String,
         )),
       HttpFailure(:final failure) => HttpFailure(failure),
     };
   }
 
-  Future<Result<_TokenRecord>> register({
-    required String name,
-    required String email,
-    required String password,
-  }) async {
+  /// Checks which auth method ('totp' | 'password') the backend requires for
+  /// the given email address.
+  Future<Result<Map<String, dynamic>>> checkEmail(String email) =>
+      _client.post<Map<String, dynamic>>(
+        '/auth/check-email',
+        fromJson: (json) => json,
+        body: {'email': email},
+      );
+
+  /// Sends a password-reset email to the given address.
+  Future<Result<Map<String, dynamic>>> forgotPassword(String email) =>
+      _client.post<Map<String, dynamic>>(
+        '/auth/forgot-password',
+        fromJson: (json) => json,
+        body: {'email': email},
+      );
+
+  /// Resets the user's password using the one-time token from the email.
+  Future<Result<Map<String, dynamic>>> resetPassword(
+    String token,
+    String newPassword,
+  ) =>
+      _client.post<Map<String, dynamic>>(
+        '/auth/reset-password',
+        fromJson: (json) => json,
+        body: {'token': token, 'newPassword': newPassword},
+      );
+
+  /// Accepts a staff invite and creates an account with [name] and [password].
+  /// Returns a token record so the user can be authenticated immediately.
+  Future<Result<TokenRecord>> acceptInvite(
+    String token,
+    String name,
+    String password,
+  ) async {
     final result = await _client.post<Map<String, dynamic>>(
-      '/auth/register',
+      '/auth/accept-invite',
       fromJson: (json) => json,
-      body: {'name': name, 'email': email, 'password': password},
+      body: {'token': token, 'name': name, 'password': password},
     );
     return switch (result) {
       Success(:final data) => Success((
           accessToken: data['accessToken'] as String,
-          refreshToken: data['refreshToken'] as String,
         )),
       HttpFailure(:final failure) => HttpFailure(failure),
     };
@@ -49,14 +163,16 @@ class AuthRepository {
   Future<Result<UserModel>> getMe() =>
       _client.get('/auth/me', fromJson: UserModel.fromJson);
 
-  Future<void> saveTokens(String accessToken, String refreshToken) =>
+  /// Saves only the access token. The refresh token is an httpOnly cookie
+  /// managed automatically by the browser / CookieJar — never stored locally.
+  Future<void> saveTokens(String accessToken) =>
       _client.tokenStorage.saveTokens(
         accessToken: accessToken,
-        refreshToken: refreshToken,
+        refreshToken: '',
       );
 
-  /// Clears tokens locally. Server-side logout (POST /auth/logout) requires
-  /// the x-refresh-token header and returns 204 No Content — handled separately
-  /// if needed; for now a local clear is sufficient.
+  /// Clears local tokens. The backend clears the httpOnly cookie when
+  /// POST /auth/logout is called (handled by Dio's cookie jar on mobile,
+  /// or the browser on web).
   Future<void> clearTokens() => _client.tokenStorage.clearTokens();
 }
