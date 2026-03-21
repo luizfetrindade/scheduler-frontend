@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:scheduler_frontend/core/policy/app_policy.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_bloc.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_event.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_state.dart';
+import 'package:scheduler_frontend/features/business/data/business_model.dart';
 import 'package:scheduler_frontend/features/professionals/bloc/professional_roles_bloc.dart';
 import 'package:scheduler_frontend/features/professionals/bloc/professional_roles_event.dart';
 import 'package:scheduler_frontend/features/professionals/bloc/professional_roles_state.dart';
@@ -44,13 +46,25 @@ void main() {
     ));
   });
 
+  const _activeBiz = BusinessModel(
+    id: 'b1', slug: 'my-biz', name: 'My Business',
+    logo: null, timezone: 'America/Sao_Paulo',
+    myStaffRole: StaffRole.owner, planMaxStaff: 5,
+  );
+
   setUp(() {
     profsBloc = MockProfessionalsBloc();
     rolesBloc = MockProfessionalRolesBloc();
     businessBloc = MockBusinessBloc();
     when(() => profsBloc.state).thenReturn(const ProfessionalsInitial());
     when(() => rolesBloc.state).thenReturn(const ProfessionalRolesInitial());
-    when(() => businessBloc.state).thenReturn(const BusinessInitial());
+    when(() => businessBloc.state).thenReturn(
+      BusinessLoaded(
+        businesses: const [],
+        active: _activeBiz,
+        policy: AppPolicy.from(_activeBiz.myStaffRole, _activeBiz.planMaxStaff),
+      ),
+    );
   });
 
   Widget buildSheet({ProfessionalModel? professional}) => MaterialApp(
@@ -77,7 +91,7 @@ void main() {
   testWidgets('shows Novo Profissional title in create mode', (tester) async {
     await tester.pumpWidget(buildSheet());
     await tester.pump();
-    expect(find.text('Novo Profissional'), findsOneWidget);
+    expect(find.text('Novo profissional'), findsOneWidget);
   });
 
   testWidgets('shows Editar Profissional title in edit mode', (tester) async {
@@ -90,7 +104,7 @@ void main() {
     );
     await tester.pumpWidget(buildSheet(professional: prof));
     await tester.pump();
-    expect(find.text('Editar Profissional'), findsOneWidget);
+    expect(find.text('Editar profissional'), findsOneWidget);
   });
 
   testWidgets('pre-fills name field in edit mode', (tester) async {
@@ -110,7 +124,7 @@ void main() {
     await tester.pumpWidget(buildSheet());
     await tester.pump();
 
-    final btn = find.byType(ElevatedButton);
+    final btn = find.text('Criar profissional');
     await tester.tap(btn);
     await tester.pump();
 
@@ -139,7 +153,7 @@ void main() {
     await tester.pumpWidget(buildSheet());
     await tester.pump();
 
-    expect(find.text('+ Criar cargo'), findsOneWidget);
+    expect(find.text('Criar novo cargo'), findsOneWidget);
   });
 
   testWidgets('tapping "+ Criar cargo" opens RoleFormSheet', (tester) async {
@@ -149,7 +163,7 @@ void main() {
     await tester.pumpWidget(buildSheet());
     await tester.pump();
 
-    await tester.tap(find.text('+ Criar cargo'));
+    await tester.tap(find.text('Criar novo cargo'));
     await tester.pump();
     await tester.pump();
 

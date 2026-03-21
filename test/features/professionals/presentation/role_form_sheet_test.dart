@@ -38,11 +38,23 @@ void main() {
     ));
   });
 
+  const _activeBiz = BusinessModel(
+    id: 'b1', slug: 'my-biz', name: 'My Business',
+    logo: null, timezone: 'America/Sao_Paulo',
+    myStaffRole: StaffRole.owner, planMaxStaff: 5,
+  );
+
   setUp(() {
     rolesBloc = MockProfessionalRolesBloc();
     businessBloc = MockBusinessBloc();
     when(() => rolesBloc.state).thenReturn(const ProfessionalRolesInitial());
-    when(() => businessBloc.state).thenReturn(const BusinessInitial());
+    when(() => businessBloc.state).thenReturn(
+      BusinessLoaded(
+        businesses: const [],
+        active: _activeBiz,
+        policy: AppPolicy.from(_activeBiz.myStaffRole, _activeBiz.planMaxStaff),
+      ),
+    );
   });
 
   Widget buildSheet({ProfessionalRoleModel? role}) => MaterialApp(
@@ -61,14 +73,14 @@ void main() {
   testWidgets('shows Novo Cargo title in create mode', (tester) async {
     await tester.pumpWidget(buildSheet());
     await tester.pump();
-    expect(find.text('Novo Cargo'), findsOneWidget);
+    expect(find.text('Novo cargo'), findsOneWidget);
   });
 
   testWidgets('shows Editar Cargo title in edit mode', (tester) async {
     final role = ProfessionalRoleModel(id: 'r1', businessId: 'b1', name: 'Manicure');
     await tester.pumpWidget(buildSheet(role: role));
     await tester.pump();
-    expect(find.text('Editar Cargo'), findsOneWidget);
+    expect(find.text('Editar cargo'), findsOneWidget);
   });
 
   testWidgets('submit with empty name shows validation error', (tester) async {

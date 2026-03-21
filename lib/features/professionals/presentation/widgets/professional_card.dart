@@ -14,7 +14,7 @@ Color _parseColor(String hex) {
 class ProfessionalCard extends StatelessWidget {
   final ProfessionalModel professional;
   final VoidCallback onTap;
-  final VoidCallback onToggleActive;
+  final VoidCallback? onToggleActive;
 
   const ProfessionalCard({
     super.key,
@@ -115,7 +115,7 @@ class ProfessionalCard extends StatelessWidget {
               // ── Active toggle ──
               Switch(
                 value: professional.isActive,
-                onChanged: (_) => onToggleActive(),
+                onChanged: onToggleActive != null ? (_) => onToggleActive!() : null,
                 activeColor: context.appColors.primary,
               ),
             ],

@@ -100,23 +100,34 @@ class _ProfessionalsPageState extends State<ProfessionalsPage> {
                         _CountBadge(count: allProfessionals.length),
                       ],
                       const Spacer(),
-                      IconButton(
-                        icon: Icon(
-                          Icons.tune,
-                          size: 20,
-                          color: context.appColors.textSecondary,
-                        ),
-                        tooltip: 'Gerenciar cargos',
-                        onPressed: () =>
-                            context.push(AppRoutes.professionalRoles),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      BaseButton(
-                        label: 'Novo',
-                        prefixIcon: Icons.add,
-                        onPressed: () =>
-                            _openForm(context, professional: null),
+                      BlocBuilder<BusinessBloc, BusinessState>(
+                        builder: (context, bizState) {
+                          final canManage = bizState is BusinessLoaded &&
+                              bizState.policy.canManageTeam;
+                          if (!canManage) return const SizedBox.shrink();
+                          return Row(
+                            children: [
+                              IconButton(
+                                icon: Icon(
+                                  Icons.tune,
+                                  size: 20,
+                                  color: context.appColors.textSecondary,
+                                ),
+                                tooltip: 'Gerenciar cargos',
+                                onPressed: () =>
+                                    context.push(AppRoutes.professionalRoles),
+                                visualDensity: VisualDensity.compact,
+                              ),
+                              const SizedBox(width: AppSpacing.xs),
+                              BaseButton(
+                                label: 'Novo',
+                                prefixIcon: Icons.add,
+                                onPressed: () =>
+                                    _openForm(context, professional: null),
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -153,7 +164,7 @@ class _ProfessionalsPageState extends State<ProfessionalsPage> {
                               padding:
                                   const EdgeInsets.all(AppSpacing.lg),
                               itemCount: professionals.length,
-                              separatorBuilder: (_, __) =>
+                              separatorBuilder: (context, index) =>
                                   const SizedBox(height: AppSpacing.sm),
                               itemBuilder: (context, i) {
                                 final prof = professionals[i];

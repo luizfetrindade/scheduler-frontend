@@ -31,11 +31,23 @@ void main() {
     registerFallbackValue(const ProfessionalRolesDeleteRequested(businessId: 'b1', roleId: 'r1'));
   });
 
+  const _activeBiz = BusinessModel(
+    id: 'b1', slug: 'my-biz', name: 'My Business',
+    logo: null, timezone: 'America/Sao_Paulo',
+    myStaffRole: StaffRole.owner, planMaxStaff: 5,
+  );
+
   setUp(() {
     rolesBloc = MockProfessionalRolesBloc();
     businessBloc = MockBusinessBloc();
     when(() => rolesBloc.state).thenReturn(const ProfessionalRolesInitial());
-    when(() => businessBloc.state).thenReturn(const BusinessInitial());
+    when(() => businessBloc.state).thenReturn(
+      BusinessLoaded(
+        businesses: const [],
+        active: _activeBiz,
+        policy: AppPolicy.from(_activeBiz.myStaffRole, _activeBiz.planMaxStaff),
+      ),
+    );
   });
 
   Widget buildPage() => MaterialApp(
@@ -65,8 +77,8 @@ void main() {
 
     expect(find.text('Cabeleireira'), findsOneWidget);
     expect(find.text('Manicure'), findsOneWidget);
-    expect(find.text('2 profissional(is)'), findsOneWidget);
-    expect(find.text('0 profissional(is)'), findsOneWidget);
+    expect(find.text('2 profissionais'), findsOneWidget);
+    expect(find.text('0 profissionais'), findsOneWidget);
   });
 
   testWidgets('renders empty state when list is empty', (tester) async {
@@ -87,23 +99,12 @@ void main() {
     await tester.tap(find.byKey(const Key('delete-r1')));
     await tester.pump();
 
-    expect(find.byType(AlertDialog), findsOneWidget);
+    expect(find.byType(Dialog), findsOneWidget);
     expect(find.textContaining('profissional'), findsWidgets);
   });
 
   testWidgets('delete fires immediately when count == 0 (no dialog)', (tester) async {
     when(() => rolesBloc.state).thenReturn(ProfessionalRolesLoaded([role2]));
-    const _activeBiz = BusinessModel(
-      id: 'b1', slug: 'my-biz', name: 'My Business',
-      logo: null, timezone: 'America/Sao_Paulo',
-    );
-    when(() => businessBloc.state).thenReturn(
-      BusinessLoaded(
-        businesses: const [],
-        active: _activeBiz,
-        policy: AppPolicy.from(_activeBiz.myStaffRole, _activeBiz.planMaxStaff),
-      ),
-    );
 
     await tester.pumpWidget(buildPage());
     await tester.pump();
@@ -111,7 +112,7 @@ void main() {
     await tester.tap(find.byKey(const Key('delete-r2')));
     await tester.pump();
 
-    expect(find.byType(AlertDialog), findsNothing);
+    expect(find.byType(Dialog), findsNothing);
     verify(() => rolesBloc.add(any(that: isA<ProfessionalRolesDeleteRequested>()))).called(1);
   });
 }

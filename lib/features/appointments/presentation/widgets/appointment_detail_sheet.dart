@@ -10,8 +10,13 @@ import 'package:scheduler_frontend/features/appointments/data/rrule_builder.dart
 
 class AppointmentDetailSheet extends StatelessWidget {
   final AppointmentModel appointment;
+  final bool canModify;
 
-  const AppointmentDetailSheet({super.key, required this.appointment});
+  const AppointmentDetailSheet({
+    super.key,
+    required this.appointment,
+    this.canModify = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +24,7 @@ class AppointmentDetailSheet extends StatelessWidget {
     final startStr = timeFormat.format(appointment.startsAt);
     final endStr = timeFormat.format(appointment.endsAt);
     final dateStr = DateFormat('dd/MM/yyyy').format(appointment.startsAt);
-    final canCancel = appointment.status != AppointmentStatus.cancelled;
+    final canCancel = canModify && appointment.status != AppointmentStatus.cancelled;
 
     return BlocListener<ScheduleBloc, ScheduleState>(
       listener: (context, state) {

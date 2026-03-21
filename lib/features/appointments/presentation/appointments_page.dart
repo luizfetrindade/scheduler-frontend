@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:scheduler_frontend/core/auth/auth_bloc.dart';
+import 'package:scheduler_frontend/core/auth/auth_state.dart';
 import 'package:scheduler_frontend/design_system/base_design_system.dart';
 import 'package:scheduler_frontend/features/appointments/bloc/schedule_bloc.dart';
 import 'package:scheduler_frontend/features/appointments/bloc/schedule_event.dart';
@@ -34,6 +36,12 @@ class AppointmentsPage extends StatelessWidget {
             slug: bizState.active.slug,
             date: DateTime.now(),
           ));
+          if (!bizState.policy.isAdmin) {
+            final myProfId = _findMyProfessionalId(context);
+            if (myProfId != null) {
+              bloc.add(ScheduleFilterByProfessional(myProfId));
+            }
+          }
         }
         return bloc;
       },
@@ -64,6 +72,14 @@ class AppointmentsBody extends StatelessWidget {
                         slug: state.active.slug,
                         date: DateTime.now(),
                       ));
+                  if (!state.policy.isAdmin) {
+                    final myProfId = _findMyProfessionalId(context);
+                    if (myProfId != null) {
+                      context
+                          .read<ScheduleBloc>()
+                          .add(ScheduleFilterByProfessional(myProfId));
+                    }
+                  }
                 }
               },
             ),
@@ -211,6 +227,7 @@ class AppointmentsBody extends StatelessWidget {
           buildWhen: (prev, curr) => curr is BusinessLoaded,
           builder: (context, state) {
             if (state is BusinessLoaded &&
+                state.policy.isAdmin &&
                 !state.policy.isSoloMode &&
                 professionals.isNotEmpty) {
               return ProfessionalFilterChips(professionals: professionals);
@@ -292,6 +309,12 @@ void _openCreateSheet(BuildContext context, DateTime dateTime) {
 }
 
 void _showFabOptions(BuildContext context) {
+  final bizState = context.read<BusinessBloc>().state;
+  final isAdmin = bizState is BusinessLoaded && bizState.policy.isAdmin;
+  if (!isAdmin) {
+    _openCreateSheet(context, DateTime.now());
+    return;
+  }
   final bloc = context.read<ScheduleBloc>();
   showModalBottomSheet(
     context: context,
@@ -384,7 +407,27 @@ void _openBlockSheet(BuildContext context, DateTime dateTime) {
   );
 }
 
+String? _findMyProfessionalId(BuildContext context) {
+  final authState = context.read<AuthBloc>().state;
+  if (authState is! AuthAuthenticated) return null;
+  final userId = authState.user.id;
+  final profsState = context.read<ProfessionalsBloc>().state;
+  final professionals = switch (profsState) {
+    ProfessionalsLoaded(:final professionals) => professionals,
+    ProfessionalsActionInProgress(:final professionals) => professionals,
+    _ => <ProfessionalModel>[],
+  };
+  return professionals.where((p) => p.linkedUserId == userId).firstOrNull?.id;
+}
+
 void _openDetailSheet(BuildContext context, AppointmentModel appointment) {
+  final bizState = context.read<BusinessBloc>().state;
+  final policy = bizState is BusinessLoaded ? bizState.policy : null;
+  final myProfId = (policy != null && !policy.isAdmin) ? _findMyProfessionalId(context) : null;
+  final bool canModify = policy == null ||
+      policy.isAdmin ||
+      (myProfId != null && appointment.staffId == myProfId);
+
   final bloc = context.read<ScheduleBloc>();
   showModalBottomSheet(
     context: context,
@@ -394,7 +437,7 @@ void _openDetailSheet(BuildContext context, AppointmentModel appointment) {
     ),
     builder: (_) => BlocProvider.value(
       value: bloc,
-      child: AppointmentDetailSheet(appointment: appointment),
+      child: AppointmentDetailSheet(appointment: appointment, canModify: canModify),
     ),
   );
 }

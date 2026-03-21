@@ -4,16 +4,16 @@ import 'package:scheduler_frontend/features/services/data/service_model.dart';
 
 class ServiceCard extends StatelessWidget {
   final ServiceModel service;
-  final VoidCallback onEdit;
-  final VoidCallback onToggleActive;
-  final VoidCallback onDelete;
+  final VoidCallback? onEdit;
+  final VoidCallback? onToggleActive;
+  final VoidCallback? onDelete;
 
   const ServiceCard({
     super.key,
     required this.service,
-    required this.onEdit,
-    required this.onToggleActive,
-    required this.onDelete,
+    this.onEdit,
+    this.onToggleActive,
+    this.onDelete,
   });
 
   @override
@@ -103,42 +103,47 @@ class ServiceCard extends StatelessWidget {
               tooltip: 'Editar',
               visualDensity: VisualDensity.compact,
             ),
-            PopupMenuButton<_ServiceAction>(
-              icon: Icon(
-                Icons.more_vert,
-                size: 17,
-                color: context.appColors.textSecondary,
-              ),
-              color: context.appColors.surface,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-                side: BorderSide(color: context.appColors.outline),
-              ),
-              onSelected: (action) {
-                if (action == _ServiceAction.toggleActive) onToggleActive();
-                if (action == _ServiceAction.delete) onDelete();
-              },
-              itemBuilder: (_) => [
-                PopupMenuItem(
-                  value: _ServiceAction.toggleActive,
-                  child: Text(
-                    service.isActive ? 'Desativar' : 'Reativar',
-                    style: AppTypography.bodySm.copyWith(
-                      color: context.appColors.textPrimary,
-                    ),
-                  ),
+            if (onToggleActive != null || onDelete != null)
+              PopupMenuButton<_ServiceAction>(
+                icon: Icon(
+                  Icons.more_vert,
+                  size: 17,
+                  color: context.appColors.textSecondary,
                 ),
-                PopupMenuItem(
-                  value: _ServiceAction.delete,
-                  child: Text(
-                    'Excluir',
-                    style: AppTypography.bodySm.copyWith(
-                      color: AppColors.error,
-                    ),
-                  ),
+                color: context.appColors.surface,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                  side: BorderSide(color: context.appColors.outline),
                 ),
-              ],
-            ),
+                onSelected: (action) {
+                  if (action == _ServiceAction.toggleActive) {
+                    onToggleActive?.call();
+                  }
+                  if (action == _ServiceAction.delete) onDelete?.call();
+                },
+                itemBuilder: (_) => [
+                  if (onToggleActive != null)
+                    PopupMenuItem(
+                      value: _ServiceAction.toggleActive,
+                      child: Text(
+                        service.isActive ? 'Desativar' : 'Reativar',
+                        style: AppTypography.bodySm.copyWith(
+                          color: context.appColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  if (onDelete != null)
+                    PopupMenuItem(
+                      value: _ServiceAction.delete,
+                      child: Text(
+                        'Excluir',
+                        style: AppTypography.bodySm.copyWith(
+                          color: AppColors.error,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
           ],
         ),
       ),

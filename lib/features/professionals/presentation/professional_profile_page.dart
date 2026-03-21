@@ -157,42 +157,49 @@ class _ProfileTab extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
           ],
           const SizedBox(height: AppSpacing.lg),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => _openEditForm(context),
-                  icon: const Icon(Icons.edit_outlined),
-                  label: const Text('Editar'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: context.appColors.primary,
-                    side: BorderSide(color: context.appColors.primary),
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => _toggleActive(context),
-                  icon: Icon(professional.isActive
-                      ? Icons.person_off_outlined
-                      : Icons.person_outlined),
-                  label: Text(
-                    professional.isActive ? 'Desativar' : 'Ativar',
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: professional.isActive
-                        ? AppColors.error
-                        : context.appColors.primary,
-                    side: BorderSide(
-                      color: professional.isActive
-                          ? AppColors.error
-                          : context.appColors.primary,
+          BlocBuilder<BusinessBloc, BusinessState>(
+            builder: (context, bizState) {
+              final canManage =
+                  bizState is BusinessLoaded && bizState.policy.canManageTeam;
+              if (!canManage) return const SizedBox.shrink();
+              return Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _openEditForm(context),
+                      icon: const Icon(Icons.edit_outlined),
+                      label: const Text('Editar'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: context.appColors.primary,
+                        side: BorderSide(color: context.appColors.primary),
+                      ),
                     ),
                   ),
-                ),
-              ),
-            ],
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _toggleActive(context),
+                      icon: Icon(professional.isActive
+                          ? Icons.person_off_outlined
+                          : Icons.person_outlined),
+                      label: Text(
+                        professional.isActive ? 'Desativar' : 'Ativar',
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: professional.isActive
+                            ? AppColors.error
+                            : context.appColors.primary,
+                        side: BorderSide(
+                          color: professional.isActive
+                              ? AppColors.error
+                              : context.appColors.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -229,8 +236,12 @@ class _ProfileTab extends StatelessWidget {
   }
 
   Color _parseColor(String hex) {
-    final cleaned = hex.replaceAll('#', '');
-    return Color(int.parse('FF$cleaned', radix: 16));
+    try {
+      final cleaned = hex.replaceAll('#', '');
+      return Color(int.parse('FF$cleaned', radix: 16));
+    } catch (_) {
+      return const Color(0xFF4A90E2); // default blue
+    }
   }
 }
 

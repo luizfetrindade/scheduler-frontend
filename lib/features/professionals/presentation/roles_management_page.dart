@@ -35,6 +35,10 @@ class RolesManagementPage extends StatelessWidget {
             );
           }
 
+          final bizState = context.watch<BusinessBloc>().state;
+          final canManage =
+              bizState is BusinessLoaded && bizState.policy.canManageTeam;
+
           final roles = switch (state) {
             ProfessionalRolesLoaded(:final roles) => roles,
             ProfessionalRolesActionInProgress(:final roles) => roles,
@@ -90,11 +94,12 @@ class RolesManagementPage extends StatelessWidget {
                         ),
                       ],
                       const Spacer(),
-                      BaseButton(
-                        label: 'Novo cargo',
-                        prefixIcon: Icons.add,
-                        onPressed: () => _openForm(context, role: null),
-                      ),
+                      if (canManage)
+                        BaseButton(
+                          label: 'Novo cargo',
+                          prefixIcon: Icons.add,
+                          onPressed: () => _openForm(context, role: null),
+                        ),
                     ],
                   ),
                 ),
@@ -104,20 +109,22 @@ class RolesManagementPage extends StatelessWidget {
                 // ── Body ──────────────────────────────────────────
                 Expanded(
                   child: roles.isEmpty
-                      ? _buildEmptyState(context)
+                      ? _buildEmptyState(context, canManage: canManage)
                       : ListView.separated(
                           padding: const EdgeInsets.all(AppSpacing.lg),
                           itemCount: roles.length,
-                          separatorBuilder: (_, __) =>
+                          separatorBuilder: (_, _) =>
                               const SizedBox(height: AppSpacing.sm),
                           itemBuilder: (context, index) {
                             final role = roles[index];
                             return _RoleListItem(
                               role: role,
-                              onEdit: () =>
-                                  _openForm(context, role: role),
-                              onDelete: () =>
-                                  _onDeleteTapped(context, role),
+                              onEdit: canManage
+                                  ? () => _openForm(context, role: role)
+                                  : null,
+                              onDelete: canManage
+                                  ? () => _onDeleteTapped(context, role)
+                                  : null,
                             );
                           },
                         ),
@@ -130,7 +137,7 @@ class RolesManagementPage extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
+  Widget _buildEmptyState(BuildContext context, {required bool canManage}) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xxxl),
@@ -164,11 +171,12 @@ class RolesManagementPage extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.xl),
-            BaseButton(
-              label: 'Adicionar cargo',
-              prefixIcon: Icons.add,
-              onPressed: () => _openForm(context, role: null),
-            ),
+            if (canManage)
+              BaseButton(
+                label: 'Adicionar cargo',
+                prefixIcon: Icons.add,
+                onPressed: () => _openForm(context, role: null),
+              ),
           ],
         ),
       ),
@@ -295,8 +303,8 @@ class RolesManagementPage extends StatelessWidget {
 
 class _RoleListItem extends StatelessWidget {
   final ProfessionalRoleModel role;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   const _RoleListItem({
     required this.role,

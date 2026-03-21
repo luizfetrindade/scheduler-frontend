@@ -91,10 +91,19 @@ class _ServicesPageState extends State<ServicesPage> {
                         _CountBadge(count: allServices.length),
                       ],
                       const Spacer(),
-                      BaseButton(
-                        label: 'Novo serviço',
-                        prefixIcon: Icons.add,
-                        onPressed: () => _openForm(context, initial: null),
+                      BlocBuilder<BusinessBloc, BusinessState>(
+                        buildWhen: (p, c) => c is BusinessLoaded,
+                        builder: (context, bizState) {
+                          final canManage = bizState is BusinessLoaded &&
+                              bizState.policy.canManageServices;
+                          if (!canManage) return const SizedBox.shrink();
+                          return BaseButton(
+                            label: 'Novo serviço',
+                            prefixIcon: Icons.add,
+                            onPressed: () =>
+                                _openForm(context, initial: null),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -120,31 +129,48 @@ class _ServicesPageState extends State<ServicesPage> {
 
                 // ── Body ────────────────────────────────────────────────
                 Expanded(
-                  child: allServices.isEmpty
-                      ? _EmptyState(
+                  child: Builder(
+                    builder: (context) {
+                      final bizState = context.read<BusinessBloc>().state;
+                      final canManage = bizState is BusinessLoaded &&
+                          bizState.policy.canManageServices;
+
+                      if (allServices.isEmpty) {
+                        return _EmptyState(
                           isFirstTime: true,
-                          onAdd: () => _openForm(context, initial: null),
-                        )
-                      : services.isEmpty
-                          ? const _EmptyState(isFirstTime: false)
-                          : ListView.separated(
-                              padding: const EdgeInsets.all(AppSpacing.lg),
-                              itemCount: services.length,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(height: AppSpacing.sm),
-                              itemBuilder: (context, i) {
-                                final svc = services[i];
-                                return ServiceCard(
-                                  service: svc,
-                                  onEdit: () =>
-                                      _openForm(context, initial: svc),
-                                  onToggleActive: () =>
-                                      _toggleActive(context, svc),
-                                  onDelete: () =>
-                                      _confirmDelete(context, svc),
-                                );
-                              },
-                            ),
+                          onAdd: canManage
+                              ? () => _openForm(context, initial: null)
+                              : null,
+                        );
+                      }
+
+                      if (services.isEmpty) {
+                        return const _EmptyState(isFirstTime: false);
+                      }
+
+                      return ListView.separated(
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        itemCount: services.length,
+                        separatorBuilder: (_, _) =>
+                            const SizedBox(height: AppSpacing.sm),
+                        itemBuilder: (context, i) {
+                          final svc = services[i];
+                          return ServiceCard(
+                            service: svc,
+                            onEdit: canManage
+                                ? () => _openForm(context, initial: svc)
+                                : null,
+                            onToggleActive: canManage
+                                ? () => _toggleActive(context, svc)
+                                : null,
+                            onDelete: canManage
+                                ? () => _confirmDelete(context, svc)
+                                : null,
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
