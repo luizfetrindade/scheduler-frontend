@@ -7,8 +7,13 @@ const _weekdayAbbr = ['', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 
 class DailySeriesChart extends StatelessWidget {
   final List<DailyPoint> series;
+  final String title;
 
-  const DailySeriesChart({super.key, required this.series});
+  const DailySeriesChart({
+    super.key,
+    required this.series,
+    this.title = 'Agendamentos por Dia',
+  });
 
   String _label(int index) {
     final date = DateTime.tryParse(series[index].date);
@@ -44,7 +49,7 @@ class DailySeriesChart extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Agendamentos por Dia',
+            title,
             style: AppTypography.bodyMd.copyWith(
                 color: colors.textPrimary, fontWeight: FontWeight.w600),
           ),
