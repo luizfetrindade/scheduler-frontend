@@ -1,12 +1,19 @@
+import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:scheduler_frontend/core/cache/preferences_service.dart';
 import 'package:scheduler_frontend/core/theme/theme_cubit.dart';
-import 'package:scheduler_frontend/core/theme/theme_state.dart';
 import 'package:scheduler_frontend/design_system/tokens/app_theme.dart';
+import 'package:scheduler_frontend/features/business/bloc/business_bloc.dart';
+import 'package:scheduler_frontend/features/business/bloc/business_event.dart';
+import 'package:scheduler_frontend/features/business/bloc/business_state.dart';
 import 'package:scheduler_frontend/features/settings/presentation/settings_page.dart';
+
+class _MockBusinessBloc extends MockBloc<BusinessEvent, BusinessState>
+    implements BusinessBloc {}
 
 Future<Widget> buildPage([ThemeMode mode = ThemeMode.dark]) async {
   SharedPreferences.setMockInitialValues(
@@ -15,8 +22,14 @@ Future<Widget> buildPage([ThemeMode mode = ThemeMode.dark]) async {
   final prefs = PreferencesService();
   await prefs.init();
 
-  return BlocProvider(
-    create: (_) => ThemeCubit(prefs),
+  final businessBloc = _MockBusinessBloc();
+  when(() => businessBloc.state).thenReturn(const BusinessInitial());
+
+  return MultiBlocProvider(
+    providers: [
+      BlocProvider(create: (_) => ThemeCubit(prefs)),
+      BlocProvider<BusinessBloc>.value(value: businessBloc),
+    ],
     child: MaterialApp(
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),

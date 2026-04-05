@@ -11,6 +11,7 @@ class ProfessionalRolesBloc
 
   ProfessionalRolesBloc(this._repository)
       : super(const ProfessionalRolesInitial()) {
+    on<ProfessionalRolesSessionCleared>((_, emit) => emit(const ProfessionalRolesInitial()));
     on<ProfessionalRolesLoadRequested>(_onLoad);
     on<ProfessionalRolesCreateRequested>(_onCreate);
     on<ProfessionalRolesUpdateRequested>(_onUpdate);

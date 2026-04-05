@@ -28,6 +28,7 @@ class ClientCard extends StatefulWidget {
   final String businessId;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final bool showDivider;
 
   const ClientCard({
     super.key,
@@ -35,6 +36,7 @@ class ClientCard extends StatefulWidget {
     required this.businessId,
     required this.onEdit,
     required this.onDelete,
+    this.showDivider = true,
   });
 
   @override
@@ -63,15 +65,9 @@ class _ClientCardState extends State<ClientCard> {
         final history = state._historyFor(widget.client.id);
         final isLoading = _expanded && history == null;
 
-        return Container(
-          decoration: BoxDecoration(
-            color: context.appColors.surface,
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            border: Border.all(color: context.appColors.outline),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
               // ── Header row ────────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(
@@ -81,25 +77,6 @@ class _ClientCardState extends State<ClientCard> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Square avatar
-                    Container(
-                      width: 40,
-                      height: 40,
-                      color: context.appColors.primary.withValues(alpha: 0.08),
-                      child: Center(
-                        child: Text(
-                          widget.client.name.isNotEmpty
-                              ? widget.client.name[0].toUpperCase()
-                              : '?',
-                          style: AppTypography.bodyMd.copyWith(
-                            color: context.appColors.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-
                     // Name + contact info
                     Expanded(
                       child: Column(
@@ -114,7 +91,7 @@ class _ClientCardState extends State<ClientCard> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            _formatPhone(widget.client.phone),
+                            _formatPhone(widget.client.phone ?? ''),
                             style: AppTypography.caption.copyWith(
                               color: context.appColors.textSecondary,
                             ),
@@ -230,9 +207,14 @@ class _ClientCardState extends State<ClientCard> {
                       )
                     : const SizedBox.shrink(),
               ),
+              if (widget.showDivider)
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: context.appColors.outline,
+                ),
             ],
-          ),
-        );
+          );
       },
     );
   }

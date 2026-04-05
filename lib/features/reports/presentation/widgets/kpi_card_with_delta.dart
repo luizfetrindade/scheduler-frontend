@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:scheduler_frontend/design_system/base_design_system.dart';
 
 class KpiCardWithDelta extends StatelessWidget {
   final String label;
   final String value;
   final double delta;
   final String deltaLabel;
-  final Color accentColor;
 
   const KpiCardWithDelta({
     super.key,
@@ -13,48 +13,51 @@ class KpiCardWithDelta extends StatelessWidget {
     required this.value,
     required this.delta,
     required this.deltaLabel,
-    required this.accentColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final hasDelta = deltaLabel.isNotEmpty;
     final isPositive = delta >= 0;
-    final arrowColor =
-        isPositive ? Colors.green.shade400 : Colors.red.shade400;
+    final deltaColor = isPositive ? AppColors.success : AppColors.error;
     final arrow = isPositive ? '↑' : '↓';
 
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
-        border: Border(left: BorderSide(color: accentColor, width: 3)),
-      ),
+    return BaseCard(
+      padding: AppSpacing.md,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            style: AppTypography.caption.copyWith(
+              color: colors.textSecondary,
+              fontWeight: FontWeight.w500,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             value,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
+            style: AppTypography.headingMd.copyWith(
+              color: colors.textPrimary,
+              fontWeight: FontWeight.w700,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 2),
-          Text(
-            '$arrow $deltaLabel',
-            style: TextStyle(
-              fontSize: 12,
-              color: arrowColor,
-              fontWeight: FontWeight.w600,
+          if (hasDelta) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              '$arrow $deltaLabel',
+              style: AppTypography.caption.copyWith(
+                color: deltaColor,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );

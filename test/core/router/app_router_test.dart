@@ -2,6 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:scheduler_frontend/core/router/app_router.dart';
 import 'package:scheduler_frontend/core/router/app_routes.dart';
 
+// ignore_for_file: lines_longer_than_80_chars
+
 /// Tests the pure redirect logic extracted from GoRouter.
 /// GoRouter + BLoC widget tests are covered by integration/E2E tests.
 void main() {
@@ -77,6 +79,49 @@ void main() {
         computeRedirect(isLoggedIn: false, location: '/login/password'),
         isNull,
       );
+    });
+  });
+
+  // ─── extractToken ────────────────────────────────────────────────────────────
+
+  group('extractToken — fragment (preferred, safe path)', () {
+    test('extracts token from fragment (#token=VALUE)', () {
+      final uri = Uri.parse('/reset-password#token=abc123');
+      expect(extractToken(uri), equals('abc123'));
+    });
+
+    test('extracts invite token from fragment', () {
+      final uri = Uri.parse('/accept-invite#token=invite-xyz');
+      expect(extractToken(uri), equals('invite-xyz'));
+    });
+
+    test('prefers fragment over query parameter when both present', () {
+      final uri = Uri.parse('/reset-password?token=query-token#token=fragment-token');
+      expect(extractToken(uri), equals('fragment-token'));
+    });
+  });
+
+  group('extractToken — query param fallback (backward compatibility)', () {
+    test('falls back to query parameter when no fragment', () {
+      final uri = Uri.parse('/reset-password?token=legacy-token');
+      expect(extractToken(uri), equals('legacy-token'));
+    });
+
+    test('falls back to query parameter for invite link', () {
+      final uri = Uri.parse('/accept-invite?token=legacy-invite');
+      expect(extractToken(uri), equals('legacy-invite'));
+    });
+  });
+
+  group('extractToken — missing token', () {
+    test('returns empty string when neither fragment nor query param present', () {
+      final uri = Uri.parse('/reset-password');
+      expect(extractToken(uri), isEmpty);
+    });
+
+    test('returns empty string when fragment has no token key', () {
+      final uri = Uri.parse('/reset-password#other=value');
+      expect(extractToken(uri), isEmpty);
     });
   });
 

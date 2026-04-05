@@ -6,32 +6,32 @@ const _sentinel = Object();
 class ClientModel extends Equatable {
   final String id;
   final String name;
-  final String phone;
+  final String? phone;
   final String? email;
 
   const ClientModel({
     required this.id,
     required this.name,
-    required this.phone,
+    this.phone,
     this.email,
   });
 
   factory ClientModel.fromJson(Map<String, dynamic> json) => ClientModel(
         id: json['id'] as String,
         name: json['name'] as String,
-        phone: json['phone'] as String,
+        phone: json['phone'] as String?,
         email: json['email'] as String?,
       );
 
   ClientModel copyWith({
     String? name,
-    String? phone,
+    Object? phone = _sentinel,
     Object? email = _sentinel,
   }) =>
       ClientModel(
         id: id,
         name: name ?? this.name,
-        phone: phone ?? this.phone,
+        phone: phone == _sentinel ? this.phone : phone as String?,
         email: email == _sentinel ? this.email : email as String?,
       );
 

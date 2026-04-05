@@ -7,6 +7,7 @@ class ServiceCard extends StatelessWidget {
   final VoidCallback? onEdit;
   final VoidCallback? onToggleActive;
   final VoidCallback? onDelete;
+  final bool showDivider;
 
   const ServiceCard({
     super.key,
@@ -14,6 +15,7 @@ class ServiceCard extends StatelessWidget {
     this.onEdit,
     this.onToggleActive,
     this.onDelete,
+    this.showDivider = true,
   });
 
   @override
@@ -22,36 +24,19 @@ class ServiceCard extends StatelessWidget {
       opacity: service.isActive ? 1.0 : 0.5,
       child: Container(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
+          horizontal: AppSpacing.xs,
+          vertical: AppSpacing.md,
         ),
         decoration: BoxDecoration(
-          color: context.appColors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(color: context.appColors.outline),
+          border: Border(
+            bottom: showDivider
+                ? BorderSide(color: context.appColors.outline)
+                : BorderSide.none,
+          ),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // ── Initial avatar ──
-            Container(
-              width: 40,
-              height: 40,
-              color: context.appColors.primary.withValues(alpha: 0.08),
-              child: Center(
-                child: Text(
-                  service.name.isNotEmpty
-                      ? service.name[0].toUpperCase()
-                      : 'S',
-                  style: AppTypography.bodyMd.copyWith(
-                    color: context.appColors.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-
             // ── Name + metadata ──
             Expanded(
               child: Column(

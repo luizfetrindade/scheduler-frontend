@@ -28,9 +28,28 @@ class _ServicesPageState extends State<ServicesPage> {
   }
 
   List<ServiceModel> _filtered(List<ServiceModel> services) {
-    if (_query.isEmpty) return services;
-    final q = _query.toLowerCase();
-    return services.where((s) => s.name.toLowerCase().contains(q)).toList();
+    final list = _query.isEmpty
+        ? [...services]
+        : services
+            .where((s) => s.name.toLowerCase().contains(_query.toLowerCase()))
+            .toList();
+    list.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    return list;
+  }
+
+  List<_GroupEntry> _grouped(List<ServiceModel> services) {
+    final entries = <_GroupEntry>[];
+    String? currentLetter;
+    for (final s in services) {
+      final letter =
+          s.name.isNotEmpty ? s.name[0].toUpperCase() : '#';
+      if (letter != currentLetter) {
+        currentLetter = letter;
+        entries.add(_LetterHeader(letter));
+      }
+      entries.add(_ServiceEntry(s));
+    }
+    return entries;
   }
 
   @override
@@ -49,7 +68,7 @@ class _ServicesPageState extends State<ServicesPage> {
           }
         },
         builder: (context, state) {
-          if (state is ServicesLoading) {
+          if (state is ServicesInitial || state is ServicesLoading) {
             return Center(
               child: CircularProgressIndicator(
                   color: context.appColors.primary),
@@ -148,25 +167,48 @@ class _ServicesPageState extends State<ServicesPage> {
                         return const _EmptyState(isFirstTime: false);
                       }
 
-                      return ListView.separated(
+                      final entries = _grouped(services);
+                      return ListView.builder(
                         padding: const EdgeInsets.all(AppSpacing.lg),
-                        itemCount: services.length,
-                        separatorBuilder: (_, _) =>
-                            const SizedBox(height: AppSpacing.sm),
+                        itemCount: entries.length,
+                        findChildIndexCallback: (key) {
+                          if (key is ValueKey<String>) {
+                            final idx =
+                                entries.indexWhere((e) => switch (e) {
+                                      _LetterHeader(:final letter) =>
+                                        key.value == 'header_$letter',
+                                      _ServiceEntry(:final service) =>
+                                        key.value == service.id,
+                                    });
+                            return idx >= 0 ? idx : null;
+                          }
+                          return null;
+                        },
                         itemBuilder: (context, i) {
-                          final svc = services[i];
-                          return ServiceCard(
-                            service: svc,
-                            onEdit: canManage
-                                ? () => _openForm(context, initial: svc)
-                                : null,
-                            onToggleActive: canManage
-                                ? () => _toggleActive(context, svc)
-                                : null,
-                            onDelete: canManage
-                                ? () => _confirmDelete(context, svc)
-                                : null,
-                          );
+                          final entry = entries[i];
+                          return switch (entry) {
+                            _LetterHeader(:final letter) =>
+                              _SectionHeader(
+                                key: ValueKey('header_$letter'),
+                                letter: letter,
+                              ),
+                            _ServiceEntry(:final service) => ServiceCard(
+                                key: ValueKey(service.id),
+                                service: service,
+                                showDivider: i + 1 < entries.length &&
+                                    entries[i + 1] is! _LetterHeader,
+                                onEdit: canManage
+                                    ? () =>
+                                        _openForm(context, initial: service)
+                                    : null,
+                                onToggleActive: canManage
+                                    ? () => _toggleActive(context, service)
+                                    : null,
+                                onDelete: canManage
+                                    ? () => _confirmDelete(context, service)
+                                    : null,
+                              ),
+                          };
                         },
                       );
                     },
@@ -217,7 +259,7 @@ class _ServicesPageState extends State<ServicesPage> {
       builder: (ctx) => Dialog(
         backgroundColor: ctx.appColors.surface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderRadius: BorderRadius.zero,
         ),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.xl),
@@ -406,7 +448,7 @@ class _EmptyState extends StatelessWidget {
               color: context.appColors.surfaceHigh,
               child: Icon(
                 isFirstTime
-                    ? Icons.cut_outlined
+                    ? Icons.category_outlined
                     : Icons.search_off_outlined,
                 size: 24,
                 color: context.appColors.textDisabled,
@@ -445,4 +487,60 @@ class _EmptyState extends StatelessWidget {
       ),
     );
   }
+}
+
+// ── Section header ───────────────────────────────────────────────────────────
+
+class _SectionHeader extends StatelessWidget {
+  final String letter;
+  const _SectionHeader({super.key, required this.letter});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(
+        top: AppSpacing.md,
+        bottom: AppSpacing.sm,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            color: context.appColors.primary,
+            child: Center(
+              child: Text(
+                letter,
+                style: AppTypography.labelLarge.copyWith(
+                  color: context.appColors.surface,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Divider(
+              height: 1,
+              color: context.appColors.outline,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Group entry types ────────────────────────────────────────────────────────
+
+sealed class _GroupEntry {}
+
+class _LetterHeader extends _GroupEntry {
+  final String letter;
+  _LetterHeader(this.letter);
+}
+
+class _ServiceEntry extends _GroupEntry {
+  final ServiceModel service;
+  _ServiceEntry(this.service);
 }

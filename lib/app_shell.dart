@@ -11,7 +11,11 @@ import 'package:scheduler_frontend/core/theme/theme_cubit.dart';
 import 'package:scheduler_frontend/core/theme/theme_state.dart';
 import 'package:scheduler_frontend/design_system/base_design_system.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_bloc.dart';
+import 'package:scheduler_frontend/features/business/bloc/business_event.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_state.dart';
+import 'package:scheduler_frontend/features/onboarding/bloc/wizard_bloc.dart';
+import 'package:scheduler_frontend/features/onboarding/bloc/wizard_event.dart';
+import 'package:scheduler_frontend/features/onboarding/presentation/wizard_page.dart';
 
 // ─── Nav item descriptor (internal rendering struct) ─────────────────────────
 
@@ -52,9 +56,9 @@ class _FloatingNavBar extends StatelessWidget {
         child: Container(
           height: 64,
           decoration: BoxDecoration(
-            color: context.appColors.surface.withValues(alpha: 0.65),
+            color: context.appColors.surface.withValues(alpha: 0.85),
             border: Border.all(
-              color: context.appColors.surfaceHigh.withValues(alpha: 0.5),
+              color: context.appColors.outline,
             ),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
@@ -76,7 +80,7 @@ class _FloatingNavBar extends StatelessWidget {
                     width: itemWidth - 4,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: context.appColors.primaryDark.withValues(alpha: 0.5),
+                        color: context.appColors.primary,
                         borderRadius: BorderRadius.circular(22),
                       ),
                     ),
@@ -136,8 +140,8 @@ class _NavItemButton extends StatelessWidget {
                 item.icon,
                 size: 22,
                 color: Color.lerp(
-                  isSelected ? context.appColors.textSecondary : context.appColors.primaryLight,
-                  isSelected ? context.appColors.primaryLight : context.appColors.textSecondary,
+                  isSelected ? context.appColors.textDisabled : context.appColors.surface,
+                  isSelected ? context.appColors.surface : context.appColors.textDisabled,
                   t,
                 ),
               ),
@@ -174,10 +178,64 @@ class AdaptiveShell extends StatelessWidget {
 
   static const _kBreakpoint = 720.0;
 
+  void _showWizardSheet(BuildContext context) {
+    context.read<WizardBloc>().add(const WizardCheckRequested());
+    showModalBottomSheet<void>(
+      context: context,
+      isDismissible: false,
+      enableDrag: false,
+      isScrollControlled: true,
+      backgroundColor: context.appColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => BlocProvider.value(
+        value: context.read<WizardBloc>(),
+        child: WizardPageWrapper(
+          onComplete: () => Navigator.pop(context),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<BusinessBloc, BusinessState>(
+    return BlocConsumer<BusinessBloc, BusinessState>(
+      listenWhen: (_, current) =>
+          current is BusinessError &&
+          current.message == 'Nenhum negócio encontrado',
+      listener: (context, _) => _showWizardSheet(context),
       builder: (context, state) {
+        if (state is BusinessError &&
+            state.message != 'Nenhum negócio encontrado') {
+          return Scaffold(
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.error_outline,
+                        size: 48, color: Colors.red),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      state.message,
+                      textAlign: TextAlign.center,
+                      style: AppTypography.bodyMd,
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    ElevatedButton(
+                      onPressed: () => context
+                          .read<BusinessBloc>()
+                          .add(const BusinessLoadRequested()),
+                      child: const Text('Tentar novamente'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
         if (state is! BusinessLoaded) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
@@ -380,29 +438,32 @@ class _SidebarHeader extends StatelessWidget {
         left: AppSpacing.xs,
         right: AppSpacing.xs,
       ),
-      child: Row(
-        children: [
-          IconButton(
-            key: const ValueKey('sidebar_toggle'),
-            icon: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              child: Icon(
-                expanded ? Icons.chevron_left : Icons.chevron_right,
-                key: ValueKey(expanded),
-                color: context.appColors.sidebarForeground,
+      child: SizedBox(
+        height: 48,
+        child: Row(
+          children: [
+            IconButton(
+              key: const ValueKey('sidebar_toggle'),
+              icon: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                child: Icon(
+                  expanded ? Icons.chevron_left : Icons.chevron_right,
+                  key: ValueKey(expanded),
+                  color: context.appColors.sidebarForeground,
+                ),
               ),
+              onPressed: onToggle,
+              tooltip: expanded ? 'Retrair' : 'Expandir',
             ),
-            onPressed: onToggle,
-            tooltip: expanded ? 'Retrair' : 'Expandir',
-          ),
-          Expanded(
-            child: AnimatedOpacity(
-              opacity: expanded ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 150),
-              child: Text('Scheduler', style: AppTypography.headingMd.copyWith(color: context.appColors.sidebarForeground)),
-            ),
-          ),
-        ],
+            if (expanded)
+              Text(
+                'Scheduler',
+                style: AppTypography.headingMd.copyWith(
+                  color: context.appColors.sidebarForeground,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

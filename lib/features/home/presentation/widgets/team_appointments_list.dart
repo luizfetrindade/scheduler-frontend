@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:scheduler_frontend/core/router/app_routes.dart';
 import 'package:scheduler_frontend/design_system/base_design_system.dart';
 import 'package:scheduler_frontend/features/appointments/bloc/appointments_bloc.dart';
 import 'package:scheduler_frontend/features/appointments/bloc/appointments_event.dart';
@@ -10,6 +12,7 @@ import 'package:scheduler_frontend/features/appointments/data/appointment_reposi
 import 'package:scheduler_frontend/features/business/bloc/business_bloc.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_state.dart';
 import 'package:scheduler_frontend/features/home/presentation/widgets/appointment_card.dart';
+import 'package:scheduler_frontend/features/home/presentation/widgets/empty_state_cta_card.dart';
 import 'package:scheduler_frontend/features/professionals/bloc/professionals_bloc.dart';
 import 'package:scheduler_frontend/features/professionals/bloc/professionals_state.dart';
 import 'package:scheduler_frontend/features/professionals/data/professional_model.dart';
@@ -54,16 +57,12 @@ class _TeamAppointmentsBody extends StatelessWidget {
                 ),
               AppointmentsLoaded(:final appointments)
                   when appointments.isEmpty =>
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: AppSpacing.xl),
-                    child: Text(
-                      'Nenhum agendamento hoje',
-                      style: AppTypography.bodySm.copyWith(
-                        color: context.appColors.textSecondary,
-                      ),
-                    ),
-                  ),
+                EmptyStateCtaCard(
+                  icon: Icons.calendar_today_outlined,
+                  title: 'Sem agendamentos hoje',
+                  subtitle: 'Nenhum atendimento marcado para hoje',
+                  ctaLabel: 'Ver agenda',
+                  onTap: () => context.push(AppRoutes.appointments),
                 ),
               AppointmentsLoaded(:final appointments) => Column(
                   children: appointments

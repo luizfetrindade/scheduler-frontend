@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 abstract final class AppShadows {
   // Light — Iron Gray
   static const List<BoxShadow> cardLight = [
-    BoxShadow(color: Color(0x0F000000), blurRadius: 8, offset: Offset(0, 2)),
+    BoxShadow(color: Color(0x0A000000), blurRadius: 1, offset: Offset(0, 0), spreadRadius: 1),
+    BoxShadow(color: Color(0x14000000), blurRadius: 8, offset: Offset(0, 2)),
   ];
   static const List<BoxShadow> cardWrapperLight = [
     BoxShadow(color: Color(0x0D000000), blurRadius: 12, offset: Offset(0, 4)),

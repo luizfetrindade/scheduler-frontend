@@ -149,4 +149,163 @@ void main() {
       ],
     );
   });
+
+  group('ScheduleBloc - ScheduleAppointmentUpdateRequested', () {
+    final updatedAppt = _makeAppointment(id: 'appt-1');
+
+    blocTest<ScheduleBloc, ScheduleState>(
+      'emits ScheduleActionSuccess on successful update',
+      build: () {
+        when(
+          () => mockRepo.updateAppointment(
+            slug: any(named: 'slug'),
+            appointmentId: any(named: 'appointmentId'),
+            clientName: any(named: 'clientName'),
+            startsAt: any(named: 'startsAt'),
+            durationMinutes: any(named: 'durationMinutes'),
+            notes: any(named: 'notes'),
+            serviceId: any(named: 'serviceId'),
+            clearNotes: any(named: 'clearNotes'),
+            clearService: any(named: 'clearService'),
+          ),
+        ).thenAnswer((_) async => Success(updatedAppt));
+        return ScheduleBloc(mockRepo);
+      },
+      seed: () => ScheduleActionSuccess(
+        message: '',
+        selectedDate: testDate,
+        viewMode: ScheduleViewMode.day,
+      ),
+      act: (bloc) => bloc.add(
+        const ScheduleAppointmentUpdateRequested(
+          appointmentId: 'appt-1',
+          clientName: 'New Name',
+        ),
+      ),
+      expect: () => [
+        isA<ScheduleActionSuccess>().having(
+          (s) => s.message,
+          'success message',
+          'Agendamento atualizado com sucesso',
+        ),
+      ],
+    );
+
+    blocTest<ScheduleBloc, ScheduleState>(
+      'emits ScheduleActionFailure on network failure',
+      build: () {
+        when(
+          () => mockRepo.updateAppointment(
+            slug: any(named: 'slug'),
+            appointmentId: any(named: 'appointmentId'),
+            clientName: any(named: 'clientName'),
+            startsAt: any(named: 'startsAt'),
+            durationMinutes: any(named: 'durationMinutes'),
+            notes: any(named: 'notes'),
+            serviceId: any(named: 'serviceId'),
+            clearNotes: any(named: 'clearNotes'),
+            clearService: any(named: 'clearService'),
+          ),
+        ).thenAnswer(
+          (_) async => const HttpFailure(NetworkFailure('no internet')),
+        );
+        return ScheduleBloc(mockRepo);
+      },
+      seed: () => ScheduleActionSuccess(
+        message: '',
+        selectedDate: testDate,
+        viewMode: ScheduleViewMode.day,
+      ),
+      act: (bloc) => bloc.add(
+        const ScheduleAppointmentUpdateRequested(appointmentId: 'appt-1'),
+      ),
+      expect: () => [
+        isA<ScheduleActionFailure>().having(
+          (s) => s.message,
+          'failure message',
+          'Sem conexão com a internet',
+        ),
+      ],
+    );
+  });
+
+  group('ScheduleBloc - ScheduleRecurrenceUpdateRequested', () {
+    final updatedAppt = _makeAppointment(id: 'appt-1');
+
+    blocTest<ScheduleBloc, ScheduleState>(
+      'updateFuture: true — calls updateFutureAppointments and emits ScheduleActionSuccess with future message',
+      build: () {
+        when(
+          () => mockRepo.updateFutureAppointments(
+            slug: any(named: 'slug'),
+            appointmentId: any(named: 'appointmentId'),
+            clientName: any(named: 'clientName'),
+            startsAt: any(named: 'startsAt'),
+            durationMinutes: any(named: 'durationMinutes'),
+            notes: any(named: 'notes'),
+            serviceId: any(named: 'serviceId'),
+            clearNotes: any(named: 'clearNotes'),
+            clearService: any(named: 'clearService'),
+          ),
+        ).thenAnswer((_) async => const Success(<String, dynamic>{}));
+        return ScheduleBloc(mockRepo);
+      },
+      seed: () => ScheduleActionSuccess(
+        message: '',
+        selectedDate: testDate,
+        viewMode: ScheduleViewMode.day,
+      ),
+      act: (bloc) => bloc.add(
+        const ScheduleRecurrenceUpdateRequested(
+          appointmentId: 'appt-1',
+          updateFuture: true,
+        ),
+      ),
+      expect: () => [
+        isA<ScheduleActionSuccess>().having(
+          (s) => s.message,
+          'future occurrences message',
+          'Ocorrências futuras atualizadas',
+        ),
+      ],
+    );
+
+    blocTest<ScheduleBloc, ScheduleState>(
+      'updateFuture: false — routes to updateAppointment and emits ScheduleActionSuccess with single message',
+      build: () {
+        when(
+          () => mockRepo.updateAppointment(
+            slug: any(named: 'slug'),
+            appointmentId: any(named: 'appointmentId'),
+            clientName: any(named: 'clientName'),
+            startsAt: any(named: 'startsAt'),
+            durationMinutes: any(named: 'durationMinutes'),
+            notes: any(named: 'notes'),
+            serviceId: any(named: 'serviceId'),
+            clearNotes: any(named: 'clearNotes'),
+            clearService: any(named: 'clearService'),
+          ),
+        ).thenAnswer((_) async => Success(updatedAppt));
+        return ScheduleBloc(mockRepo);
+      },
+      seed: () => ScheduleActionSuccess(
+        message: '',
+        selectedDate: testDate,
+        viewMode: ScheduleViewMode.day,
+      ),
+      act: (bloc) => bloc.add(
+        const ScheduleRecurrenceUpdateRequested(
+          appointmentId: 'appt-1',
+          updateFuture: false,
+        ),
+      ),
+      expect: () => [
+        isA<ScheduleActionSuccess>().having(
+          (s) => s.message,
+          'single appointment message',
+          'Agendamento atualizado com sucesso',
+        ),
+      ],
+    );
+  });
 }

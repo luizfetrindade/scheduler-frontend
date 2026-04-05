@@ -29,7 +29,7 @@ class BusinessSelectorHeader extends StatelessWidget {
             .map((b) => ListTile(
                   title: Text(b.name, style: AppTypography.bodyMd),
                   trailing: b.id == active.id
-                      ? Icon(Icons.check, color: context.appColors.primary)
+                      ? Icon(Icons.check, color: context.appColors.accent)
                       : null,
                   onTap: () {
                     Navigator.pop(context);
@@ -65,10 +65,13 @@ class BusinessSelectorHeader extends StatelessWidget {
         const Spacer(),
         CircleAvatar(
           radius: 18,
-          backgroundColor: context.appColors.primaryDark,
+          backgroundColor: context.appColors.primary,
           child: Text(
             userName.isNotEmpty ? userName[0].toUpperCase() : '?',
-            style: AppTypography.bodyMd.copyWith(color: context.appColors.textPrimary),
+            style: AppTypography.bodyMd.copyWith(
+              color: context.appColors.surface,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ],

@@ -12,4 +12,5 @@ export 'components/button/base_button.dart';
 export 'components/button/base_button_variant.dart';
 export 'components/input/base_input_field.dart';
 export 'components/input/otp_input_field.dart';
+export 'components/input/password_strength_indicator.dart';
 export 'components/card/base_card.dart';

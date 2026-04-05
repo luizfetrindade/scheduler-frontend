@@ -5,6 +5,7 @@ import 'package:scheduler_frontend/core/auth/auth_bloc.dart';
 import 'package:scheduler_frontend/core/auth/auth_event.dart';
 import 'package:scheduler_frontend/core/auth/auth_state.dart';
 import 'package:scheduler_frontend/core/router/app_routes.dart';
+import 'package:scheduler_frontend/core/utils/password_strength.dart';
 import 'package:scheduler_frontend/design_system/base_design_system.dart';
 
 class AcceptInvitePage extends StatefulWidget {
@@ -21,6 +22,7 @@ class _AcceptInvitePageState extends State<AcceptInvitePage> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   String? _validationError;
+  String _passwordValue = '';
 
   @override
   void dispose() {
@@ -36,6 +38,11 @@ class _AcceptInvitePageState extends State<AcceptInvitePage> {
     final confirm = _confirmPasswordController.text.trim();
 
     if (name.isEmpty || password.isEmpty || confirm.isEmpty) return;
+
+    if (!PasswordStrength.isStrong(password)) {
+      setState(() => _validationError = 'A senha não atende aos requisitos mínimos.');
+      return;
+    }
 
     if (password != confirm) {
       setState(() => _validationError = 'As senhas não coincidem.');
@@ -114,7 +121,9 @@ class _AcceptInvitePageState extends State<AcceptInvitePage> {
                     controller: _passwordController,
                     isPassword: true,
                     prefixIcon: Icons.lock_outline,
+                    onChanged: (v) => setState(() => _passwordValue = v),
                   ),
+                  PasswordStrengthIndicator(password: _passwordValue),
                   const SizedBox(height: AppSpacing.md),
                   BaseInputField(
                     label: 'Confirmar senha',

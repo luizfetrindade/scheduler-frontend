@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:scheduler_frontend/design_system/base_design_system.dart';
 import 'package:scheduler_frontend/features/reports/utils/health_score.dart';
 
 class HealthScoreCard extends StatelessWidget {
@@ -11,21 +12,20 @@ class HealthScoreCard extends StatelessWidget {
     this.badges = const [],
   });
 
-  Color _scoreColor() {
-    if (score >= 80) return Colors.green.shade400;
-    if (score >= 60) return Colors.blue.shade400;
-    if (score >= 40) return Colors.orange.shade400;
-    return Colors.red.shade400;
+  Color _scoreColor(BuildContext context) {
+    final colors = context.appColors;
+    if (score >= 80) return AppColors.success;
+    if (score >= 60) return colors.primary;
+    if (score >= 40) return const Color(0xFFFBBF24);
+    return AppColors.error;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(16),
-      ),
+    final colors = context.appColors;
+    final scoreColor = _scoreColor(context);
+
+    return BaseCard(
       child: Row(
         children: [
           Container(
@@ -33,50 +33,80 @@ class HealthScoreCard extends StatelessWidget {
             height: 72,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: _scoreColor(), width: 3),
+              border: Border.all(color: scoreColor, width: 3),
             ),
             alignment: Alignment.center,
             child: Text(
               score.round().toString(),
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: _scoreColor(),
+              style: AppTypography.titleLarge.copyWith(
+                color: scoreColor,
+                fontWeight: FontWeight.w700,
+                fontSize: 26,
               ),
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: AppSpacing.lg),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  healthScoreLabel(score),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
+                  'Saúde do negócio',
+                  style: AppTypography.caption.copyWith(
+                    color: colors.textSecondary,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 6,
-                  children: badges
-                      .map(
-                        (b) => Chip(
-                          label: Text(
-                            b,
-                            style: const TextStyle(fontSize: 10),
-                          ),
-                          padding: EdgeInsets.zero,
-                          visualDensity: VisualDensity.compact,
-                        ),
-                      )
-                      .toList(),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  healthScoreLabel(score),
+                  style: AppTypography.bodyMd.copyWith(
+                    color: colors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
+                if (badges.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  Wrap(
+                    spacing: AppSpacing.xs,
+                    runSpacing: AppSpacing.xs,
+                    children: badges
+                        .map((b) => _HealthBadge(label: b))
+                        .toList(),
+                  ),
+                ],
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _HealthBadge extends StatelessWidget {
+  final String label;
+  const _HealthBadge({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: 2,
+      ),
+      decoration: BoxDecoration(
+        color: colors.surfaceHigh,
+        border: Border.all(color: colors.outline, width: 1),
+      ),
+      child: Text(
+        label,
+        style: AppTypography.caption.copyWith(
+          color: colors.textSecondary,
+          fontWeight: FontWeight.w500,
+          fontSize: 11,
+        ),
       ),
     );
   }

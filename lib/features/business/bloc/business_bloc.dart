@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_http/flutter_http.dart';
 import 'package:scheduler_frontend/core/policy/app_policy.dart';
@@ -11,6 +12,7 @@ class BusinessBloc extends Bloc<BusinessEvent, BusinessState> {
   BusinessBloc(this._repository) : super(const BusinessInitial()) {
     on<BusinessLoadRequested>(_onLoadRequested);
     on<BusinessSelected>(_onSelected);
+    on<BusinessSessionCleared>((_, emit) => emit(const BusinessInitial()));
   }
 
   Future<void> _onLoadRequested(
@@ -25,8 +27,10 @@ class BusinessBloc extends Bloc<BusinessEvent, BusinessState> {
         final policy = AppPolicy.from(active.myStaffRole, active.planMaxStaff);
         emit(BusinessLoaded(businesses: data, active: active, policy: policy));
       case Success():
+        debugPrint('[BusinessBloc] /businesses/mine returned empty array');
         emit(const BusinessError('Nenhum negócio encontrado'));
       case HttpFailure(:final failure):
+        debugPrint('[BusinessBloc] /businesses/mine failed: $failure');
         emit(BusinessError(_message(failure)));
     }
   }

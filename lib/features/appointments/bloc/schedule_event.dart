@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:scheduler_frontend/features/appointments/data/appointment_model.dart';
 
 sealed class ScheduleEvent extends Equatable {
   const ScheduleEvent();
@@ -43,6 +44,7 @@ class ScheduleAppointmentCreateRequested extends ScheduleEvent {
   final String? notes;
   final String? recurrenceRule;
   final String? serviceId;
+  final AppointmentStatus? status;
 
   const ScheduleAppointmentCreateRequested({
     required this.clientName,
@@ -51,11 +53,12 @@ class ScheduleAppointmentCreateRequested extends ScheduleEvent {
     this.notes,
     this.recurrenceRule,
     this.serviceId,
+    this.status,
   });
 
   @override
   List<Object?> get props =>
-      [clientName, startsAt, durationMinutes, notes, recurrenceRule, serviceId];
+      [clientName, startsAt, durationMinutes, notes, recurrenceRule, serviceId, status];
 }
 
 class ScheduleBlockCreateRequested extends ScheduleEvent {
@@ -105,6 +108,71 @@ class ScheduleFilterByProfessional extends ScheduleEvent {
   const ScheduleFilterByProfessional(this.professionalId);
   @override
   List<Object?> get props => [professionalId];
+}
+
+class ScheduleAppointmentUpdateRequested extends ScheduleEvent {
+  final String appointmentId;
+  final String? clientName;
+  final DateTime? startsAt;
+  final int? durationMinutes;
+  final String? notes;
+  final String? serviceId;
+  final bool clearNotes;
+  final bool clearService;
+
+  const ScheduleAppointmentUpdateRequested({
+    required this.appointmentId,
+    this.clientName,
+    this.startsAt,
+    this.durationMinutes,
+    this.notes,
+    this.serviceId,
+    this.clearNotes = false,
+    this.clearService = false,
+  });
+
+  @override
+  List<Object?> get props => [appointmentId, clientName, startsAt, durationMinutes, notes, serviceId, clearNotes, clearService];
+}
+
+class ScheduleRecurrenceUpdateRequested extends ScheduleEvent {
+  final String appointmentId;
+  final String? clientName;
+  final DateTime? startsAt;
+  final int? durationMinutes;
+  final String? notes;
+  final String? serviceId;
+  final bool clearNotes;
+  final bool clearService;
+  final bool updateFuture; // true = this and future, false = this only
+
+  const ScheduleRecurrenceUpdateRequested({
+    required this.appointmentId,
+    this.clientName,
+    this.startsAt,
+    this.durationMinutes,
+    this.notes,
+    this.serviceId,
+    this.clearNotes = false,
+    this.clearService = false,
+    required this.updateFuture,
+  });
+
+  @override
+  List<Object?> get props => [appointmentId, clientName, startsAt, durationMinutes, notes, serviceId, clearNotes, clearService, updateFuture];
+}
+
+class ScheduleAppointmentStatusChanged extends ScheduleEvent {
+  final String appointmentId;
+  final AppointmentStatus status;
+
+  const ScheduleAppointmentStatusChanged({
+    required this.appointmentId,
+    required this.status,
+  });
+
+  @override
+  List<Object?> get props => [appointmentId, status];
 }
 
 enum ScheduleViewMode { day, week }

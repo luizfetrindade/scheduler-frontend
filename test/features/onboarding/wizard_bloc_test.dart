@@ -8,6 +8,7 @@ WizardBloc _makeSoloBloc({
   bool hasServices = false,
 }) =>
     WizardBloc(
+      createBusiness: (_) async => 'biz-1',
       hasServices: (_) async => hasServices,
       hasProfessionals: (_) async => false,
       isSoloMode: true,
@@ -19,10 +20,23 @@ WizardBloc _makeTeamBloc({
   bool hasProfessionals = false,
 }) =>
     WizardBloc(
+      createBusiness: (_) async => 'biz-1',
       hasServices: (_) async => hasServices,
       hasProfessionals: (_) async => hasProfessionals,
       isSoloMode: false,
       businessId: 'biz-1',
+    );
+
+WizardBloc _makeNoBizBloc({
+  Future<String> Function(String)? createBusiness,
+  bool hasServices = false,
+}) =>
+    WizardBloc(
+      createBusiness: createBusiness ?? (_) async => 'biz-new',
+      hasServices: (_) async => hasServices,
+      hasProfessionals: (_) async => false,
+      isSoloMode: true,
+      businessId: '',
     );
 
 void main() {
@@ -236,6 +250,7 @@ void main() {
     blocTest<WizardBloc, WizardState>(
       'emits [WizardLoading, WizardError] when hasServices throws',
       build: () => WizardBloc(
+        createBusiness: (_) async => 'biz-1',
         hasServices: (_) async => throw Exception('network error'),
         hasProfessionals: (_) async => false,
         isSoloMode: true,
@@ -251,12 +266,99 @@ void main() {
     blocTest<WizardBloc, WizardState>(
       'emits [WizardLoading, WizardError] when hasProfessionals throws (team mode)',
       build: () => WizardBloc(
+        createBusiness: (_) async => 'biz-1',
         hasServices: (_) async => true,
         hasProfessionals: (_) async => throw Exception('network error'),
         isSoloMode: false,
         businessId: 'biz-1',
       ),
       act: (bloc) => bloc.add(const WizardCheckRequested()),
+      expect: () => [
+        const WizardLoading(),
+        const WizardError('Algo deu errado. Tente novamente.'),
+      ],
+    );
+  });
+
+  // ─── No-business state (empty businessId) ────────────────────────────────────
+
+  group('WizardCheckRequested — no business', () {
+    blocTest<WizardBloc, WizardState>(
+      'emits [WizardLoading, WizardLoaded] with only negocios step when businessId is empty',
+      build: () => _makeNoBizBloc(),
+      act: (bloc) => bloc.add(const WizardCheckRequested()),
+      expect: () => [
+        const WizardLoading(),
+        isA<WizardLoaded>().having(
+          (s) => s.steps.keys.toSet(),
+          'step keys',
+          {WizardStep.negocios},
+        ),
+      ],
+    );
+
+    blocTest<WizardBloc, WizardState>(
+      'negocios step is incomplete when businessId is empty',
+      build: () => _makeNoBizBloc(),
+      act: (bloc) => bloc.add(const WizardCheckRequested()),
+      expect: () => [
+        const WizardLoading(),
+        isA<WizardLoaded>().having(
+          (s) => s.steps[WizardStep.negocios]!.isComplete,
+          'negocios.isComplete',
+          false,
+        ),
+      ],
+    );
+
+    blocTest<WizardBloc, WizardState>(
+      'does NOT call hasServices when businessId is empty',
+      build: () {
+        var called = false;
+        return WizardBloc(
+          createBusiness: (_) async => 'biz-new',
+          hasServices: (_) async {
+            called = true;
+            return false;
+          },
+          hasProfessionals: (_) async => false,
+          isSoloMode: true,
+          businessId: '',
+        );
+      },
+      act: (bloc) => bloc.add(const WizardCheckRequested()),
+      verify: (bloc) {
+        final state = bloc.state as WizardLoaded;
+        expect(state.steps.containsKey(WizardStep.negocios), isTrue);
+      },
+    );
+  });
+
+  // ─── WizardBusinessSubmitted ─────────────────────────────────────────────────
+
+  group('WizardBusinessSubmitted', () {
+    blocTest<WizardBloc, WizardState>(
+      'calls createBusiness and then emits WizardLoaded with servicos step',
+      build: () => _makeNoBizBloc(hasServices: false),
+      act: (bloc) =>
+          bloc.add(const WizardBusinessSubmitted(name: 'Meu Salão')),
+      expect: () => [
+        const WizardLoading(),
+        isA<WizardLoaded>().having(
+          (s) => s.steps.keys.toSet(),
+          'step keys',
+          {WizardStep.servicos},
+        ),
+      ],
+    );
+
+    blocTest<WizardBloc, WizardState>(
+      'emits [WizardLoading, WizardError] when createBusiness throws',
+      build: () => _makeNoBizBloc(
+        createBusiness: (_) async => throw Exception('server error'),
+      ),
+      act: (bloc) =>
+          bloc.add(const WizardBusinessSubmitted(name: 'Meu Salão')),
       expect: () => [
         const WizardLoading(),
         const WizardError('Algo deu errado. Tente novamente.'),

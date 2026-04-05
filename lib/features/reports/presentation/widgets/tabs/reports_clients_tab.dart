@@ -12,7 +12,7 @@ class ReportsClientsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final clients = model.clients;
-    if (clients.total == 0) {
+    if (clients.total == 0 && clients.previousNewClients == 0) {
       return const Center(
           child: Text('Nenhum cliente atendido neste período'));
     }

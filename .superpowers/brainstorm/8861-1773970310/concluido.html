@@ -1,0 +1,65 @@
+<h2>Ajustes implementados ✓</h2>
+<p class="subtitle">4 mudanças aplicadas, zero erros de análise</p>
+
+<div class="section">
+  <div style="display:grid;gap:12px">
+
+    <div style="border:1px solid #D4CCC4;border-radius:8px;padding:14px;display:flex;gap:12px;align-items:flex-start">
+      <span style="font-size:20px;flex-shrink:0">🔲</span>
+      <div>
+        <strong style="font-size:14px">Inputs → BorderRadius.zero</strong>
+        <p style="margin:4px 0 0;font-size:12px;color:#6B5E52">
+          <code>_inputDecoration</code> em <code>create_appointment_sheet</code> e <code>create_block_sheet</code>: removidos overrides de borda arredondada, o tema do design system (<code>inputDecorationTheme</code>) assume o controle com cantos quadrados. Apenas <code>errorBorder</code> e <code>focusedErrorBorder</code> mantidos (com <code>BorderRadius.zero</code>).
+        </p>
+      </div>
+    </div>
+
+    <div style="border:1px solid #D4CCC4;border-radius:8px;padding:14px;display:flex;gap:12px;align-items:flex-start">
+      <span style="font-size:20px;flex-shrink:0">🔲</span>
+      <div>
+        <strong style="font-size:14px">Botões → BaseButton</strong>
+        <p style="margin:4px 0 0;font-size:12px;color:#6B5E52">
+          <code>ElevatedButton</code> no sheet de criação → <code>BaseButton(variant: primary, isLoading: _isSubmitting)</code>.<br>
+          <code>OutlinedButton</code> no detail sheet → <code>BaseButton(variant: destructive)</code>.<br>
+          Block sheet: manteve <code>ElevatedButton</code> com cor <code>blocked</code>, mas corrigiu shape para <code>BorderRadius.zero</code>.
+        </p>
+      </div>
+    </div>
+
+    <div style="border:1px solid #D4CCC4;border-radius:8px;padding:14px;display:flex;gap:12px;align-items:flex-start">
+      <span style="font-size:20px;flex-shrink:0">🎨</span>
+      <div>
+        <strong style="font-size:14px">Bordas dos seletores → outline</strong>
+        <p style="margin:4px 0 0;font-size:12px;color:#6B5E52">
+          Seletores de data/hora, serviço e duração (ambos os sheets): <code>surfaceHigh</code> → <code>context.appColors.outline</code>. Alinhado com as bordas dos cards de Clientes/Serviços/Profissionais.
+        </p>
+      </div>
+    </div>
+
+    <div style="border:1px solid #D4CCC4;border-radius:8px;padding:14px;display:flex;gap:12px;align-items:flex-start">
+      <span style="font-size:20px;flex-shrink:0">⊕</span>
+      <div>
+        <strong style="font-size:14px">FAB → contraste correto</strong>
+        <p style="margin:4px 0 0;font-size:12px;color:#6B5E52">
+          Ícone do FAB: <code>Colors.white</code> → <code>Theme.of(context).colorScheme.onPrimary</code>.<br>
+          Light: branco sobre charcoal ✓ · Dark: espresso sobre cream ✓
+        </p>
+      </div>
+    </div>
+
+    <div style="border:1px solid #D4CCC4;border-radius:8px;padding:14px;display:flex;gap:12px;align-items:flex-start">
+      <span style="font-size:20px;flex-shrink:0">🕐</span>
+      <div>
+        <strong style="font-size:14px">Linha de hora atual no calendário</strong>
+        <p style="margin:4px 0 0;font-size:12px;color:#6B5E52">
+          Widget <code>CurrentTimeLine</code> adicionado em <code>time_grid.dart</code>: linha vermelha (1.5px) com bolinha no início, posicionada em <code>TimeGridPositioner.topOffset(DateTime.now())</code>. Atualiza a cada minuto via <code>Timer.periodic</code>. Aparece no <strong>DayView</strong> (quando a data é hoje) e no <strong>WeekView</strong> (na coluna do dia atual).
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div style="background:#F0FDF4;border:1px solid #22C55E33;border-radius:8px;padding:12px;margin-top:4px">
+  <strong style="font-size:13px;color:#15803D">flutter analyze: 0 erros nos arquivos modificados</strong>
+</div>

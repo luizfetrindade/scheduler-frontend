@@ -8,7 +8,14 @@ import 'package:scheduler_frontend/features/clients/data/client_repository.dart'
 class ClientsBloc extends Bloc<ClientsEvent, ClientsState> {
   final ClientRepository _repository;
 
+  /// Tracks which businessId was last successfully loaded.
+  String? _loadedBusinessId;
+
   ClientsBloc(this._repository) : super(const ClientsInitial()) {
+    on<ClientsSessionCleared>((_, emit) {
+      _loadedBusinessId = null;
+      emit(const ClientsInitial());
+    });
     on<ClientsLoadRequested>(_onLoad);
     on<ClientCreateRequested>(_onCreate);
     on<ClientUpdateRequested>(_onUpdate);
@@ -38,10 +45,18 @@ class ClientsBloc extends Bloc<ClientsEvent, ClientsState> {
     ClientsLoadRequested event,
     Emitter<ClientsState> emit,
   ) async {
+    // Skip if already loaded for the same business (unless forced)
+    if (!event.forceRefresh &&
+        _loadedBusinessId == event.businessId &&
+        _currentClients.isNotEmpty) {
+      return;
+    }
+
     emit(const ClientsLoading());
     final result = await _repository.getClients(businessId: event.businessId);
     switch (result) {
       case Success(:final data):
+        _loadedBusinessId = event.businessId;
         emit(ClientsLoaded(data));
       case HttpFailure(:final failure):
         emit(ClientsError(_loadMessage(failure)));

@@ -72,7 +72,7 @@ abstract final class AppTheme {
           elevation: 0,
           color: AppColors.kWhite,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(AppRadius.xl)),
+            borderRadius: BorderRadius.zero,
             side: BorderSide(color: AppColors.kParchment),
           ),
         ),
@@ -139,14 +139,14 @@ abstract final class AppTheme {
             borderRadius: BorderRadius.zero,
             borderSide: BorderSide(color: AppColors.kCream, width: 1.5),
           ),
-          labelStyle: TextStyle(color: AppColors.kTextWarm),  // brighter for floating label
-          hintStyle:  TextStyle(color: AppColors.kAsh),       // muted for placeholder
+          labelStyle: TextStyle(color: AppColors.kTextWarm),
+          hintStyle: TextStyle(color: AppColors.kAsh),
         ),
         cardTheme: const CardThemeData(
           elevation: 0,
           color: AppColors.kSmoke,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(AppRadius.xl)),
+            borderRadius: BorderRadius.zero,
             side: BorderSide(color: AppColors.kEmber),
           ),
         ),

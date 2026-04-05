@@ -15,6 +15,11 @@ class AppointmentsLoadRequested extends AppointmentsEvent {
   List<Object?> get props => [slug, date];
 }
 
+/// Emitted on logout to wipe loaded data from memory.
+class AppointmentsSessionCleared extends AppointmentsEvent {
+  const AppointmentsSessionCleared();
+}
+
 class AppointmentStatusChanged extends AppointmentsEvent {
   final String slug;
   final String appointmentId;

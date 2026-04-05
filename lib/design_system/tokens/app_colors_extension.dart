@@ -13,6 +13,7 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
   final Color outline;
   final Color sidebarBackground;
   final Color sidebarForeground;
+  final Color accent;
 
   const AppColorsExtension({
     required this.background,
@@ -27,21 +28,23 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
     required this.outline,
     required this.sidebarBackground,
     required this.sidebarForeground,
+    required this.accent,
   });
 
   static AppColorsExtension light() => const AppColorsExtension(
-        background:        Color(0xFFFAF8F5), // Linen
+        background:        Color(0xFFF8F6F2), // Warm off-white
         surface:           Color(0xFFFFFFFF), // White
-        surfaceHigh:       Color(0xFFF5F2EE), // WarmNeutral
-        primary:           Color(0xFF3D3935), // Charcoal
+        surfaceHigh:       Color(0xFFF2EFEA), // WarmNeutral
+        primary:           Color(0xFF2C2825), // Deeper charcoal for better contrast
         primaryLight:      Color(0xFFEDEAE7), // CharcoalContainer
         primaryDark:       Color(0xFF1A1512), // Espresso
-        textPrimary:       Color(0xFF1A1512), // Espresso
-        textSecondary:     Color(0xFF6B5E52), // Bark
-        textDisabled:      Color(0xFFA89B8C), // Taupe
-        outline:           Color(0xFFE8E3DC), // Parchment
-        sidebarBackground: Color(0xFF3D3935), // Charcoal
-        sidebarForeground: Color(0xFFFAF8F5), // Linen
+        textPrimary:       Color(0xFF1C1816), // Near-black warm
+        textSecondary:     Color(0xFF5C5047), // Deeper bark for better readability
+        textDisabled:      Color(0xFF9A8E80), // Warmer taupe
+        outline:           Color(0xFFD5CEC5), // Stronger border
+        sidebarBackground: Color(0xFF2C2825), // Match primary
+        sidebarForeground: Color(0xFFF8F6F2), // Match background
+        accent:            Color(0xFF4A7A2E), // More vibrant green
       );
 
   static AppColorsExtension dark() => const AppColorsExtension(
@@ -57,6 +60,7 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
         outline:           Color(0xFF383635), // Ember — neutralized
         sidebarBackground: Color(0xFF1E1D1C), // EspressoDeep — neutralized
         sidebarForeground: Color(0xFFF0EBE5), // TextWarm
+        accent:            Color(0xFF6A7C5E), // SageGreen
       );
 
   @override
@@ -73,6 +77,7 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
     Color? outline,
     Color? sidebarBackground,
     Color? sidebarForeground,
+    Color? accent,
   }) =>
       AppColorsExtension(
         background:        background        ?? this.background,
@@ -87,6 +92,7 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
         outline:           outline           ?? this.outline,
         sidebarBackground: sidebarBackground ?? this.sidebarBackground,
         sidebarForeground: sidebarForeground ?? this.sidebarForeground,
+        accent:            accent            ?? this.accent,
       );
 
   @override
@@ -105,6 +111,7 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
       outline:           Color.lerp(outline,           other.outline,           t)!,
       sidebarBackground: Color.lerp(sidebarBackground, other.sidebarBackground, t)!,
       sidebarForeground: Color.lerp(sidebarForeground, other.sidebarForeground, t)!,
+      accent:            Color.lerp(accent,            other.accent,            t)!,
     );
   }
 }

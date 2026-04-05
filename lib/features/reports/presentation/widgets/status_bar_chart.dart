@@ -21,7 +21,7 @@ class StatusBarChart extends StatelessWidget {
 
   Map<String, Color> _statusColors(AppColorsExtension colors) => {
         'COMPLETED': AppColors.success,
-        'CONFIRMED': colors.primaryLight,
+        'CONFIRMED': colors.accent,
         'PENDING': const Color(0xFFFBBF24),
         'CANCELLED': AppColors.error,
         'NO_SHOW': AppColors.blocked,

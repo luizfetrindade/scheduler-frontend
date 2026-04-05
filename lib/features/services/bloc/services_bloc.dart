@@ -8,7 +8,14 @@ import 'package:scheduler_frontend/features/services/data/service_repository.dar
 class ServicesBloc extends Bloc<ServicesEvent, ServicesState> {
   final ServiceRepository _repository;
 
+  /// Tracks which businessId was last successfully loaded.
+  String? _loadedBusinessId;
+
   ServicesBloc(this._repository) : super(const ServicesInitial()) {
+    on<ServicesSessionCleared>((_, emit) {
+      _loadedBusinessId = null;
+      emit(const ServicesInitial());
+    });
     on<ServicesLoadRequested>(_onLoad);
     on<ServiceCreateRequested>(_onCreate);
     on<ServiceUpdateRequested>(_onUpdate);
@@ -26,10 +33,18 @@ class ServicesBloc extends Bloc<ServicesEvent, ServicesState> {
     ServicesLoadRequested event,
     Emitter<ServicesState> emit,
   ) async {
+    // Skip if already loaded for the same business (unless forced)
+    if (!event.forceRefresh &&
+        _loadedBusinessId == event.businessId &&
+        _currentList.isNotEmpty) {
+      return;
+    }
+
     emit(const ServicesLoading());
     final result = await _repository.getServices(businessId: event.businessId);
     switch (result) {
       case Success(:final data):
+        _loadedBusinessId = event.businessId;
         emit(ServicesLoaded(data));
       case HttpFailure(:final failure):
         emit(ServicesError(_message(failure)));

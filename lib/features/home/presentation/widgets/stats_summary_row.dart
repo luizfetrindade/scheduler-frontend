@@ -19,7 +19,7 @@ class StatsSummaryRow extends StatelessWidget {
       children: [
         _StatCard(value: total, label: 'Total', color: context.appColors.textPrimary),
         const SizedBox(width: AppSpacing.md),
-        _StatCard(value: pending, label: 'Pendentes', color: context.appColors.primaryLight),
+        _StatCard(value: pending, label: 'Pendentes', color: context.appColors.textDisabled),
         const SizedBox(width: AppSpacing.md),
         _StatCard(value: confirmed, label: 'Confirmados', color: AppColors.success),
       ],

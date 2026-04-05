@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart';
 import 'package:scheduler_frontend/design_system/tokens/app_colors.dart';
 import 'package:scheduler_frontend/design_system/tokens/app_colors_extension.dart';
+import 'package:scheduler_frontend/design_system/tokens/app_radius.dart';
 import 'package:scheduler_frontend/design_system/tokens/app_typography.dart';
 
 const double _kCellWidth = 48;

@@ -43,8 +43,11 @@ void main() {
       expect(find.byType(BaseCard), findsOneWidget);
     });
 
-    testWidgets('applies shadow when elevated=true', (tester) async {
-      await tester.pumpWidget(buildCard(elevated: true));
+    testWidgets('applies shadow in light mode', (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(body: BaseCard(child: const Text('content'))),
+      ));
       final containers = tester.widgetList<Container>(find.byType(Container));
       final hasBoxShadow = containers.any((c) {
         final decoration = c.decoration;
@@ -55,8 +58,8 @@ void main() {
       expect(hasBoxShadow, isTrue);
     });
 
-    testWidgets('no shadow when elevated=false', (tester) async {
-      await tester.pumpWidget(buildCard(elevated: false));
+    testWidgets('no shadow in dark mode', (tester) async {
+      await tester.pumpWidget(buildCard());
       final containers = tester.widgetList<Container>(find.byType(Container));
       final hasBoxShadow = containers.any((c) {
         final decoration = c.decoration;

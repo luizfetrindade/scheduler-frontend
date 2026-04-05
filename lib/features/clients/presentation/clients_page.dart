@@ -28,14 +28,35 @@ class _ClientsPageState extends State<ClientsPage> {
   }
 
   List<ClientModel> _filtered(List<ClientModel> clients) {
-    if (_query.isEmpty) return clients;
-    final q = _query.toLowerCase();
-    return clients
-        .where((c) =>
-            c.name.toLowerCase().contains(q) ||
-            c.phone.contains(q) ||
-            (c.email?.toLowerCase().contains(q) ?? false))
-        .toList();
+    final list = _query.isEmpty
+        ? [...clients]
+        : clients
+            .where((c) {
+              final q = _query.toLowerCase();
+              return c.name.toLowerCase().contains(q) ||
+                  (c.phone?.contains(q) ?? false) ||
+                  (c.email?.toLowerCase().contains(q) ?? false);
+            })
+            .toList();
+    list.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    return list;
+  }
+
+  /// Groups a sorted list by first letter, returning a flat list of entries
+  /// (headers + items) ready to be rendered.
+  List<_GroupEntry> _grouped(List<ClientModel> clients) {
+    final entries = <_GroupEntry>[];
+    String? currentLetter;
+    for (final c in clients) {
+      final letter =
+          c.name.isNotEmpty ? c.name[0].toUpperCase() : '#';
+      if (letter != currentLetter) {
+        currentLetter = letter;
+        entries.add(_LetterHeader(letter));
+      }
+      entries.add(_ClientEntry(c));
+    }
+    return entries;
   }
 
   @override
@@ -136,29 +157,54 @@ class _ClientsPageState extends State<ClientsPage> {
                         )
                       : clients.isEmpty
                           ? const _EmptyState(isFirstTime: false)
-                          : ListView.separated(
-                              padding: const EdgeInsets.all(AppSpacing.lg),
-                              itemCount: clients.length,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(height: AppSpacing.sm),
-                              itemBuilder: (_, i) {
-                                final client = clients[i];
-                                return ClientCard(
-                                  client: client,
-                                  businessId: businessId,
-                                  onEdit: () =>
-                                      _openForm(context, initial: client),
-                                  onDelete: () =>
-                                      _confirmDelete(context, client),
-                                );
-                              },
-                            ),
+                          : _buildGroupedList(
+                              context, _grouped(clients), businessId),
                 ),
               ],
             ),
           );
         },
       ),
+    );
+  }
+
+  Widget _buildGroupedList(
+    BuildContext context,
+    List<_GroupEntry> entries,
+    String businessId,
+  ) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      itemCount: entries.length,
+      findChildIndexCallback: (key) {
+        if (key is ValueKey<String>) {
+          final idx = entries.indexWhere((e) => switch (e) {
+                _LetterHeader(:final letter) => key.value == 'header_$letter',
+                _ClientEntry(:final client) => key.value == client.id,
+              });
+          return idx >= 0 ? idx : null;
+        }
+        return null;
+      },
+      itemBuilder: (_, i) {
+        final entry = entries[i];
+        final isLastInGroup = i == entries.length - 1 ||
+            entries[i + 1] is _LetterHeader;
+        return switch (entry) {
+          _LetterHeader(:final letter) => _SectionHeader(
+              key: ValueKey('header_$letter'),
+              letter: letter,
+            ),
+          _ClientEntry(:final client) => ClientCard(
+              key: ValueKey(client.id),
+              client: client,
+              businessId: businessId,
+              showDivider: !isLastInGroup,
+              onEdit: () => _openForm(context, initial: client),
+              onDelete: () => _confirmDelete(context, client),
+            ),
+        };
+      },
     );
   }
 
@@ -191,7 +237,7 @@ class _ClientsPageState extends State<ClientsPage> {
       builder: (ctx) => Dialog(
         backgroundColor: ctx.appColors.surface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderRadius: BorderRadius.zero,
         ),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.xl),
@@ -422,4 +468,60 @@ class _EmptyState extends StatelessWidget {
       ),
     );
   }
+}
+
+// ── Section header ───────────────────────────────────────────────────────────
+
+class _SectionHeader extends StatelessWidget {
+  final String letter;
+  const _SectionHeader({super.key, required this.letter});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(
+        top: AppSpacing.md,
+        bottom: AppSpacing.sm,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            color: context.appColors.primary,
+            child: Center(
+              child: Text(
+                letter,
+                style: AppTypography.labelLarge.copyWith(
+                  color: context.appColors.surface,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Divider(
+              height: 1,
+              color: context.appColors.outline,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Group entry types ────────────────────────────────────────────────────────
+
+sealed class _GroupEntry {}
+
+class _LetterHeader extends _GroupEntry {
+  final String letter;
+  _LetterHeader(this.letter);
+}
+
+class _ClientEntry extends _GroupEntry {
+  final ClientModel client;
+  _ClientEntry(this.client);
 }

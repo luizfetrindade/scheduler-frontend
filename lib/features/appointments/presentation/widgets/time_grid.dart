@@ -6,7 +6,7 @@ import 'package:scheduler_frontend/features/appointments/data/appointment_model.
 
 const int kStartHour = 0;
 const int kEndHour = 24;
-const double kSlotHeight = 60.0;
+const double kSlotHeight = 80.0;
 const double kTimeColumnWidth = 52.0;
 const double kGridTotalHeight = (kEndHour - kStartHour) * kSlotHeight;
 

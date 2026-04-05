@@ -111,7 +111,7 @@ class _CreateBlockSheetState extends State<CreateBlockSheet> {
                     padding: const EdgeInsets.symmetric(
                       vertical: AppSpacing.md,
                     ),
-                    shape: const RoundedRectangleBorder(
+                    shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.zero,
                     ),
                   ),
@@ -173,7 +173,7 @@ class _CreateBlockSheetState extends State<CreateBlockSheet> {
                   child: Text(
                     'Personalizar...',
                     style: AppTypography.bodySm.copyWith(
-                      color: context.appColors.primaryLight,
+                      color: context.appColors.textSecondary,
                     ),
                   ),
                 ),
@@ -367,13 +367,13 @@ class _CreateBlockSheetState extends State<CreateBlockSheet> {
   InputDecoration _inputDecoration(BuildContext context, String label) =>
       InputDecoration(
         labelText: label,
-        errorBorder: const OutlineInputBorder(
+        errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.zero,
-          borderSide: BorderSide(color: AppColors.error),
+          borderSide: const BorderSide(color: AppColors.error),
         ),
-        focusedErrorBorder: const OutlineInputBorder(
+        focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.zero,
-          borderSide: BorderSide(color: AppColors.error),
+          borderSide: const BorderSide(color: AppColors.error),
         ),
       );
 }

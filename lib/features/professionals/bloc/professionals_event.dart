@@ -6,6 +6,11 @@ sealed class ProfessionalsEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+/// Emitted on logout to wipe loaded data from memory.
+class ProfessionalsSessionCleared extends ProfessionalsEvent {
+  const ProfessionalsSessionCleared();
+}
+
 class ProfessionalsLoadRequested extends ProfessionalsEvent {
   final String businessId;
   const ProfessionalsLoadRequested(this.businessId);

@@ -39,6 +39,7 @@ class AppointmentRepository {
     String? notes,
     String? recurrenceRule,
     String? serviceId,
+    AppointmentStatus? status,
   }) =>
       _client.post(
         '/b/$slug/appointments',
@@ -51,6 +52,7 @@ class AppointmentRepository {
           if (notes != null && notes.isNotEmpty) 'notes': notes,
           if (recurrenceRule != null) 'recurrenceRule': recurrenceRule,
           if (serviceId != null) 'serviceId': serviceId,
+          if (status != null) 'status': status.apiValue,
         },
       );
 
@@ -95,5 +97,53 @@ class AppointmentRepository {
       _client.patch(
         '/b/$slug/appointments/$appointmentId/cancel-future',
         fromJson: (json) => json,
+      );
+
+  /// PATCH /b/:slug/appointments/:id
+  Future<Result<AppointmentModel>> updateAppointment({
+    required String slug,
+    required String appointmentId,
+    String? clientName,
+    DateTime? startsAt,
+    int? durationMinutes,
+    String? notes,
+    String? serviceId,
+    bool clearNotes = false,
+    bool clearService = false,
+  }) =>
+      _client.patch(
+        '/b/$slug/appointments/$appointmentId',
+        fromJson: AppointmentModel.fromJson,
+        body: {
+          if (clientName != null) 'clientName': clientName,
+          if (startsAt != null) 'startsAt': startsAt.toUtc().toIso8601String(),
+          if (durationMinutes != null) 'durationMinutes': durationMinutes,
+          if (clearNotes) 'notes': null else if (notes != null) 'notes': notes,
+          if (clearService) 'serviceId': null else if (serviceId != null) 'serviceId': serviceId,
+        },
+      );
+
+  /// PATCH /b/:slug/appointments/:id/update-future
+  Future<Result<Map<String, dynamic>>> updateFutureAppointments({
+    required String slug,
+    required String appointmentId,
+    String? clientName,
+    DateTime? startsAt,
+    int? durationMinutes,
+    String? notes,
+    String? serviceId,
+    bool clearNotes = false,
+    bool clearService = false,
+  }) =>
+      _client.patch(
+        '/b/$slug/appointments/$appointmentId/update-future',
+        fromJson: (json) => json,
+        body: {
+          if (clientName != null) 'clientName': clientName,
+          if (startsAt != null) 'startsAt': startsAt.toUtc().toIso8601String(),
+          if (durationMinutes != null) 'durationMinutes': durationMinutes,
+          if (clearNotes) 'notes': null else if (notes != null) 'notes': notes,
+          if (clearService) 'serviceId': null else if (serviceId != null) 'serviceId': serviceId,
+        },
       );
 }

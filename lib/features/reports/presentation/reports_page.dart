@@ -48,22 +48,7 @@ class ReportsView extends StatelessWidget {
     return DefaultTabController(
       length: 5,
       child: BlocConsumer<ReportsBloc, ReportsState>(
-        listener: (context, state) {
-          if (state is ReportsError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                action: SnackBarAction(
-                  label: 'Tentar novamente',
-                  onPressed: () => context.read<ReportsBloc>().add(
-                        ReportsLoadRequested(
-                            slug: slug, period: state.period),
-                      ),
-                ),
-              ),
-            );
-          }
-        },
+        listener: (context, state) {},
         builder: (context, state) {
           final currentPeriod = state is ReportsLoaded
               ? state.period
@@ -133,6 +118,32 @@ class ReportsView extends StatelessWidget {
                         ReportsClientsTab(model: state.data),
                         ReportsStaffTab(model: state.data),
                       ],
+                    ),
+                  )
+                else if (state is ReportsError)
+                  Expanded(
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            state.message,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          FilledButton(
+                            onPressed: () =>
+                                context.read<ReportsBloc>().add(
+                                      ReportsLoadRequested(
+                                        slug: slug,
+                                        period: state.period,
+                                      ),
+                                    ),
+                            child: const Text('Tentar novamente'),
+                          ),
+                        ],
+                      ),
                     ),
                   )
                 else if (state is ReportsInitial)

@@ -5,6 +5,7 @@ import 'package:scheduler_frontend/design_system/base_design_system.dart';
 import 'package:scheduler_frontend/features/appointments/bloc/schedule_bloc.dart';
 import 'package:scheduler_frontend/features/appointments/bloc/schedule_event.dart';
 import 'package:scheduler_frontend/features/appointments/bloc/schedule_state.dart';
+import 'package:scheduler_frontend/features/appointments/data/appointment_model.dart';
 import 'package:scheduler_frontend/features/appointments/presentation/widgets/recurrence_selector.dart';
 import 'package:scheduler_frontend/features/clients/bloc/clients_bloc.dart';
 import 'package:scheduler_frontend/features/clients/bloc/clients_state.dart';
@@ -160,7 +161,7 @@ class _CreateAppointmentSheetState extends State<CreateAppointmentSheet> {
           alignment: Alignment.topLeft,
           child: Material(
             elevation: 4,
-            borderRadius: BorderRadius.circular(AppRadius.md),
+            borderRadius: BorderRadius.zero,
             color: context.appColors.surface,
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 200),
@@ -172,7 +173,7 @@ class _CreateAppointmentSheetState extends State<CreateAppointmentSheet> {
                   final client = options.elementAt(i);
                   final subtitle = [
                     if (client.email != null) client.email!,
-                    if (client.phone.isNotEmpty) client.phone,
+                    if (client.phone?.isNotEmpty ?? false) client.phone!,
                   ].join(' · ');
                   return InkWell(
                     onTap: () => onSelected(client),
@@ -487,7 +488,7 @@ class _CreateAppointmentSheetState extends State<CreateAppointmentSheet> {
                   child: Text(
                     'Personalizar...',
                     style: AppTypography.bodySm.copyWith(
-                      color: context.appColors.primaryLight,
+                      color: context.appColors.textSecondary,
                     ),
                   ),
                 ),
@@ -605,7 +606,7 @@ class _CreateAppointmentSheetState extends State<CreateAppointmentSheet> {
     final picked = await showDatePicker(
       context: context,
       initialDate: _selectedDateTime,
-      firstDate: DateTime.now(),
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
     if (picked != null) {
@@ -642,6 +643,67 @@ class _CreateAppointmentSheetState extends State<CreateAppointmentSheet> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
+    final now = DateTime.now();
+    final isPast = _selectedDateTime.isBefore(
+      DateTime(now.year, now.month, now.day),
+    );
+
+    if (isPast) {
+      _showPastDateWarning();
+    } else {
+      _dispatchCreate();
+    }
+  }
+
+  void _showPastDateWarning() {
+    showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: dialogContext.appColors.surface,
+        title: Text(
+          'Data no passado',
+          style: AppTypography.bodySm.copyWith(
+            color: dialogContext.appColors.textPrimary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: Text(
+          'Você está criando um agendamento em uma data que já passou. '
+          'O status será definido como "Confirmado". Deseja continuar?',
+          style: AppTypography.bodySm.copyWith(
+            color: dialogContext.appColors.textSecondary,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(
+              'Cancelar',
+              style: AppTypography.bodySm.copyWith(
+                color: dialogContext.appColors.textSecondary,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(
+              'Continuar',
+              style: AppTypography.bodySm.copyWith(
+                color: dialogContext.appColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    ).then((confirmed) {
+      if (confirmed == true) {
+        _dispatchCreate(status: AppointmentStatus.confirmed);
+      }
+    });
+  }
+
+  void _dispatchCreate({AppointmentStatus? status}) {
     setState(() => _isSubmitting = true);
 
     final duration = _isCustomDuration
@@ -658,6 +720,7 @@ class _CreateAppointmentSheetState extends State<CreateAppointmentSheet> {
                 : _notesController.text.trim(),
             recurrenceRule: _recurrenceRule,
             serviceId: _selectedServiceId,
+            status: status,
           ),
         );
   }
@@ -665,13 +728,13 @@ class _CreateAppointmentSheetState extends State<CreateAppointmentSheet> {
   InputDecoration _inputDecoration(BuildContext context, String label) =>
       InputDecoration(
         labelText: label,
-        errorBorder: const OutlineInputBorder(
+        errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.zero,
-          borderSide: BorderSide(color: AppColors.error),
+          borderSide: const BorderSide(color: AppColors.error),
         ),
-        focusedErrorBorder: const OutlineInputBorder(
+        focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.zero,
-          borderSide: BorderSide(color: AppColors.error),
+          borderSide: const BorderSide(color: AppColors.error),
         ),
       );
 }

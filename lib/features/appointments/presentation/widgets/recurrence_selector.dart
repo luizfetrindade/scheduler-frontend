@@ -322,7 +322,7 @@ class _RecurrenceSelectorState extends State<RecurrenceSelector> {
         child: Text(
           label,
           style: AppTypography.caption.copyWith(
-            color: selected ? context.appColors.primaryLight : context.appColors.textSecondary,
+            color: selected ? context.appColors.primary : context.appColors.textSecondary,
           ),
         ),
       ),

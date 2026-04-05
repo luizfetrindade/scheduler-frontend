@@ -22,6 +22,9 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
     on<ScheduleAppointmentCancelRequested>(_onCancelRequested);
     on<ScheduleRecurrenceCancelRequested>(_onRecurrenceCancelRequested);
     on<ScheduleFilterByProfessional>(_onFilterByProfessional);
+    on<ScheduleAppointmentUpdateRequested>(_onUpdateRequested);
+    on<ScheduleRecurrenceUpdateRequested>(_onRecurrenceUpdateRequested);
+    on<ScheduleAppointmentStatusChanged>(_onStatusChanged);
   }
 
   Future<void> _onInitialized(
@@ -180,6 +183,7 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
       notes: event.notes,
       recurrenceRule: event.recurrenceRule,
       serviceId: event.serviceId,
+      status: event.status,
     );
 
     switch (result) {
@@ -311,6 +315,132 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
       ));
     } else {
       _pendingProfessionalFilter = event.professionalId;
+    }
+  }
+
+  Future<void> _onUpdateRequested(
+    ScheduleAppointmentUpdateRequested event,
+    Emitter<ScheduleState> emit,
+  ) async {
+    final date = _currentDate ?? DateTime.now();
+    final mode = _currentViewMode ?? ScheduleViewMode.day;
+
+    final result = await _repository.updateAppointment(
+      slug: _slug,
+      appointmentId: event.appointmentId,
+      clientName: event.clientName,
+      startsAt: event.startsAt,
+      durationMinutes: event.durationMinutes,
+      notes: event.notes,
+      serviceId: event.serviceId,
+      clearNotes: event.clearNotes,
+      clearService: event.clearService,
+    );
+
+    switch (result) {
+      case Success():
+        emit(ScheduleActionSuccess(
+          message: 'Agendamento atualizado com sucesso',
+          selectedDate: date,
+          viewMode: mode,
+        ));
+      case HttpFailure(:final failure):
+        emit(ScheduleActionFailure(
+          message: _mutationMessage(failure),
+          selectedDate: date,
+          viewMode: mode,
+        ));
+    }
+  }
+
+  Future<void> _onRecurrenceUpdateRequested(
+    ScheduleRecurrenceUpdateRequested event,
+    Emitter<ScheduleState> emit,
+  ) async {
+    final date = _currentDate ?? DateTime.now();
+    final mode = _currentViewMode ?? ScheduleViewMode.day;
+
+    if (event.updateFuture) {
+      final result = await _repository.updateFutureAppointments(
+        slug: _slug,
+        appointmentId: event.appointmentId,
+        clientName: event.clientName,
+        startsAt: event.startsAt,
+        durationMinutes: event.durationMinutes,
+        notes: event.notes,
+        serviceId: event.serviceId,
+        clearNotes: event.clearNotes,
+        clearService: event.clearService,
+      );
+      switch (result) {
+        case Success():
+          emit(ScheduleActionSuccess(
+            message: 'Ocorrências futuras atualizadas',
+            selectedDate: date,
+            viewMode: mode,
+          ));
+        case HttpFailure(:final failure):
+          emit(ScheduleActionFailure(
+            message: _mutationMessage(failure),
+            selectedDate: date,
+            viewMode: mode,
+          ));
+      }
+    } else {
+      final result = await _repository.updateAppointment(
+        slug: _slug,
+        appointmentId: event.appointmentId,
+        clientName: event.clientName,
+        startsAt: event.startsAt,
+        durationMinutes: event.durationMinutes,
+        notes: event.notes,
+        serviceId: event.serviceId,
+        clearNotes: event.clearNotes,
+        clearService: event.clearService,
+      );
+      switch (result) {
+        case Success():
+          emit(ScheduleActionSuccess(
+            message: 'Agendamento atualizado com sucesso',
+            selectedDate: date,
+            viewMode: mode,
+          ));
+        case HttpFailure(:final failure):
+          emit(ScheduleActionFailure(
+            message: _mutationMessage(failure),
+            selectedDate: date,
+            viewMode: mode,
+          ));
+      }
+    }
+  }
+
+  Future<void> _onStatusChanged(
+    ScheduleAppointmentStatusChanged event,
+    Emitter<ScheduleState> emit,
+  ) async {
+    final date = _currentDate ?? DateTime.now();
+    final mode = _currentViewMode ?? ScheduleViewMode.day;
+
+    final result = await _repository.updateStatus(
+      slug: _slug,
+      appointmentId: event.appointmentId,
+      status: event.status,
+    );
+
+    switch (result) {
+      case Success():
+        emit(ScheduleActionSuccess(
+          message: 'Status atualizado com sucesso',
+          selectedDate: date,
+          viewMode: mode,
+        ));
+      case HttpFailure(:final failure):
+        emit(ScheduleActionFailure(
+          message: _mutationMessage(failure),
+          selectedDate: date,
+          viewMode: mode,
+        ));
     }
   }
 

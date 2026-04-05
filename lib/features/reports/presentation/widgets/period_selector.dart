@@ -25,6 +25,7 @@ class PeriodSelector extends StatelessWidget {
             selected: isSelected,
             onSelected: (_) => onChanged(period),
             selectedColor: colors.primary,
+            checkmarkColor: Theme.of(context).colorScheme.onPrimary,
             backgroundColor: colors.surface,
             labelStyle: AppTypography.bodySm.copyWith(
               color: isSelected

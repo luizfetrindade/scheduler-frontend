@@ -17,12 +17,24 @@ class GreetingRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dateStr = DateFormat('EEE, d MMM', 'pt_BR').format(DateTime.now());
+    final accent = context.appColors.accent;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          '$_greeting, $firstName!',
-          style: AppTypography.headingMd,
+        RichText(
+          text: TextSpan(
+            style: AppTypography.headingMd.copyWith(
+              color: context.appColors.textPrimary,
+            ),
+            children: [
+              TextSpan(text: '$_greeting, '),
+              TextSpan(
+                text: firstName,
+                style: TextStyle(color: accent),
+              ),
+              const TextSpan(text: '!'),
+            ],
+          ),
         ),
         Text(dateStr, style: AppTypography.caption),
       ],

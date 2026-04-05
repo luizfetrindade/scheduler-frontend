@@ -63,7 +63,7 @@ class AppPolicy {
     required bool canTeam,
   }) {
     return [
-      const NavItem(label: 'Início', icon: Icons.home_outlined, route: '/home'),
+      const NavItem(label: 'Dashboard', icon: Icons.home_outlined, route: '/home'),
       const NavItem(
         label: 'Agenda',
         icon: Icons.calendar_today_outlined,
@@ -84,7 +84,7 @@ class AppPolicy {
       if (isAdmin)
         const NavItem(
           label: 'Serviços',
-          icon: Icons.cut_outlined,
+          icon: Icons.category_outlined,
           route: '/services',
         ),
       if (!isAdmin)

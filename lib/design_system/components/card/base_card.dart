@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:scheduler_frontend/design_system/tokens/app_colors_extension.dart';
-import 'package:scheduler_frontend/design_system/tokens/app_radius.dart';
 import 'package:scheduler_frontend/design_system/tokens/app_shadows.dart';
 import 'package:scheduler_frontend/design_system/tokens/app_spacing.dart';
 
@@ -11,6 +10,7 @@ class BaseCard extends StatelessWidget {
   final VoidCallback? onTap;
   final bool elevated;
   final double padding;
+  final Color? color;
 
   const BaseCard({
     super.key,
@@ -18,13 +18,16 @@ class BaseCard extends StatelessWidget {
     this.onTap,
     this.elevated = false,
     this.padding = AppSpacing.lg,
+    this.color,
   });
 
   @override
   Widget build(BuildContext context) {
-    final borderRadius = BorderRadius.circular(AppRadius.xl);
+    final borderRadius = BorderRadius.zero;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = color ?? context.appColors.surface;
     return Material(
-      color: context.appColors.surface,
+      color: bgColor,
       borderRadius: borderRadius,
       child: InkWell(
         onTap: onTap,
@@ -33,8 +36,10 @@ class BaseCard extends StatelessWidget {
         child: Container(
           padding: EdgeInsets.all(padding),
           decoration: BoxDecoration(
+            color: bgColor,
             borderRadius: borderRadius,
-            boxShadow: elevated ? AppShadows.card(context) : null,
+            border: Border.all(color: context.appColors.outline, width: 1),
+            boxShadow: isDark ? null : AppShadows.cardLight,
           ),
           child: child,
         ),

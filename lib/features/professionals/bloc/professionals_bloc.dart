@@ -9,6 +9,7 @@ class ProfessionalsBloc extends Bloc<ProfessionalsEvent, ProfessionalsState> {
   final ProfessionalRepository _repository;
 
   ProfessionalsBloc(this._repository) : super(const ProfessionalsInitial()) {
+    on<ProfessionalsSessionCleared>((_, emit) => emit(const ProfessionalsInitial()));
     on<ProfessionalsLoadRequested>(_onLoad);
     on<ProfessionalsCreateRequested>(_onCreate);
     on<ProfessionalsUpdateRequested>(_onUpdate);

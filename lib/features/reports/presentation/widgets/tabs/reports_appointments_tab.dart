@@ -13,7 +13,7 @@ class ReportsAppointmentsTab extends StatelessWidget {
     final appts = model.appointments;
     final occ = model.occupancy;
 
-    if (appts.total == 0) {
+    if (appts.total == 0 && appts.previousTotal == 0) {
       return const Center(child: Text('Nenhum agendamento neste período'));
     }
 

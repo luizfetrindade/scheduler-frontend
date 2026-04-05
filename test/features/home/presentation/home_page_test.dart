@@ -201,7 +201,7 @@ void main() {
       await tester.pumpWidget(buildPersonal());
       await tester.pump(const Duration(milliseconds: 100));
 
-      expect(find.text('Nenhum agendamento hoje'), findsOneWidget);
+      expect(find.text('Sem agendamentos hoje'), findsOneWidget);
     });
 
     testWidgets('shows error message on AppointmentsError', (tester) async {

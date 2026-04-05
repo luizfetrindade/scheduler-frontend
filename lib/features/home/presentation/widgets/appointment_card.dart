@@ -31,7 +31,7 @@ class AppointmentCard extends StatelessWidget {
             child: Text(
               timeStr,
               style: AppTypography.bodySm.copyWith(
-                color: context.appColors.primaryLight,
+                color: context.appColors.textSecondary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -89,7 +89,7 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = switch (status) {
-      AppointmentStatus.pending => context.appColors.primaryLight,
+      AppointmentStatus.pending => context.appColors.textDisabled,
       AppointmentStatus.confirmed => AppColors.success,
       AppointmentStatus.cancelled => AppColors.error,
       AppointmentStatus.noShow => context.appColors.textDisabled,

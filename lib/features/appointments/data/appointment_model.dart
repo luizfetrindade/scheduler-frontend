@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+const _sentinel = Object();
+
 enum AppointmentStatus { pending, confirmed, cancelled, noShow, completed }
 
 extension AppointmentStatusX on AppointmentStatus {
@@ -50,6 +52,7 @@ class AppointmentModel extends Equatable {
   final AppointmentStatus status;
   final String clientName;
   final String? title;
+  final String? serviceId;
   final String? serviceName;
   final int? serviceDurationMinutes;
   final String? staffId;
@@ -65,6 +68,7 @@ class AppointmentModel extends Equatable {
     required this.status,
     required this.clientName,
     this.title,
+    this.serviceId,
     this.serviceName,
     this.serviceDurationMinutes,
     this.staffId,
@@ -87,6 +91,7 @@ class AppointmentModel extends Equatable {
       status: AppointmentStatusX.fromString(json['status'] as String? ?? 'PENDING'),
       clientName: client?['name'] as String? ?? 'Cliente',
       title: json['title'] as String?,
+      serviceId: service?['id'] as String?,
       serviceName: service?['name'] as String?,
       serviceDurationMinutes: service?['durationMinutes'] as int?,
       staffId: json['staffId'] as String?,
@@ -96,7 +101,10 @@ class AppointmentModel extends Equatable {
     );
   }
 
-  AppointmentModel copyWith({AppointmentStatus? status}) => AppointmentModel(
+  AppointmentModel copyWith({
+    AppointmentStatus? status,
+    Object? serviceId = _sentinel,
+  }) => AppointmentModel(
         id: id,
         type: type,
         startsAt: startsAt,
@@ -104,6 +112,7 @@ class AppointmentModel extends Equatable {
         status: status ?? this.status,
         clientName: clientName,
         title: title,
+        serviceId: identical(serviceId, _sentinel) ? this.serviceId : serviceId as String?,
         serviceName: serviceName,
         serviceDurationMinutes: serviceDurationMinutes,
         staffId: staffId,
@@ -115,6 +124,6 @@ class AppointmentModel extends Equatable {
   @override
   List<Object?> get props => [
         id, type, startsAt, endsAt, status, clientName, title,
-        serviceName, staffId, recurrenceRule, recurrenceGroupId,
+        serviceId, serviceName, serviceDurationMinutes, staffId, notes, recurrenceRule, recurrenceGroupId,
       ];
 }

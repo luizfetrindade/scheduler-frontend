@@ -10,6 +10,7 @@ class AppointmentsBloc extends Bloc<AppointmentsEvent, AppointmentsState> {
 
   AppointmentsBloc(this._repository) : super(const AppointmentsInitial()) {
     on<AppointmentsLoadRequested>(_onLoadRequested);
+    on<AppointmentsSessionCleared>((_, emit) => emit(const AppointmentsInitial()));
     on<AppointmentStatusChanged>(_onStatusChanged);
   }
 

@@ -5,18 +5,15 @@ import 'package:scheduler_frontend/core/auth/auth_state.dart';
 import 'package:scheduler_frontend/design_system/base_design_system.dart';
 import 'package:scheduler_frontend/features/appointments/bloc/appointments_bloc.dart';
 import 'package:scheduler_frontend/features/appointments/bloc/appointments_event.dart';
-import 'package:scheduler_frontend/features/appointments/bloc/appointments_state.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_bloc.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_event.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_state.dart';
+import 'package:scheduler_frontend/features/home/presentation/widgets/appointments_summary_card.dart';
 import 'package:scheduler_frontend/features/home/presentation/widgets/business_selector_header.dart';
+import 'package:scheduler_frontend/features/home/presentation/widgets/clients_summary_card.dart';
 import 'package:scheduler_frontend/features/home/presentation/widgets/greeting_row.dart';
-import 'package:scheduler_frontend/features/home/presentation/widgets/personal_appointments_list.dart';
-import 'package:scheduler_frontend/features/home/presentation/widgets/setup_card.dart';
-import 'package:scheduler_frontend/features/home/presentation/widgets/stats_summary_row.dart';
-import 'package:scheduler_frontend/features/home/presentation/widgets/team_appointments_list.dart';
-import 'package:scheduler_frontend/features/onboarding/bloc/wizard_bloc.dart';
-import 'package:scheduler_frontend/features/onboarding/bloc/wizard_state.dart';
+import 'package:scheduler_frontend/features/home/presentation/widgets/next_appointment_banner.dart';
+import 'package:scheduler_frontend/features/home/presentation/widgets/services_summary_card.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -26,18 +23,7 @@ class HomePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: context.appColors.background,
       body: SafeArea(
-        child: BlocListener<BusinessBloc, BusinessState>(
-          listener: (context, state) {
-            if (state is BusinessLoaded) {
-              context.read<AppointmentsBloc>().add(
-                    AppointmentsLoadRequested(
-                      slug: state.active.slug,
-                      date: DateTime.now(),
-                    ),
-                  );
-            }
-          },
-          child: RefreshIndicator(
+        child: RefreshIndicator(
             color: context.appColors.primary,
             onRefresh: () async {
               final bizState = context.read<BusinessBloc>().state;
@@ -50,31 +36,25 @@ class HomePage extends StatelessWidget {
                     );
               }
             },
-            child: CustomScrollView(
-              slivers: [
-                SliverPadding(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  sliver: SliverList(
-                    delegate: SliverChildListDelegate([
-                      _buildHeader(context),
-                      const SizedBox(height: AppSpacing.lg),
-                      _buildGreeting(context),
-                      const SizedBox(height: AppSpacing.lg),
-                      _buildStats(context),
-                      const SizedBox(height: AppSpacing.lg),
-                      _buildSetupCard(context),
-                      const SizedBox(height: AppSpacing.xl),
-                      Text(
-                        'Agendamentos de hoje',
-                        style: AppTypography.headingMd,
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      _buildAppointmentList(context),
-                    ]),
-                  ),
+          child: CustomScrollView(
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    _buildHeader(context),
+                    const SizedBox(height: AppSpacing.lg),
+                    _buildGreeting(context),
+                    const SizedBox(height: AppSpacing.lg),
+                    const NextAppointmentBanner(),
+                    const SizedBox(height: AppSpacing.xl),
+                    const AppointmentsSummaryCard(),
+                    const SizedBox(height: AppSpacing.xl),
+                    _buildSummaryCards(context),
+                  ]),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -107,89 +87,58 @@ class HomePage extends StatelessWidget {
     return GreetingRow(firstName: firstName);
   }
 
-  Widget _buildStats(BuildContext context) {
+  Widget _buildSummaryCards(BuildContext context) {
     return BlocBuilder<BusinessBloc, BusinessState>(
-      builder: (context, bizState) {
-        final isAdmin =
-            bizState is BusinessLoaded ? bizState.policy.isAdmin : true;
-        return BlocBuilder<AppointmentsBloc, AppointmentsState>(
-          builder: (context, state) {
-            if (state is AppointmentsLoaded) {
-              return _StatsWithLabel(
-                total: state.total,
-                pending: state.pending,
-                confirmed: state.confirmed,
-                isAdmin: isAdmin,
-              );
-            }
-            return _StatsWithLabel(
-              total: 0,
-              pending: 0,
-              confirmed: 0,
-              isAdmin: isAdmin,
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildSetupCard(BuildContext context) {
-    return BlocBuilder<WizardBloc, WizardState>(
-      builder: (context, wizardState) {
-        if (wizardState is WizardLoaded && !wizardState.isAllComplete) {
-          return Column(
-            children: [
-              SetupCard(wizardState: wizardState),
-              const SizedBox(height: AppSpacing.sm),
-            ],
-          );
+      builder: (context, state) {
+        if (state is! BusinessLoaded || !state.policy.isAdmin) {
+          return const SizedBox.shrink();
         }
-        return const SizedBox.shrink();
-      },
-    );
-  }
-
-  Widget _buildAppointmentList(BuildContext context) {
-    return BlocBuilder<BusinessBloc, BusinessState>(
-      builder: (context, businessState) {
-        if (businessState is! BusinessLoaded) return const SizedBox.shrink();
-        return businessState.policy.canViewOtherAppts
-            ? const TeamAppointmentsList()
-            : const PersonalAppointmentsList();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _SectionHeader(label: 'Visão geral'),
+            const SizedBox(height: AppSpacing.md),
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: const [
+                  Expanded(child: ServicesSummaryCard()),
+                  SizedBox(width: AppSpacing.md),
+                  Expanded(child: ClientsSummaryCard()),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+          ],
+        );
       },
     );
   }
 }
 
-class _StatsWithLabel extends StatelessWidget {
-  final int total;
-  final int pending;
-  final int confirmed;
-  final bool isAdmin;
+class _SectionHeader extends StatelessWidget {
+  final String label;
 
-  const _StatsWithLabel({
-    required this.total,
-    required this.pending,
-    required this.confirmed,
-    required this.isAdmin,
-  });
+  const _SectionHeader({required this.label});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
       children: [
-        Text(
-          isAdmin ? 'Total hoje' : 'Seus hoje',
-          style: AppTypography.bodySm
-              .copyWith(color: context.appColors.textSecondary),
+        Container(
+          width: 3,
+          height: 14,
+          decoration: BoxDecoration(
+            color: context.appColors.accent,
+            borderRadius: BorderRadius.circular(2),
+          ),
         ),
-        const SizedBox(height: AppSpacing.sm),
-        StatsSummaryRow(
-          total: total,
-          pending: pending,
-          confirmed: confirmed,
+        const SizedBox(width: AppSpacing.sm),
+        Text(
+          label,
+          style: AppTypography.labelLarge.copyWith(
+            color: context.appColors.textPrimary,
+          ),
         ),
       ],
     );

@@ -32,3 +32,13 @@ class WizardStepCompleted extends WizardEvent {
   @override
   List<Object?> get props => [step];
 }
+
+/// User submitted the business creation form.
+class WizardBusinessSubmitted extends WizardEvent {
+  final String name;
+
+  const WizardBusinessSubmitted({required this.name});
+
+  @override
+  List<Object?> get props => [name];
+}

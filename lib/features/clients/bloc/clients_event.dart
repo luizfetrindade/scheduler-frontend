@@ -6,11 +6,17 @@ sealed class ClientsEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+/// Emitted on logout to wipe loaded data from memory.
+class ClientsSessionCleared extends ClientsEvent {
+  const ClientsSessionCleared();
+}
+
 class ClientsLoadRequested extends ClientsEvent {
   final String businessId;
-  const ClientsLoadRequested(this.businessId);
+  final bool forceRefresh;
+  const ClientsLoadRequested(this.businessId, {this.forceRefresh = false});
   @override
-  List<Object?> get props => [businessId];
+  List<Object?> get props => [businessId, forceRefresh];
 }
 
 class ClientCreateRequested extends ClientsEvent {

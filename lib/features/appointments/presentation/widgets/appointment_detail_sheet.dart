@@ -7,6 +7,7 @@ import 'package:scheduler_frontend/features/appointments/bloc/schedule_event.dar
 import 'package:scheduler_frontend/features/appointments/bloc/schedule_state.dart';
 import 'package:scheduler_frontend/features/appointments/data/appointment_model.dart';
 import 'package:scheduler_frontend/features/appointments/data/rrule_builder.dart';
+import 'package:scheduler_frontend/features/appointments/presentation/widgets/edit_appointment_sheet.dart';
 
 class AppointmentDetailSheet extends StatelessWidget {
   final AppointmentModel appointment;
@@ -17,6 +18,16 @@ class AppointmentDetailSheet extends StatelessWidget {
     required this.appointment,
     this.canModify = true,
   });
+
+  bool get canEdit =>
+      canModify &&
+      !appointment.isBlock &&
+      appointment.status != AppointmentStatus.cancelled;
+
+  bool get canChangeStatus =>
+      canModify &&
+      !appointment.isBlock &&
+      appointment.status != AppointmentStatus.cancelled;
 
   @override
   Widget build(BuildContext context) {
@@ -60,12 +71,36 @@ class AppointmentDetailSheet extends StatelessWidget {
             ],
             _DetailRow(icon: Icons.calendar_today, label: dateStr),
             _DetailRow(icon: Icons.access_time, label: '$startStr – $endStr'),
-            _DetailRow(
-              icon: Icons.circle,
-              label: appointment.status.label,
-              iconColor: _statusColor(context, appointment.status),
-              iconSize: 12,
+            GestureDetector(
+              onTap: canChangeStatus
+                  ? () => _showStatusPicker(context)
+                  : null,
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.circle,
+                    size: 12,
+                    color: _statusColor(context, appointment.status),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Text(
+                      appointment.status.label,
+                      style: AppTypography.bodySm.copyWith(
+                        color: context.appColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  if (canChangeStatus)
+                    Icon(
+                      Icons.chevron_right,
+                      size: 16,
+                      color: context.appColors.textSecondary,
+                    ),
+                ],
+              ),
             ),
+            const SizedBox(height: AppSpacing.sm),
             if (appointment.notes != null && appointment.notes!.isNotEmpty)
               _DetailRow(icon: Icons.notes, label: appointment.notes!),
             if (appointment.isRecurring && appointment.recurrenceRule != null)
@@ -73,8 +108,16 @@ class AppointmentDetailSheet extends StatelessWidget {
                 icon: Icons.repeat,
                 label: describeRRule(appointment.recurrenceRule!),
               ),
-            if (canCancel) ...[
+            if (canEdit) ...[
               const SizedBox(height: AppSpacing.lg),
+              BaseButton(
+                label: 'Editar Agendamento',
+                onPressed: () => _handleEdit(context),
+                variant: BaseButtonVariant.secondary,
+              ),
+            ],
+            if (canCancel) ...[
+              const SizedBox(height: AppSpacing.md),
               BaseButton(
                 label: appointment.isBlock
                     ? 'Remover Bloqueio'
@@ -85,6 +128,119 @@ class AppointmentDetailSheet extends StatelessWidget {
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  void _showStatusPicker(BuildContext context) {
+    final statuses = [
+      AppointmentStatus.pending,
+      AppointmentStatus.confirmed,
+      AppointmentStatus.completed,
+      AppointmentStatus.noShow,
+    ];
+
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: context.appColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                    vertical: AppSpacing.xs,
+                  ),
+                  child: Text(
+                    'Alterar status',
+                    style: AppTypography.bodySm.copyWith(
+                      color: sheetContext.appColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Divider(height: 1, color: sheetContext.appColors.surfaceHigh),
+                ...statuses.map((status) {
+                  final isSelected = status == appointment.status;
+                  return InkWell(
+                    onTap: () {
+                      Navigator.of(sheetContext).pop();
+                      if (!isSelected) {
+                        context.read<ScheduleBloc>().add(
+                              ScheduleAppointmentStatusChanged(
+                                appointmentId: appointment.id,
+                                status: status,
+                              ),
+                            );
+                      }
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                        vertical: AppSpacing.sm,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.circle,
+                            size: 12,
+                            color: _statusColor(context, status),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: Text(
+                              status.label,
+                              style: AppTypography.bodySm.copyWith(
+                                color: isSelected
+                                    ? context.appColors.primary
+                                    : context.appColors.textPrimary,
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                          ),
+                          if (isSelected)
+                            Icon(
+                              Icons.check,
+                              size: 16,
+                              color: context.appColors.primary,
+                            ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _handleEdit(BuildContext context) {
+    final bloc = context.read<ScheduleBloc>();
+    final navigator = Navigator.of(context);
+    navigator.pop();
+    showModalBottomSheet<void>(
+      context: navigator.context,
+      isScrollControlled: true,
+      backgroundColor: navigator.context.appColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+      ),
+      builder: (_) => BlocProvider.value(
+        value: bloc,
+        child: EditAppointmentSheet(appointment: appointment),
       ),
     );
   }

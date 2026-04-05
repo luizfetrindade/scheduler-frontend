@@ -18,7 +18,7 @@ class ReportsGeneralTab extends StatelessWidget {
     final occ = model.occupancy;
     final clients = model.clients;
 
-    if (appts.total == 0) {
+    if (appts.total == 0 && appts.previousTotal == 0 && rev.previousRealized == 0) {
       return const Center(child: Text('Nenhum agendamento neste período'));
     }
 

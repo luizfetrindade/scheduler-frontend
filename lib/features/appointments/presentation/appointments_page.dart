@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:scheduler_frontend/core/auth/auth_bloc.dart';
 import 'package:scheduler_frontend/core/auth/auth_state.dart';
+import 'package:scheduler_frontend/core/config/schedule_preferences.dart';
 import 'package:scheduler_frontend/design_system/base_design_system.dart';
 import 'package:scheduler_frontend/features/appointments/bloc/schedule_bloc.dart';
 import 'package:scheduler_frontend/features/appointments/bloc/schedule_event.dart';
@@ -50,8 +51,66 @@ class AppointmentsPage extends StatelessWidget {
   }
 }
 
-class AppointmentsBody extends StatelessWidget {
+class AppointmentsBody extends StatefulWidget {
   const AppointmentsBody({super.key});
+
+  @override
+  State<AppointmentsBody> createState() => _AppointmentsBodyState();
+}
+
+class _AppointmentsBodyState extends State<AppointmentsBody> {
+  /// Statuses hidden from the view. Cancelled is hidden by default.
+  final Set<String> _hiddenStatuses = {};
+
+  /// Whether drag-and-drop is enabled (loaded from preferences).
+  bool _dragEnabled = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDragPreference();
+  }
+
+  Future<void> _loadDragPreference() async {
+    final enabled = await SchedulePreferences.isDragEnabled();
+    if (mounted) setState(() => _dragEnabled = enabled);
+  }
+
+  void _toggleStatus(String key) {
+    setState(() {
+      if (_hiddenStatuses.contains(key)) {
+        _hiddenStatuses.remove(key);
+      } else {
+        _hiddenStatuses.add(key);
+      }
+    });
+  }
+
+  void _toggleAll() {
+    setState(() {
+      if (_hiddenStatuses.isEmpty) {
+        // All are visible → hide all
+        _hiddenStatuses.addAll(StatusFilterBar.allKeys);
+      } else {
+        // Some hidden → show all
+        _hiddenStatuses.clear();
+      }
+    });
+  }
+
+  /// Filters appointments based on hidden statuses.
+  Map<String, List<AppointmentModel>> _applyStatusFilter(
+    Map<String, List<AppointmentModel>> byDate,
+  ) {
+    if (_hiddenStatuses.isEmpty) return byDate;
+    return {
+      for (final entry in byDate.entries)
+        entry.key: entry.value.where((a) {
+          if (a.isBlock) return !_hiddenStatuses.contains('block');
+          return !_hiddenStatuses.contains(a.status.name);
+        }).toList(),
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -105,78 +164,60 @@ class AppointmentsBody extends StatelessWidget {
               },
             ),
           ],
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final isWide = constraints.maxWidth >= 720;
-              final targetMode =
-                  isWide ? ScheduleViewMode.week : ScheduleViewMode.day;
-
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (context.mounted) {
-                  context
-                      .read<ScheduleBloc>()
-                      .add(ScheduleViewModeChanged(targetMode));
-                }
-              });
-
-              return BlocBuilder<ScheduleBloc, ScheduleState>(
-                buildWhen: (prev, curr) =>
-                    curr is! ScheduleActionSuccess &&
-                    curr is! ScheduleActionFailure,
-                builder: (context, state) {
-                  return switch (state) {
-                    ScheduleInitial() => Center(
-                        child: CircularProgressIndicator(
-                          color: context.appColors.primary,
-                        ),
-                      ),
-                    ScheduleLoading(:final selectedDate, :final viewMode) =>
-                      _buildContent(
-                        context,
-                        selectedDate: selectedDate,
-                        viewMode: viewMode,
-                        appointmentsByDate: const {},
-                        isLoading: true,
-                      ),
-                    ScheduleLoaded(
-                      :final selectedDate,
-                      :final viewMode,
-                      :final appointmentsByDate,
-                    ) =>
-                      _buildContent(
-                        context,
-                        selectedDate: selectedDate,
-                        viewMode: viewMode,
-                        appointmentsByDate: appointmentsByDate,
-                        isLoading: false,
-                      ),
-                    ScheduleError(
-                      :final message,
-                      :final selectedDate,
-                      :final viewMode,
-                    ) =>
-                      _buildError(context, message, selectedDate, viewMode),
-                    ScheduleActionSuccess(:final selectedDate, :final viewMode)
-                      =>
-                      _buildContent(
-                        context,
-                        selectedDate: selectedDate,
-                        viewMode: viewMode,
-                        appointmentsByDate: const {},
-                        isLoading: true,
-                      ),
-                    ScheduleActionFailure(:final selectedDate, :final viewMode)
-                      =>
-                      _buildContent(
-                        context,
-                        selectedDate: selectedDate,
-                        viewMode: viewMode,
-                        appointmentsByDate: const {},
-                        isLoading: true,
-                      ),
-                  };
-                },
-              );
+          child: BlocBuilder<ScheduleBloc, ScheduleState>(
+            buildWhen: (prev, curr) =>
+                curr is! ScheduleActionSuccess &&
+                curr is! ScheduleActionFailure,
+            builder: (context, state) {
+              return switch (state) {
+                ScheduleInitial() => Center(
+                    child: CircularProgressIndicator(
+                      color: context.appColors.primary,
+                    ),
+                  ),
+                ScheduleLoading(:final selectedDate, :final viewMode) =>
+                  _buildContent(
+                    context,
+                    selectedDate: selectedDate,
+                    viewMode: viewMode,
+                    appointmentsByDate: const {},
+                    isLoading: true,
+                  ),
+                ScheduleLoaded(
+                  :final selectedDate,
+                  :final viewMode,
+                  :final appointmentsByDate,
+                ) =>
+                  _buildContent(
+                    context,
+                    selectedDate: selectedDate,
+                    viewMode: viewMode,
+                    appointmentsByDate: appointmentsByDate,
+                    isLoading: false,
+                  ),
+                ScheduleError(
+                  :final message,
+                  :final selectedDate,
+                  :final viewMode,
+                ) =>
+                  _buildError(context, message, selectedDate, viewMode),
+                ScheduleActionSuccess(:final selectedDate, :final viewMode) =>
+                  _buildContent(
+                    context,
+                    selectedDate: selectedDate,
+                    viewMode: viewMode,
+                    appointmentsByDate: const {},
+                    isLoading: true,
+                  ),
+                ScheduleActionFailure(:final selectedDate, :final viewMode) =>
+                  _buildContent(
+                    context,
+                    selectedDate: selectedDate,
+                    viewMode: viewMode,
+                    appointmentsByDate: const {},
+                    isLoading: true,
+                  ),
+              };
             },
           ),
         ),
@@ -206,6 +247,7 @@ class AppointmentsBody extends StatelessWidget {
     required bool isLoading,
   }) {
     final bloc = context.read<ScheduleBloc>();
+    final filtered = _applyStatusFilter(appointmentsByDate);
 
     final profsState = context.read<ProfessionalsBloc>().state;
     final professionals = switch (profsState) {
@@ -222,7 +264,15 @@ class AppointmentsBody extends StatelessWidget {
           onPrevious: () => bloc.add(const SchedulePreviousPeriod()),
           onNext: () => bloc.add(const ScheduleNextPeriod()),
           onDateSelected: (date) => bloc.add(ScheduleDateSelected(date)),
+          onViewModeChanged: (mode) =>
+              bloc.add(ScheduleViewModeChanged(mode)),
         ),
+        StatusFilterBar(
+          hiddenStatuses: _hiddenStatuses,
+          onToggle: _toggleStatus,
+          onToggleAll: _toggleAll,
+        ),
+        const SizedBox(height: AppSpacing.xs),
         BlocBuilder<BusinessBloc, BusinessState>(
           buildWhen: (prev, curr) => curr is BusinessLoaded,
           builder: (context, state) {
@@ -245,21 +295,40 @@ class AppointmentsBody extends StatelessWidget {
               : viewMode == ScheduleViewMode.day
                   ? DayView(
                       date: selectedDate,
-                      appointmentsByDate: appointmentsByDate,
+                      appointmentsByDate: filtered,
                       onSlotTap: (dt) => _openCreateSheet(context, dt),
-                      onAppointmentTap: (a) =>
-                          _openDetailSheet(context, a),
+                      onAppointmentTap: (a) => _openDetailSheet(context, a),
+                      dragEnabled: _dragEnabled,
+                      onAppointmentDropped: _dragEnabled
+                          ? (a, newStart) =>
+                              _handleDrop(context, a, newStart)
+                          : null,
                     )
                   : WeekView(
                       selectedDate: selectedDate,
-                      appointmentsByDate: appointmentsByDate,
+                      appointmentsByDate: filtered,
                       onSlotTap: (dt) => _openCreateSheet(context, dt),
-                      onAppointmentTap: (a) =>
-                          _openDetailSheet(context, a),
+                      onAppointmentTap: (a) => _openDetailSheet(context, a),
+                      dragEnabled: _dragEnabled,
+                      onAppointmentDropped: _dragEnabled
+                          ? (a, newStart) =>
+                              _handleDrop(context, a, newStart)
+                          : null,
                     ),
         ),
       ],
     );
+  }
+
+  void _handleDrop(
+    BuildContext context,
+    AppointmentModel appointment,
+    DateTime newStart,
+  ) {
+    context.read<ScheduleBloc>().add(ScheduleAppointmentUpdateRequested(
+          appointmentId: appointment.id,
+          startsAt: newStart,
+        ));
   }
 
   Widget _buildError(
@@ -278,6 +347,8 @@ class AppointmentsBody extends StatelessWidget {
           onPrevious: () => bloc.add(const SchedulePreviousPeriod()),
           onNext: () => bloc.add(const ScheduleNextPeriod()),
           onDateSelected: (date) => bloc.add(ScheduleDateSelected(date)),
+          onViewModeChanged: (mode) =>
+              bloc.add(ScheduleViewModeChanged(mode)),
         ),
         Expanded(
           child: Center(
@@ -338,7 +409,8 @@ void _showFabOptions(BuildContext context) {
             ),
             const SizedBox(height: AppSpacing.lg),
             ListTile(
-              leading: Icon(Icons.event, color: sheetContext.appColors.primary),
+              leading:
+                  Icon(Icons.event, color: sheetContext.appColors.primary),
               title: Text(
                 'Novo Agendamento',
                 style: AppTypography.bodySm.copyWith(
@@ -351,9 +423,7 @@ void _showFabOptions(BuildContext context) {
                   color: sheetContext.appColors.textSecondary,
                 ),
               ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.md),
-              ),
+              shape: const RoundedRectangleBorder(),
               tileColor: sheetContext.appColors.surface,
               onTap: () {
                 Navigator.of(sheetContext).pop();
@@ -375,9 +445,7 @@ void _showFabOptions(BuildContext context) {
                   color: sheetContext.appColors.textSecondary,
                 ),
               ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.md),
-              ),
+              shape: const RoundedRectangleBorder(),
               tileColor: sheetContext.appColors.surface,
               onTap: () {
                 Navigator.of(sheetContext).pop();
@@ -423,7 +491,9 @@ String? _findMyProfessionalId(BuildContext context) {
 void _openDetailSheet(BuildContext context, AppointmentModel appointment) {
   final bizState = context.read<BusinessBloc>().state;
   final policy = bizState is BusinessLoaded ? bizState.policy : null;
-  final myProfId = (policy != null && !policy.isAdmin) ? _findMyProfessionalId(context) : null;
+  final myProfId = (policy != null && !policy.isAdmin)
+      ? _findMyProfessionalId(context)
+      : null;
   final bool canModify = policy == null ||
       policy.isAdmin ||
       (myProfId != null && appointment.staffId == myProfId);
@@ -437,7 +507,8 @@ void _openDetailSheet(BuildContext context, AppointmentModel appointment) {
     ),
     builder: (_) => BlocProvider.value(
       value: bloc,
-      child: AppointmentDetailSheet(appointment: appointment, canModify: canModify),
+      child: AppointmentDetailSheet(
+          appointment: appointment, canModify: canModify),
     ),
   );
 }

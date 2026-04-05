@@ -1,0 +1,131 @@
+<h2>Como estruturar a página de Relatórios?</h2>
+<p class="subtitle">3 abordagens diferentes — escolha a que faz mais sentido pra você</p>
+
+<div class="cards">
+
+  <!-- Approach A -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0f172a;padding:16px;font-family:monospace;font-size:11px;color:#94a3b8;border-radius:8px 8px 0 0;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:10px;">
+        <div style="background:#1e293b;border-radius:4px;padding:6px;text-align:center;">
+          <div style="color:#22c55e;font-size:13px;font-weight:bold;">R$12.4k</div>
+          <div style="font-size:9px;">Receita ↑8%</div>
+        </div>
+        <div style="background:#1e293b;border-radius:4px;padding:6px;text-align:center;">
+          <div style="color:#60a5fa;font-size:13px;font-weight:bold;">147</div>
+          <div style="font-size:9px;">Agendamentos ↑5%</div>
+        </div>
+        <div style="background:#1e293b;border-radius:4px;padding:6px;text-align:center;">
+          <div style="color:#f59e0b;font-size:13px;font-weight:bold;">68%</div>
+          <div style="font-size:9px;">Ocup. ↓2%</div>
+        </div>
+        <div style="background:#1e293b;border-radius:4px;padding:6px;text-align:center;">
+          <div style="color:#a78bfa;font-size:13px;font-weight:bold;">43</div>
+          <div style="font-size:9px;">Novos clientes ↑12%</div>
+        </div>
+      </div>
+      <div style="background:#1e293b;border-radius:4px;padding:8px;margin-bottom:8px;">
+        <div style="color:#e2e8f0;margin-bottom:4px;font-size:10px;">💰 Financeiro</div>
+        <div style="height:28px;background:linear-gradient(90deg,#22c55e 60%,#1e293b 60%);border-radius:2px;"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+        <div style="background:#1e293b;border-radius:4px;padding:8px;">
+          <div style="color:#e2e8f0;margin-bottom:4px;font-size:10px;">👥 Clientes</div>
+          <div style="height:24px;background:linear-gradient(90deg,#60a5fa 40%,#a78bfa 40%);border-radius:2px;"></div>
+        </div>
+        <div style="background:#1e293b;border-radius:4px;padding:8px;">
+          <div style="color:#e2e8f0;margin-bottom:4px;font-size:10px;">📅 Agendamentos</div>
+          <div style="height:24px;background:linear-gradient(90deg,#f59e0b 70%,#1e293b 70%);border-radius:2px;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Dashboard por Seções</h3>
+      <p>KPIs no topo com comparativo vs. mês anterior, depois seções verticais: Financeiro → Agendamentos → Clientes → Equipe. Scroll único, tudo visível.</p>
+      <div class="pros-cons" style="margin-top:8px;">
+        <div class="pros"><h4>Prós</h4><ul><li>Visão 360° sem sair da tela</li><li>Escanável rapidamente</li><li>Simples de navegar</li></ul></div>
+        <div class="cons"><h4>Contras</h4><ul><li>Scroll longo</li><li>Pode parecer denso</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Approach B -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0f172a;padding:16px;font-family:monospace;font-size:11px;color:#94a3b8;border-radius:8px 8px 0 0;">
+      <div style="display:flex;gap:4px;margin-bottom:10px;border-bottom:1px solid #1e293b;padding-bottom:8px;">
+        <div style="background:#3b82f6;color:white;padding:3px 8px;border-radius:4px;font-size:9px;">Geral</div>
+        <div style="padding:3px 8px;font-size:9px;">💰 Financeiro</div>
+        <div style="padding:3px 8px;font-size:9px;">👥 Clientes</div>
+        <div style="padding:3px 8px;font-size:9px;">📅 Agenda</div>
+        <div style="padding:3px 8px;font-size:9px;">👤 Equipe</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
+        <div style="background:#1e293b;border-radius:4px;padding:6px;">
+          <div style="color:#22c55e;font-size:15px;font-weight:bold;">R$12.4k</div>
+          <div>Receita total ↑8%</div>
+        </div>
+        <div style="background:#1e293b;border-radius:4px;padding:6px;">
+          <div style="color:#60a5fa;font-size:15px;font-weight:bold;">147</div>
+          <div>Agendamentos ↑5%</div>
+        </div>
+      </div>
+      <div style="background:#1e293b;border-radius:4px;padding:8px;">
+        <div style="color:#e2e8f0;margin-bottom:6px;font-size:10px;">🔥 Destaques do mês</div>
+        <div style="color:#fbbf24;font-size:10px;">↑ Serviço mais lucrativo: Corte+Barba</div>
+        <div style="color:#f87171;font-size:10px;">↓ Taxa de cancelamento subiu 4%</div>
+        <div style="color:#34d399;font-size:10px;">↑ 12 clientes novos a mais que mês passado</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Multi-aba por Dimensão</h3>
+      <p>Aba "Geral" com KPIs e highlights do mês. Abas separadas para Financeiro, Clientes, Agenda e Equipe com profundidade máxima em cada uma.</p>
+      <div class="pros-cons" style="margin-top:8px;">
+        <div class="pros"><h4>Prós</h4><ul><li>Organizado e focado</li><li>Cada aba é uma análise completa</li><li>Não sobrecarrega</li></ul></div>
+        <div class="cons"><h4>Contras</h4><ul><li>Precisa navegar entre abas</li><li>Perde visão geral rápida</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Approach C -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0f172a;padding:16px;font-family:monospace;font-size:11px;color:#94a3b8;border-radius:8px 8px 0 0;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <div style="display:inline-block;background:#1e293b;border-radius:50%;width:60px;height:60px;line-height:60px;font-size:22px;font-weight:bold;color:#22c55e;">82</div>
+        <div style="font-size:9px;margin-top:2px;color:#94a3b8;">Score de saúde do negócio ↑6pts</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+        <div style="background:#1e293b;border-radius:4px;padding:6px;border-left:3px solid #22c55e;">
+          <div style="color:#22c55e;font-size:10px;">💰 Receita</div>
+          <div style="font-size:13px;color:white;font-weight:bold;">R$12.4k ↑8%</div>
+          <div style="color:#64748b;font-size:9px;">Ver detalhes →</div>
+        </div>
+        <div style="background:#1e293b;border-radius:4px;padding:6px;border-left:3px solid #f87171;">
+          <div style="color:#f87171;font-size:10px;">⚠️ Cancelamentos</div>
+          <div style="font-size:13px;color:white;font-weight:bold;">14% ↑4%</div>
+          <div style="color:#64748b;font-size:9px;">Atenção necessária →</div>
+        </div>
+        <div style="background:#1e293b;border-radius:4px;padding:6px;border-left:3px solid #60a5fa;">
+          <div style="color:#60a5fa;font-size:10px;">👥 Clientes novos</div>
+          <div style="font-size:13px;color:white;font-weight:bold;">43 ↑12%</div>
+          <div style="color:#64748b;font-size:9px;">Ver detalhes →</div>
+        </div>
+        <div style="background:#1e293b;border-radius:4px;padding:6px;border-left:3px solid #f59e0b;">
+          <div style="color:#f59e0b;font-size:10px;">😴 Clientes inativos</div>
+          <div style="font-size:13px;color:white;font-weight:bold;">18 clientes</div>
+          <div style="color:#64748b;font-size:9px;">Lista completa →</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Score + Alertas Inteligentes</h3>
+      <p>Score de saúde composto no topo. Cards com semáforo de cor (verde/amarelo/vermelho) e alertas de atenção. Cada card expande para o detalhe completo.</p>
+      <div class="pros-cons" style="margin-top:8px;">
+        <div class="pros"><h4>Prós</h4><ul><li>Orientado a ação</li><li>Destaca o que precisa de atenção</li><li>Muito rápido de ler</li></ul></div>
+        <div class="cons"><h4>Contras</h4><ul><li>Score composto pode confundir</li><li>Mais complexo de implementar</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:16px;">Clique em uma ou mais abordagens. Pode combinar elementos de diferentes opções.</p>

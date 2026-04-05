@@ -1,0 +1,347 @@
+<h2>Conteúdo detalhado de cada aba</h2>
+<p class="subtitle">Role para ver todas as abas — clique nas que você quer manter, remover ou ajustar</p>
+
+<div style="display:flex;flex-direction:column;gap:20px;">
+
+<!-- ===== ABA FINANCEIRO ===== -->
+<div class="option" data-choice="financeiro" onclick="toggleSelect(this)" style="border-radius:12px;overflow:hidden;">
+  <div style="background:#0f172a;padding:12px 16px;display:flex;align-items:center;gap:10px;">
+    <div style="font-size:18px;">💰</div>
+    <div>
+      <div style="color:#e2e8f0;font-weight:700;font-size:13px;">Aba Financeiro</div>
+      <div style="color:#64748b;font-size:10px;">Saúde da receita e serviços mais lucrativos</div>
+    </div>
+  </div>
+  <div style="background:#0f172a;padding:0 16px 16px;font-family:system-ui;font-size:11px;color:#94a3b8;">
+
+    <!-- Receita 3 colunas -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+      <div style="background:#14532d33;border:1px solid #166534;border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:9px;color:#86efac;text-transform:uppercase;">Realizada</div>
+        <div style="font-size:18px;font-weight:bold;color:#22c55e;">R$12.480</div>
+        <div style="font-size:9px;color:#4ade80;">↑ +8% vs. fev</div>
+        <div style="font-size:8px;color:#64748b;margin-top:2px;">Serviços concluídos</div>
+      </div>
+      <div style="background:#1e3a5f33;border:1px solid #1e40af;border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:9px;color:#93c5fd;text-transform:uppercase;">Confirmada</div>
+        <div style="font-size:18px;font-weight:bold;color:#60a5fa;">R$14.900</div>
+        <div style="font-size:9px;color:#93c5fd;">↑ +6% vs. fev</div>
+        <div style="font-size:8px;color:#64748b;margin-top:2px;">Confirmados + concluídos</div>
+      </div>
+      <div style="background:#7f1d1d33;border:1px solid #991b1b;border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:9px;color:#fca5a5;text-transform:uppercase;">Perdida</div>
+        <div style="font-size:18px;font-weight:bold;color:#ef4444;">R$1.240</div>
+        <div style="font-size:9px;color:#f87171;">↑ +4% vs. fev</div>
+        <div style="font-size:8px;color:#64748b;margin-top:2px;">Cancelamentos</div>
+      </div>
+    </div>
+
+    <!-- Ticket médio -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+      <div style="background:#1e293b;border-radius:8px;padding:10px;">
+        <div style="font-size:9px;color:#64748b;text-transform:uppercase;">Ticket médio / agendamento</div>
+        <div style="font-size:18px;font-weight:bold;color:#e2e8f0;margin:3px 0;">R$ 84,90</div>
+        <div style="font-size:9px;color:#22c55e;">↑ +R$6 vs. fev</div>
+      </div>
+      <div style="background:#1e293b;border-radius:8px;padding:10px;">
+        <div style="font-size:9px;color:#64748b;text-transform:uppercase;">Receita média / dia</div>
+        <div style="font-size:18px;font-weight:bold;color:#e2e8f0;margin:3px 0;">R$ 415</div>
+        <div style="font-size:9px;color:#22c55e;">↑ +3% vs. fev</div>
+      </div>
+    </div>
+
+    <!-- Gráfico de linha (simulado) -->
+    <div style="background:#1e293b;border-radius:8px;padding:10px;margin-bottom:12px;">
+      <div style="font-size:10px;color:#e2e8f0;margin-bottom:8px;font-weight:600;">Evolução da receita no mês</div>
+      <div style="display:flex;align-items:flex-end;gap:2px;height:40px;">
+        <div style="flex:1;background:#1e40af55;border-radius:2px 2px 0 0;" title="Semana 1" style="height:60%;"></div>
+        <div style="flex:1;background:#1e40af88;" style="height:45%;border-radius:2px 2px 0 0;"></div>
+        <div style="flex:1;background:#1e40afaa;" style="height:70%;border-radius:2px 2px 0 0;"></div>
+        <div style="flex:1;background:#3b82f6;" style="height:90%;border-radius:2px 2px 0 0;"></div>
+      </div>
+      <div style="display:flex;gap:2px;margin-top:2px;">
+        <div style="flex:1;text-align:center;font-size:8px;color:#64748b;">Sem 1</div>
+        <div style="flex:1;text-align:center;font-size:8px;color:#64748b;">Sem 2</div>
+        <div style="flex:1;text-align:center;font-size:8px;color:#64748b;">Sem 3</div>
+        <div style="flex:1;text-align:center;font-size:8px;color:#64748b;">Sem 4</div>
+      </div>
+    </div>
+
+    <!-- Top serviços -->
+    <div style="background:#1e293b;border-radius:8px;padding:10px;">
+      <div style="font-size:10px;color:#e2e8f0;margin-bottom:8px;font-weight:600;">Top serviços por receita</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="font-size:10px;color:#64748b;width:12px;">1</div>
+          <div style="flex:1;font-size:10px;color:#e2e8f0;">Corte + Barba</div>
+          <div style="font-size:10px;color:#94a3b8;">32x</div>
+          <div style="font-size:10px;font-weight:600;color:#22c55e;min-width:55px;text-align:right;">R$ 3.840</div>
+        </div>
+        <div style="height:1px;background:#334155;"></div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="font-size:10px;color:#64748b;width:12px;">2</div>
+          <div style="flex:1;font-size:10px;color:#e2e8f0;">Coloração completa</div>
+          <div style="font-size:10px;color:#94a3b8;">18x</div>
+          <div style="font-size:10px;font-weight:600;color:#22c55e;min-width:55px;text-align:right;">R$ 2.700</div>
+        </div>
+        <div style="height:1px;background:#334155;"></div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="font-size:10px;color:#64748b;width:12px;">3</div>
+          <div style="flex:1;font-size:10px;color:#e2e8f0;">Hidratação</div>
+          <div style="font-size:10px;color:#94a3b8;">24x</div>
+          <div style="font-size:10px;font-weight:600;color:#22c55e;min-width:55px;text-align:right;">R$ 1.920</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== ABA AGENDAMENTOS ===== -->
+<div class="option" data-choice="agendamentos" onclick="toggleSelect(this)" style="border-radius:12px;overflow:hidden;">
+  <div style="background:#0f172a;padding:12px 16px;display:flex;align-items:center;gap:10px;">
+    <div style="font-size:18px;">📅</div>
+    <div>
+      <div style="color:#e2e8f0;font-weight:700;font-size:13px;">Aba Agendamentos</div>
+      <div style="color:#64748b;font-size:10px;">Ocupação, horários de pico e qualidade operacional</div>
+    </div>
+  </div>
+  <div style="background:#0f172a;padding:0 16px 16px;font-family:system-ui;font-size:11px;color:#94a3b8;">
+
+    <!-- KPIs operacionais -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+      <div style="background:#1e293b;border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:9px;color:#64748b;">Total</div>
+        <div style="font-size:20px;font-weight:bold;color:#e2e8f0;">147</div>
+        <div style="font-size:9px;color:#22c55e;">↑ +5%</div>
+      </div>
+      <div style="background:#1e293b;border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:9px;color:#64748b;">Cancelamentos</div>
+        <div style="font-size:20px;font-weight:bold;color:#ef4444;">14%</div>
+        <div style="font-size:9px;color:#ef4444;">↑ +4%</div>
+      </div>
+      <div style="background:#1e293b;border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:9px;color:#64748b;">No-show</div>
+        <div style="font-size:20px;font-weight:bold;color:#f59e0b;">6%</div>
+        <div style="font-size:9px;color:#22c55e;">↓ -1%</div>
+      </div>
+    </div>
+
+    <!-- Ocupação -->
+    <div style="background:#1e293b;border-radius:8px;padding:10px;margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <div style="font-size:10px;color:#e2e8f0;font-weight:600;">Taxa de Ocupação</div>
+        <div style="font-size:14px;font-weight:bold;color:#f59e0b;">68% <span style="font-size:9px;color:#ef4444;">↓ -2%</span></div>
+      </div>
+      <div style="background:#334155;border-radius:4px;height:8px;overflow:hidden;">
+        <div style="background:linear-gradient(90deg,#f59e0b,#fbbf24);width:68%;height:100%;border-radius:4px;"></div>
+      </div>
+      <div style="font-size:9px;color:#64748b;margin-top:4px;">203 slots disponíveis → 138 ocupados</div>
+    </div>
+
+    <!-- Status breakdown -->
+    <div style="background:#1e293b;border-radius:8px;padding:10px;margin-bottom:12px;">
+      <div style="font-size:10px;color:#e2e8f0;font-weight:600;margin-bottom:8px;">Distribuição por status</div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:60px;font-size:9px;color:#64748b;">Concluído</div>
+          <div style="flex:1;background:#334155;border-radius:2px;height:12px;overflow:hidden;">
+            <div style="background:#22c55e;width:72%;height:100%;"></div>
+          </div>
+          <div style="font-size:9px;color:#e2e8f0;min-width:30px;text-align:right;">106</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:60px;font-size:9px;color:#64748b;">Confirmado</div>
+          <div style="flex:1;background:#334155;border-radius:2px;height:12px;overflow:hidden;">
+            <div style="background:#60a5fa;width:15%;height:100%;"></div>
+          </div>
+          <div style="font-size:9px;color:#e2e8f0;min-width:30px;text-align:right;">22</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:60px;font-size:9px;color:#64748b;">Cancelado</div>
+          <div style="flex:1;background:#334155;border-radius:2px;height:12px;overflow:hidden;">
+            <div style="background:#ef4444;width:14%;height:100%;"></div>
+          </div>
+          <div style="font-size:9px;color:#e2e8f0;min-width:30px;text-align:right;">21</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Horários de pico + dias da semana -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div style="background:#1e293b;border-radius:8px;padding:10px;">
+        <div style="font-size:10px;color:#e2e8f0;font-weight:600;margin-bottom:8px;">Horários de pico</div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:9px;color:#a78bfa;">🔥 09h–10h</div>
+            <div style="font-size:9px;color:#e2e8f0;font-weight:600;">38 agend.</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:9px;color:#60a5fa;">14h–15h</div>
+            <div style="font-size:9px;color:#e2e8f0;">29 agend.</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:9px;color:#60a5fa;">11h–12h</div>
+            <div style="font-size:9px;color:#e2e8f0;">24 agend.</div>
+          </div>
+        </div>
+      </div>
+      <div style="background:#1e293b;border-radius:8px;padding:10px;">
+        <div style="font-size:10px;color:#e2e8f0;font-weight:600;margin-bottom:8px;">Dias mais movimentados</div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:9px;color:#a78bfa;">🔥 Sexta</div>
+            <div style="font-size:9px;color:#e2e8f0;font-weight:600;">34 agend.</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:9px;color:#60a5fa;">Sábado</div>
+            <div style="font-size:9px;color:#e2e8f0;">31 agend.</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:9px;color:#64748b;">Segunda</div>
+            <div style="font-size:9px;color:#e2e8f0;">8 agend.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== ABA CLIENTES ===== -->
+<div class="option" data-choice="clientes" onclick="toggleSelect(this)" style="border-radius:12px;overflow:hidden;">
+  <div style="background:#0f172a;padding:12px 16px;display:flex;align-items:center;gap:10px;">
+    <div style="font-size:18px;">👥</div>
+    <div>
+      <div style="color:#e2e8f0;font-weight:700;font-size:13px;">Aba Clientes</div>
+      <div style="color:#64748b;font-size:10px;">Fidelização, retenção e oportunidades de reativação</div>
+    </div>
+  </div>
+  <div style="background:#0f172a;padding:0 16px 16px;font-family:system-ui;font-size:11px;color:#94a3b8;">
+
+    <!-- Novos vs recorrentes -->
+    <div style="background:#1e293b;border-radius:8px;padding:10px;margin-bottom:12px;">
+      <div style="font-size:10px;color:#e2e8f0;font-weight:600;margin-bottom:8px;">Novos vs. Recorrentes</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div style="flex:1;">
+          <div style="display:flex;height:16px;border-radius:4px;overflow:hidden;">
+            <div style="background:#a78bfa;width:38%;" title="Novos"></div>
+            <div style="background:#22c55e;width:62%;" title="Recorrentes"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:4px;">
+            <div style="font-size:9px;color:#a78bfa;">■ 43 novos (38%)</div>
+            <div style="font-size:9px;color:#22c55e;">■ 71 recorrentes (62%)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPIs de clientes -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+      <div style="background:#1e293b;border-radius:8px;padding:10px;">
+        <div style="font-size:9px;color:#64748b;text-transform:uppercase;">Taxa de retorno</div>
+        <div style="font-size:20px;font-weight:bold;color:#a78bfa;margin:3px 0;">71%</div>
+        <div style="font-size:9px;color:#22c55e;">↑ +5% vs. fev</div>
+      </div>
+      <div style="background:#1e293b;border-radius:8px;padding:10px;">
+        <div style="font-size:9px;color:#64748b;text-transform:uppercase;">Frequência média</div>
+        <div style="font-size:20px;font-weight:bold;color:#60a5fa;margin:3px 0;">28 dias</div>
+        <div style="font-size:9px;color:#22c55e;">↓ -3 dias vs. fev</div>
+      </div>
+      <div style="background:#1e293b;border-radius:8px;padding:10px;">
+        <div style="font-size:9px;color:#64748b;text-transform:uppercase;">Ticket médio / cliente</div>
+        <div style="font-size:20px;font-weight:bold;color:#22c55e;margin:3px 0;">R$ 109</div>
+        <div style="font-size:9px;color:#22c55e;">↑ +R$12 vs. fev</div>
+      </div>
+      <div style="background:#1e293b;border-radius:8px;padding:10px;">
+        <div style="font-size:9px;color:#64748b;text-transform:uppercase;">Clientes ativos</div>
+        <div style="font-size:20px;font-weight:bold;color:#e2e8f0;margin:3px 0;">114</div>
+        <div style="font-size:9px;color:#22c55e;">↑ +8 vs. fev</div>
+      </div>
+    </div>
+
+    <!-- Clientes em risco -->
+    <div style="background:#1e293b;border-radius:8px;padding:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="font-size:10px;color:#e2e8f0;font-weight:600;">😴 Clientes para reativar</div>
+        <div style="background:#7f1d1d;color:#fca5a5;padding:2px 8px;border-radius:10px;font-size:9px;">18 clientes</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;background:#0f172a;border-radius:6px;padding:6px 8px;">
+          <div>
+            <div style="font-size:10px;color:#e2e8f0;">Ana Costa</div>
+            <div style="font-size:9px;color:#64748b;">Última visita: 23 Jan · Coloração</div>
+          </div>
+          <div style="font-size:9px;color:#ef4444;font-weight:600;">89 dias</div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;background:#0f172a;border-radius:6px;padding:6px 8px;">
+          <div>
+            <div style="font-size:10px;color:#e2e8f0;">Bruno Mendes</div>
+            <div style="font-size:9px;color:#64748b;">Última visita: 28 Jan · Corte</div>
+          </div>
+          <div style="font-size:9px;color:#f59e0b;font-weight:600;">63 dias</div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;background:#0f172a;border-radius:6px;padding:6px 8px;opacity:0.5;">
+          <div style="font-size:9px;color:#64748b;">+ 16 clientes inativos...</div>
+          <div style="font-size:9px;color:#60a5fa;">Ver todos →</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== ABA EQUIPE ===== -->
+<div class="option" data-choice="equipe" onclick="toggleSelect(this)" style="border-radius:12px;overflow:hidden;">
+  <div style="background:#0f172a;padding:12px 16px;display:flex;align-items:center;gap:10px;">
+    <div style="font-size:18px;">👤</div>
+    <div>
+      <div style="color:#e2e8f0;font-weight:700;font-size:13px;">Aba Equipe <span style="background:#1e293b;color:#94a3b8;padding:2px 6px;border-radius:4px;font-size:9px;margin-left:4px;">Secundário</span></div>
+      <div style="color:#64748b;font-size:10px;">Performance individual de cada profissional</div>
+    </div>
+  </div>
+  <div style="background:#0f172a;padding:0 16px 16px;font-family:system-ui;font-size:11px;color:#94a3b8;">
+
+    <!-- Profissional cards -->
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div style="background:#1e293b;border-radius:8px;padding:10px;display:flex;align-items:center;gap:12px;">
+        <div style="width:36px;height:36px;border-radius:50%;background:#3b82f6;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:13px;flex-shrink:0;">MR</div>
+        <div style="flex:1;">
+          <div style="font-size:11px;color:#e2e8f0;font-weight:600;">Marina Rodrigues</div>
+          <div style="font-size:9px;color:#64748b;">Cabeleireira Sênior</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px;color:#22c55e;font-weight:bold;">R$ 4.920</div>
+          <div style="font-size:9px;color:#94a3b8;">58 agend. · 94% concluídos</div>
+        </div>
+      </div>
+      <div style="background:#1e293b;border-radius:8px;padding:10px;display:flex;align-items:center;gap:12px;">
+        <div style="width:36px;height:36px;border-radius:50%;background:#8b5cf6;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:13px;flex-shrink:0;">JL</div>
+        <div style="flex:1;">
+          <div style="font-size:11px;color:#e2e8f0;font-weight:600;">João Lima</div>
+          <div style="font-size:9px;color:#64748b;">Barbeiro</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px;color:#22c55e;font-weight:bold;">R$ 3.840</div>
+          <div style="font-size:9px;color:#94a3b8;">48 agend. · 88% concluídos</div>
+        </div>
+      </div>
+      <div style="background:#1e293b;border-radius:8px;padding:10px;display:flex;align-items:center;gap:12px;">
+        <div style="width:36px;height:36px;border-radius:50%;background:#f59e0b;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:13px;flex-shrink:0;">CS</div>
+        <div style="flex:1;">
+          <div style="font-size:11px;color:#e2e8f0;font-weight:600;">Carla Souza</div>
+          <div style="font-size:9px;color:#64748b;">Colorista</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px;color:#22c55e;font-weight:bold;">R$ 3.720</div>
+          <div style="font-size:9px;color:#94a3b8;">41 agend. · 91% concluídos</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div>
+
+<p class="subtitle" style="margin-top:20px;text-align:center;">Clique nas abas que quer manter. Alguma que não faz sentido? Algo faltando? Me diga no terminal.</p>

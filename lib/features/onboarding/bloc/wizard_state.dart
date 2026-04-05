@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-enum WizardStep { horarios, servicos, equipe }
+enum WizardStep { negocios, horarios, servicos, equipe }
 
 class WizardStepStatus extends Equatable {
   final WizardStep step;

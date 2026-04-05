@@ -12,7 +12,7 @@ class ReportsFinancialTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rev = model.revenue;
-    if (rev.realized == 0 && rev.confirmed == 0) {
+    if (rev.realized == 0 && rev.confirmed == 0 && rev.previousRealized == 0 && rev.previousConfirmed == 0) {
       return const Center(
           child: Text('Sem receita registrada neste período'));
     }

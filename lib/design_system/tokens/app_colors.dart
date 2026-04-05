@@ -9,7 +9,7 @@ abstract final class AppColors {
   static const Color kEspresso          = Color(0xFF1A1512);
   static const Color kBark              = Color(0xFF6B5E52);
   static const Color kTaupe             = Color(0xFFA89B8C); // same value as kAsh — intentional, palettes coincide here
-  static const Color kParchment         = Color(0xFFE8E3DC);
+  static const Color kParchment         = Color(0xFFDDD7CE);
   static const Color kParchmentDeep     = Color(0xFFD4CCC4);
   static const Color kCharcoalContainer = Color(0xFFEDEAE7);
   static const Color kWarmNeutral       = Color(0xFFF5F2EE);

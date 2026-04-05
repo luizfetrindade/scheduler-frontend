@@ -17,3 +17,8 @@ class BusinessSelected extends BusinessEvent {
   @override
   List<Object?> get props => [business];
 }
+
+/// Emitted on logout to wipe loaded data from memory.
+class BusinessSessionCleared extends BusinessEvent {
+  const BusinessSessionCleared();
+}

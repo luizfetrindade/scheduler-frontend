@@ -53,7 +53,15 @@ class AuthTotpSetupReady extends AuthState {
     required this.tempToken,
   });
   @override
-  List<Object?> get props => [qrCodeUrl, secret, tempToken];
+  // secret and tempToken excluded — Equatable serialises props in toString()
+  // and exposes them to BlocObservers (crash reporters, analytics SDKs).
+  // Equality on qrCodeUrl alone is sufficient: only one setup state is ever
+  // emitted per registration flow and qrCodeUrls are unique per user session.
+  List<Object?> get props => [qrCodeUrl];
+
+  @override
+  String toString() =>
+      'AuthTotpSetupReady(qrCodeUrl: $qrCodeUrl, secret: [REDACTED], tempToken: [REDACTED])';
 }
 
 /// check-email flow: email found, backend returned which auth method to use.

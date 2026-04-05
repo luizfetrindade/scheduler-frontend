@@ -25,6 +25,13 @@ void main() {
       expect(client.email, isNull);
     });
 
+    test('fromJson handles null phone (client created via appointment without phone)', () {
+      final json = {'id': 'c-3', 'name': 'Carlos', 'phone': null, 'email': null};
+      final client = ClientModel.fromJson(json);
+      expect(client.phone, isNull);
+      expect(client.name, 'Carlos');
+    });
+
     test('copyWith returns new instance with updated fields', () {
       final client = ClientModel.fromJson(fullJson);
       final updated = client.copyWith(name: 'Ana S.', phone: '11000000001');

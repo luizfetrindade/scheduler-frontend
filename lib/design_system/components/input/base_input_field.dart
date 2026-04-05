@@ -20,6 +20,7 @@ class BaseInputField extends StatefulWidget {
   final bool isDisabled;
   final TextInputType keyboardType;
   final List<TextInputFormatter>? inputFormatters;
+  final ValueChanged<String>? onChanged;
 
   const BaseInputField({
     super.key,
@@ -33,6 +34,7 @@ class BaseInputField extends StatefulWidget {
     this.isDisabled = false,
     this.keyboardType = TextInputType.text,
     this.inputFormatters,
+    this.onChanged,
   });
 
   @override
@@ -66,6 +68,7 @@ class _BaseInputFieldState extends State<BaseInputField> {
           obscureText: widget.isPassword && _obscureText,
           keyboardType: widget.keyboardType,
           inputFormatters: widget.inputFormatters,
+          onChanged: widget.onChanged,
           style: AppTypography.bodyMd.copyWith(color: context.appColors.textPrimary),
           decoration: InputDecoration(
             hintText: widget.hint,
