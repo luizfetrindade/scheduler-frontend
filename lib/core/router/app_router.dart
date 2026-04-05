@@ -24,6 +24,24 @@ import 'package:scheduler_frontend/core/router/uuid_validator.dart';
 import 'package:scheduler_frontend/features/onboarding/presentation/wizard_page.dart';
 import 'package:scheduler_frontend/features/settings/presentation/settings_page.dart';
 
+/// Extracts a one-time token from a deep-link or web URI.
+///
+/// Preference order (most secure first):
+/// 1. URL fragment (`#token=VALUE`) — fragment is never sent to servers and
+///    never appears in Referer headers, preventing leakage via CDN/proxy logs.
+/// 2. Query parameter (`?token=VALUE`) — fallback for existing email links
+///    that the backend already sent with the old format.
+///
+/// Returns an empty string when no token is found.
+String extractToken(Uri uri) {
+  if (uri.fragment.isNotEmpty) {
+    final fragmentParams = Uri.splitQueryString(uri.fragment);
+    final token = fragmentParams['token'];
+    if (token != null && token.isNotEmpty) return token;
+  }
+  return uri.queryParameters['token'] ?? '';
+}
+
 /// Pure redirect logic — testable without a BuildContext.
 String? computeRedirect({required bool isLoggedIn, required String location}) {
   const publicPaths = [
@@ -53,13 +71,30 @@ GoRouter createAppRouter(AuthBloc authBloc) => GoRouter(
         ),
         GoRoute(
           path: '/login/totp',
-          builder: (_, state) =>
-              TotpLoginPage(email: state.extra as String? ?? ''),
+          builder: (_, state) {
+            final extra = state.extra;
+            if (extra is ({String email, bool rememberMe})) {
+              return TotpLoginPage(
+                email: extra.email,
+                rememberMe: extra.rememberMe,
+              );
+            }
+            // Fallback — deep-link or reload lost the extra. Send user back to login.
+            return const TotpLoginPage(email: '', rememberMe: false);
+          },
         ),
         GoRoute(
           path: '/login/password',
-          builder: (_, state) =>
-              PasswordLoginPage(email: state.extra as String? ?? ''),
+          builder: (_, state) {
+            final extra = state.extra;
+            if (extra is ({String email, bool rememberMe})) {
+              return PasswordLoginPage(
+                email: extra.email,
+                rememberMe: extra.rememberMe,
+              );
+            }
+            return const PasswordLoginPage(email: '', rememberMe: false);
+          },
         ),
         GoRoute(
           path: AppRoutes.register,
@@ -71,17 +106,13 @@ GoRouter createAppRouter(AuthBloc authBloc) => GoRouter(
         ),
         GoRoute(
           path: '/reset-password',
-          builder: (_, state) {
-            final token = state.uri.queryParameters['token'] ?? '';
-            return ResetPasswordPage(token: token);
-          },
+          builder: (_, state) =>
+              ResetPasswordPage(token: extractToken(state.uri)),
         ),
         GoRoute(
           path: '/accept-invite',
-          builder: (_, state) {
-            final token = state.uri.queryParameters['token'] ?? '';
-            return AcceptInvitePage(token: token);
-          },
+          builder: (_, state) =>
+              AcceptInvitePage(token: extractToken(state.uri)),
         ),
         GoRoute(
           path: AppRoutes.onboarding,

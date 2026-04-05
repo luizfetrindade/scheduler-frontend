@@ -9,8 +9,13 @@ import 'package:scheduler_frontend/design_system/base_design_system.dart';
 
 class TotpLoginPage extends StatefulWidget {
   final String email;
+  final bool rememberMe;
 
-  const TotpLoginPage({super.key, required this.email});
+  const TotpLoginPage({
+    super.key,
+    required this.email,
+    required this.rememberMe,
+  });
 
   @override
   State<TotpLoginPage> createState() => _TotpLoginPageState();
@@ -29,7 +34,11 @@ class _TotpLoginPageState extends State<TotpLoginPage> {
 
   void _submitTotp(String code) {
     context.read<AuthBloc>().add(
-          AuthTotpLoginSubmitted(email: widget.email, code: code),
+          AuthTotpLoginSubmitted(
+            email: widget.email,
+            code: code,
+            rememberMe: widget.rememberMe,
+          ),
         );
   }
 

@@ -24,7 +24,7 @@ Widget _buildPage(MockAuthBloc bloc, {String email = 'user@example.com'}) {
     locale: const Locale('pt'),
     home: BlocProvider<AuthBloc>.value(
       value: bloc,
-      child: PasswordLoginPage(email: email),
+      child: PasswordLoginPage(email: email, rememberMe: false),
     ),
   );
 }
@@ -39,6 +39,7 @@ void main() {
       const AuthPasswordLoginRequested(
         email: 'test@test.com',
         password: 'secret',
+        rememberMe: false,
       ),
     );
   });
@@ -66,6 +67,7 @@ void main() {
         const AuthPasswordLoginRequested(
           email: 'user@example.com',
           password: 'mypassword123',
+          rememberMe: false,
         ),
       ),
     ).called(1);

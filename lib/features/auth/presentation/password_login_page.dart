@@ -8,8 +8,13 @@ import 'package:scheduler_frontend/design_system/base_design_system.dart';
 
 class PasswordLoginPage extends StatefulWidget {
   final String email;
+  final bool rememberMe;
 
-  const PasswordLoginPage({super.key, required this.email});
+  const PasswordLoginPage({
+    super.key,
+    required this.email,
+    required this.rememberMe,
+  });
 
   @override
   State<PasswordLoginPage> createState() => _PasswordLoginPageState();
@@ -33,6 +38,7 @@ class _PasswordLoginPageState extends State<PasswordLoginPage> {
           AuthPasswordLoginRequested(
             email: widget.email,
             password: password,
+            rememberMe: widget.rememberMe,
           ),
         );
   }
