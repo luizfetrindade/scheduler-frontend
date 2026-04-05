@@ -63,10 +63,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final loginResult = await _repository.loginWithTotp(
       email: event.email,
       code: event.code,
+      rememberMe: event.rememberMe,
     );
     switch (loginResult) {
       case Success(:final data):
         await _repository.saveTokens(data.accessToken);
+        await _persistRememberMe(event.email, event.rememberMe);
         final meResult = await _repository.getMe();
         switch (meResult) {
           case Success(:final data):
@@ -131,7 +133,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthLogoutRequested event,
     Emitter<AuthState> emit,
   ) async {
-    await _repository.clearTokens();
+    await _repository.logout();
     emit(const AuthUnauthenticated());
   }
 
@@ -164,10 +166,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final loginResult = await _repository.loginWithPassword(
       email: event.email,
       password: event.password,
+      rememberMe: event.rememberMe,
     );
     switch (loginResult) {
       case Success(:final data):
         await _repository.saveTokens(data.accessToken);
+        await _persistRememberMe(event.email, event.rememberMe);
         final meResult = await _repository.getMe();
         switch (meResult) {
           case Success(:final data):
@@ -227,6 +231,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(const AuthInviteAccepted());
       case HttpFailure(:final failure):
         emit(AuthError(_message(failure)));
+    }
+  }
+
+  /// Persists the "Lembrar de mim" choice after a successful login.
+  /// Called exactly once per successful login, never on failure.
+  Future<void> _persistRememberMe(String email, bool rememberMe) async {
+    if (rememberMe) {
+      await _repository.saveRememberMe(email);
+    } else {
+      await _repository.clearRememberMe();
     }
   }
 

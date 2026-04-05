@@ -98,15 +98,20 @@ void main() {
     blocTest<AuthBloc, AuthState>(
       'emits [Loading, Authenticated] on valid TOTP code',
       build: () {
-        when(() => mockRepo.loginWithTotp(email: 'j@j.com', code: '123456'))
-            .thenAnswer((_) async => const Success((accessToken: 'acc')));
+        when(() => mockRepo.loginWithTotp(
+              email: 'j@j.com',
+              code: '123456',
+              rememberMe: false,
+            )).thenAnswer((_) async => const Success((accessToken: 'acc')));
         when(() => mockRepo.saveTokens('acc')).thenAnswer((_) async {});
+        when(() => mockRepo.clearRememberMe()).thenAnswer((_) async {});
         when(() => mockRepo.getMe())
             .thenAnswer((_) async => const Success(_user));
         return AuthBloc(mockRepo);
       },
       act: (bloc) => bloc.add(
-          const AuthTotpLoginSubmitted(email: 'j@j.com', code: '123456')),
+          const AuthTotpLoginSubmitted(
+              email: 'j@j.com', code: '123456', rememberMe: false)),
       expect: () => [const AuthLoading(), const AuthAuthenticated(_user)],
     );
 
@@ -116,12 +121,14 @@ void main() {
         when(() => mockRepo.loginWithTotp(
               email: any(named: 'email'),
               code: any(named: 'code'),
+              rememberMe: any(named: 'rememberMe'),
             )).thenAnswer((_) async =>
             const HttpFailure(UnauthorizedFailure('invalid code')));
         return AuthBloc(mockRepo);
       },
       act: (bloc) => bloc.add(
-          const AuthTotpLoginSubmitted(email: 'j@j.com', code: '000000')),
+          const AuthTotpLoginSubmitted(
+              email: 'j@j.com', code: '000000', rememberMe: false)),
       expect: () => [
         const AuthLoading(),
         const AuthError('Código inválido ou expirado. Tente novamente.'),
@@ -134,16 +141,101 @@ void main() {
         when(() => mockRepo.loginWithTotp(
               email: any(named: 'email'),
               code: any(named: 'code'),
+              rememberMe: any(named: 'rememberMe'),
             )).thenAnswer((_) async =>
             const HttpFailure(NetworkFailure('no internet')));
         return AuthBloc(mockRepo);
       },
       act: (bloc) => bloc.add(
-          const AuthTotpLoginSubmitted(email: 'j@j.com', code: '123456')),
+          const AuthTotpLoginSubmitted(
+              email: 'j@j.com', code: '123456', rememberMe: false)),
       expect: () => [
         const AuthLoading(),
         const AuthError('Sem conexão com a internet'),
       ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'saves remember-me on successful TOTP login when rememberMe=true',
+      setUp: () {
+        when(() => mockRepo.loginWithTotp(
+              email: 'j@j.com',
+              code: '123456',
+              rememberMe: true,
+            )).thenAnswer(
+          (_) async => const Success((accessToken: 'a')),
+        );
+        when(() => mockRepo.saveTokens(any())).thenAnswer((_) async {});
+        when(() => mockRepo.getMe())
+            .thenAnswer((_) async => const Success(_user));
+        when(() => mockRepo.saveRememberMe(any())).thenAnswer((_) async {});
+      },
+      build: () => AuthBloc(mockRepo),
+      act: (bloc) => bloc.add(const AuthTotpLoginSubmitted(
+        email: 'j@j.com',
+        code: '123456',
+        rememberMe: true,
+      )),
+      expect: () => [const AuthLoading(), const AuthAuthenticated(_user)],
+      verify: (_) {
+        verify(() => mockRepo.saveRememberMe('j@j.com')).called(1);
+        verifyNever(() => mockRepo.clearRememberMe());
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'clears remember-me on successful TOTP login when rememberMe=false',
+      setUp: () {
+        when(() => mockRepo.loginWithTotp(
+              email: 'j@j.com',
+              code: '123456',
+              rememberMe: false,
+            )).thenAnswer(
+          (_) async => const Success((accessToken: 'a')),
+        );
+        when(() => mockRepo.saveTokens(any())).thenAnswer((_) async {});
+        when(() => mockRepo.getMe())
+            .thenAnswer((_) async => const Success(_user));
+        when(() => mockRepo.clearRememberMe()).thenAnswer((_) async {});
+      },
+      build: () => AuthBloc(mockRepo),
+      act: (bloc) => bloc.add(const AuthTotpLoginSubmitted(
+        email: 'j@j.com',
+        code: '123456',
+        rememberMe: false,
+      )),
+      expect: () => [const AuthLoading(), const AuthAuthenticated(_user)],
+      verify: (_) {
+        verify(() => mockRepo.clearRememberMe()).called(1);
+        verifyNever(() => mockRepo.saveRememberMe(any()));
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'does not touch remember-me when TOTP login fails',
+      setUp: () {
+        when(() => mockRepo.loginWithTotp(
+              email: 'j@j.com',
+              code: '123456',
+              rememberMe: true,
+            )).thenAnswer(
+          (_) async => const HttpFailure(UnauthorizedFailure('bad code')),
+        );
+      },
+      build: () => AuthBloc(mockRepo),
+      act: (bloc) => bloc.add(const AuthTotpLoginSubmitted(
+        email: 'j@j.com',
+        code: '123456',
+        rememberMe: true,
+      )),
+      expect: () => [
+        const AuthLoading(),
+        const AuthError('Código inválido ou expirado. Tente novamente.'),
+      ],
+      verify: (_) {
+        verifyNever(() => mockRepo.saveRememberMe(any()));
+        verifyNever(() => mockRepo.clearRememberMe());
+      },
     );
   });
 
@@ -260,14 +352,14 @@ void main() {
 
   group('AuthBloc — AuthLogoutRequested', () {
     blocTest<AuthBloc, AuthState>(
-      'emits [Unauthenticated] and clears tokens',
+      'calls logout() and emits [Unauthenticated]',
       build: () {
-        when(() => mockRepo.clearTokens()).thenAnswer((_) async {});
+        when(() => mockRepo.logout()).thenAnswer((_) async {});
         return AuthBloc(mockRepo);
       },
       act: (bloc) => bloc.add(const AuthLogoutRequested()),
       expect: () => [const AuthUnauthenticated()],
-      verify: (_) => verify(() => mockRepo.clearTokens()).called(1),
+      verify: (_) => verify(() => mockRepo.logout()).called(1),
     );
   });
 
@@ -333,14 +425,19 @@ void main() {
         when(() => mockRepo.loginWithPassword(
               email: 'member@test.com',
               password: 'correctPass',
+              rememberMe: false,
             )).thenAnswer((_) async => const Success((accessToken: 'acc')));
         when(() => mockRepo.saveTokens('acc')).thenAnswer((_) async {});
+        when(() => mockRepo.clearRememberMe()).thenAnswer((_) async {});
         when(() => mockRepo.getMe())
             .thenAnswer((_) async => const Success(_user));
         return AuthBloc(mockRepo);
       },
       act: (bloc) => bloc.add(
-          const AuthPasswordLoginRequested(email: 'member@test.com', password: 'correctPass')),
+          const AuthPasswordLoginRequested(
+              email: 'member@test.com',
+              password: 'correctPass',
+              rememberMe: false)),
       expect: () => [const AuthLoading(), const AuthAuthenticated(_user)],
     );
 
@@ -350,16 +447,104 @@ void main() {
         when(() => mockRepo.loginWithPassword(
               email: any(named: 'email'),
               password: any(named: 'password'),
+              rememberMe: any(named: 'rememberMe'),
             )).thenAnswer((_) async =>
             const HttpFailure(UnauthorizedFailure('invalid credentials')));
         return AuthBloc(mockRepo);
       },
       act: (bloc) => bloc.add(
-          const AuthPasswordLoginRequested(email: 'member@test.com', password: 'wrongPass')),
+          const AuthPasswordLoginRequested(
+              email: 'member@test.com',
+              password: 'wrongPass',
+              rememberMe: false)),
       expect: () => [
         const AuthLoading(),
         const AuthError('Código inválido ou expirado. Tente novamente.'),
       ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'saves remember-me on successful password login when rememberMe=true',
+      setUp: () {
+        when(() => mockRepo.loginWithPassword(
+              email: 'j@j.com',
+              password: 'pw',
+              rememberMe: true,
+            )).thenAnswer(
+          (_) async => const Success((accessToken: 'a')),
+        );
+        when(() => mockRepo.saveTokens(any())).thenAnswer((_) async {});
+        when(() => mockRepo.getMe())
+            .thenAnswer((_) async => const Success(_user));
+        when(() => mockRepo.saveRememberMe(any())).thenAnswer((_) async {});
+      },
+      build: () => AuthBloc(mockRepo),
+      act: (bloc) => bloc.add(const AuthPasswordLoginRequested(
+        email: 'j@j.com',
+        password: 'pw',
+        rememberMe: true,
+      )),
+      expect: () => [const AuthLoading(), const AuthAuthenticated(_user)],
+      verify: (_) {
+        verify(() => mockRepo.saveRememberMe('j@j.com')).called(1);
+        verifyNever(() => mockRepo.clearRememberMe());
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'clears remember-me on successful password login when rememberMe=false',
+      setUp: () {
+        when(() => mockRepo.loginWithPassword(
+              email: 'j@j.com',
+              password: 'pw',
+              rememberMe: false,
+            )).thenAnswer(
+          (_) async => const Success((accessToken: 'a')),
+        );
+        when(() => mockRepo.saveTokens(any())).thenAnswer((_) async {});
+        when(() => mockRepo.getMe())
+            .thenAnswer((_) async => const Success(_user));
+        when(() => mockRepo.clearRememberMe()).thenAnswer((_) async {});
+      },
+      build: () => AuthBloc(mockRepo),
+      act: (bloc) => bloc.add(const AuthPasswordLoginRequested(
+        email: 'j@j.com',
+        password: 'pw',
+        rememberMe: false,
+      )),
+      expect: () => [const AuthLoading(), const AuthAuthenticated(_user)],
+      verify: (_) {
+        verify(() => mockRepo.clearRememberMe()).called(1);
+        verifyNever(() => mockRepo.saveRememberMe(any()));
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'does not touch remember-me when password login fails',
+      setUp: () {
+        when(() => mockRepo.loginWithPassword(
+              email: 'j@j.com',
+              password: 'pw',
+              rememberMe: true,
+            )).thenAnswer(
+          (_) async =>
+              const HttpFailure(UnauthorizedFailure('bad credentials')),
+        );
+      },
+      build: () => AuthBloc(mockRepo),
+      act: (bloc) => bloc.add(const AuthPasswordLoginRequested(
+        email: 'j@j.com',
+        password: 'pw',
+        rememberMe: true,
+      )),
+      expect: () => [
+        const AuthLoading(),
+        const AuthError('Código inválido ou expirado. Tente novamente.'),
+      ],
+      verify: (_) {
+        verifyNever(() => mockRepo.saveRememberMe(any()));
+        verifyNever(() => mockRepo.clearRememberMe());
+      },
     );
   });
 

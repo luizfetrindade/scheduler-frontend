@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_http/flutter_http.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:scheduler_frontend/core/auth/auth_bloc.dart';
 import 'package:scheduler_frontend/core/auth/auth_event.dart';
 import 'package:scheduler_frontend/core/auth/auth_repository.dart';
+import 'package:scheduler_frontend/core/auth/remember_me_storage.dart';
 import 'package:scheduler_frontend/core/auth/auth_state.dart';
 import 'package:scheduler_frontend/core/cache/hive_cache_service.dart';
 import 'package:scheduler_frontend/core/cache/preferences_service.dart';
@@ -16,7 +18,9 @@ import 'package:scheduler_frontend/core/theme/theme_cubit.dart';
 import 'package:scheduler_frontend/core/theme/theme_state.dart';
 import 'package:scheduler_frontend/design_system/tokens/app_theme.dart';
 import 'package:scheduler_frontend/features/appointments/bloc/appointments_bloc.dart';
+import 'package:scheduler_frontend/features/appointments/bloc/appointments_event.dart';
 import 'package:scheduler_frontend/features/appointments/data/appointment_repository.dart';
+import 'package:scheduler_frontend/features/appointments/presentation/attendance_prompt_watcher.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_bloc.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_event.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_state.dart';
@@ -34,8 +38,6 @@ import 'package:scheduler_frontend/features/professionals/bloc/professionals_blo
 import 'package:scheduler_frontend/features/professionals/bloc/professionals_event.dart';
 import 'package:scheduler_frontend/features/professionals/data/professional_repository.dart';
 import 'package:scheduler_frontend/features/onboarding/bloc/wizard_bloc.dart';
-import 'package:scheduler_frontend/features/onboarding/bloc/wizard_event.dart';
-import 'package:scheduler_frontend/features/onboarding/bloc/wizard_state.dart';
 import 'package:scheduler_frontend/features/professionals/data/professional_roles_repository.dart';
 
 void main() async {
@@ -49,8 +51,8 @@ void main() async {
   final preferences = PreferencesService();
   await preferences.init();
 
-  final apiClient = ApiClient.create();
-  final authRepo = AuthRepository(apiClient);
+  final apiClient = await ApiClient.create();
+  final authRepo = AuthRepository(apiClient, RememberMeStorage());
   final businessRepo = BusinessRepository(apiClient);
   final appointmentRepo = AppointmentRepository(apiClient);
   final serviceRepo = ServiceRepository(apiClient);
@@ -60,6 +62,10 @@ void main() async {
   final professionalRolesRepo = ProfessionalRolesRepository(apiClient);
 
   final authBloc = AuthBloc(authRepo)..add(const AuthUserFetched());
+
+  // When the access token expires and the refresh token is also invalid,
+  // automatically log the user out instead of showing "no permission" errors.
+  apiClient.onAuthExpired = () => authBloc.add(const AuthLogoutRequested());
 
   runApp(SchedulerApp(
     authBloc: authBloc,
@@ -116,7 +122,17 @@ class SchedulerApp extends StatelessWidget {
           BlocProvider(create: (_) => ProfessionalsBloc(professionalRepo)),
           BlocProvider(create: (_) => ProfessionalRolesBloc(professionalRolesRepo)),
           BlocProvider(
-            create: (_) => WizardBloc(
+            create: (context) => WizardBloc(
+              createBusiness: (name) async {
+                final result = await businessRepo.createBusiness(name: name);
+                if (result case Success(:final data)) {
+                  context
+                      .read<BusinessBloc>()
+                      .add(const BusinessLoadRequested());
+                  return data.id;
+                }
+                throw (result as HttpFailure).failure;
+              },
               hasServices: (bizId) async {
                 final result = await serviceRepo.getServices(businessId: bizId);
                 return switch (result) {
@@ -144,9 +160,22 @@ class SchedulerApp extends StatelessWidget {
   }
 }
 
-class _AppBody extends StatelessWidget {
+class _AppBody extends StatefulWidget {
   final AuthBloc authBloc;
   const _AppBody({required this.authBloc});
+
+  @override
+  State<_AppBody> createState() => _AppBodyState();
+}
+
+class _AppBodyState extends State<_AppBody> {
+  late final GoRouter _router = createAppRouter(widget.authBloc);
+
+  @override
+  void dispose() {
+    _router.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -160,12 +189,38 @@ class _AppBody extends StatelessWidget {
               }
             },
           ),
+          // HIGH-05 fix: wipe all BLoC state on logout so that a subsequent
+          // login on the same device never sees the previous user's data.
+          BlocListener<AuthBloc, AuthState>(
+            listener: (context, state) {
+              if (state is AuthUnauthenticated) {
+                context.read<BusinessBloc>().add(const BusinessSessionCleared());
+                context.read<AppointmentsBloc>().add(const AppointmentsSessionCleared());
+                context.read<ServicesBloc>().add(const ServicesSessionCleared());
+                context.read<ClientsBloc>().add(const ClientsSessionCleared());
+                context.read<ProfessionalsBloc>().add(const ProfessionalsSessionCleared());
+                context.read<ProfessionalRolesBloc>().add(const ProfessionalRolesSessionCleared());
+              }
+            },
+          ),
           BlocListener<BusinessBloc, BusinessState>(
             listener: (context, state) {
               if (state is BusinessLoaded) {
                 context
                     .read<ServicesBloc>()
                     .add(ServicesLoadRequested(state.active.id));
+              }
+            },
+          ),
+          BlocListener<BusinessBloc, BusinessState>(
+            listener: (context, state) {
+              if (state is BusinessLoaded) {
+                context.read<AppointmentsBloc>().add(
+                      AppointmentsLoadRequested(
+                        slug: state.active.slug,
+                        date: DateTime.now(),
+                      ),
+                    );
               }
             },
           ),
@@ -210,12 +265,15 @@ class _AppBody extends StatelessWidget {
         child: MaterialApp.router(
           title: 'Scheduler',
           debugShowCheckedModeBanner: false,
-          routerConfig: createAppRouter(authBloc),
+          routerConfig: _router,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           themeMode: themeState.themeMode,
           theme: AppTheme.light(),
           darkTheme: AppTheme.dark(),
+          builder: (context, child) => AttendancePromptWatcher(
+            child: child ?? const SizedBox.shrink(),
+          ),
         ),
       ),
     );

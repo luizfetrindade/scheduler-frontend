@@ -23,9 +23,16 @@ class AuthEmailSubmitted extends AuthEvent {
 class AuthTotpLoginSubmitted extends AuthEvent {
   final String email;
   final String code;
-  const AuthTotpLoginSubmitted({required this.email, required this.code});
+  final bool rememberMe;
+  const AuthTotpLoginSubmitted({
+    required this.email,
+    required this.code,
+    required this.rememberMe,
+  });
   @override
-  List<Object?> get props => [email, code];
+  // TOTP code excluded from props — Equatable serialises props in toString(),
+  // which leaks into debug logs and crash reporters.
+  List<Object?> get props => [email, rememberMe];
 }
 
 /// Step 1 of registration: submit profile fields (no password).
@@ -48,7 +55,9 @@ class AuthTotpSetupConfirmed extends AuthEvent {
   final String code;
   const AuthTotpSetupConfirmed({required this.tempToken, required this.code});
   @override
-  List<Object?> get props => [tempToken, code];
+  // tempToken and TOTP code excluded — sensitive credentials must not appear
+  // in Equatable's toString() output (logs, crash reporters).
+  List<Object?> get props => [];
 }
 
 /// Dispatched when the user taps logout.
@@ -68,9 +77,15 @@ class AuthCheckEmailRequested extends AuthEvent {
 class AuthPasswordLoginRequested extends AuthEvent {
   final String email;
   final String password;
-  const AuthPasswordLoginRequested({required this.email, required this.password});
+  final bool rememberMe;
+  const AuthPasswordLoginRequested({
+    required this.email,
+    required this.password,
+    required this.rememberMe,
+  });
   @override
-  List<Object?> get props => [email, password];
+  // Password excluded — must not appear in Equatable's toString() output.
+  List<Object?> get props => [email, rememberMe];
 }
 
 /// Triggers a forgot-password email to be sent.
@@ -87,7 +102,9 @@ class AuthResetPasswordRequested extends AuthEvent {
   final String newPassword;
   const AuthResetPasswordRequested({required this.token, required this.newPassword});
   @override
-  List<Object?> get props => [token, newPassword];
+  // Reset token and new password excluded — sensitive credentials must not
+  // appear in Equatable's toString() output (logs, crash reporters).
+  List<Object?> get props => [];
 }
 
 /// Accepts a staff invite and sets up the account with name + password.
@@ -97,5 +114,7 @@ class AuthAcceptInviteRequested extends AuthEvent {
   final String password;
   const AuthAcceptInviteRequested({required this.token, required this.name, required this.password});
   @override
-  List<Object?> get props => [token, name, password];
+  // Invite token and password excluded — sensitive credentials must not
+  // appear in Equatable's toString() output (logs, crash reporters).
+  List<Object?> get props => [name];
 }

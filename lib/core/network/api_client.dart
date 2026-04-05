@@ -1,9 +1,10 @@
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
-import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
+import 'package:flutter/foundation.dart' show VoidCallback, debugPrint, kIsWeb;
 import 'package:flutter_http/flutter_http.dart';
 import 'package:mutex/mutex.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:scheduler_frontend/core/config/app_config.dart';
 import 'package:scheduler_frontend/core/network/web_token_storage.dart';
 import 'package:scheduler_frontend/features/business/data/business_model.dart';
@@ -39,30 +40,56 @@ class ApiClient {
   final Dio _rawDio;
   final TokenStorage tokenStorage;
 
+  /// The persisted cookie jar used on mobile to store the httpOnly refresh
+  /// token. Null on web (the browser manages cookies natively).
+  /// Exposed so that [clearCookies] can wipe refresh tokens on logout.
+  final CookieJar? _cookieJar;
+
   /// M8 — serialises concurrent token reads so that an expiry check is always
   /// based on the latest stored value, preventing race conditions when multiple
   /// requests fire simultaneously.
   final _tokenMutex = Mutex();
 
-  ApiClient._(this._http, this._rawDio, this.tokenStorage);
+  /// Called when a 401 response cannot be recovered by refreshing the token.
+  /// Typically wired to trigger [AuthLogoutRequested] so the user is redirected
+  /// to the login screen instead of seeing misleading "no permission" errors.
+  VoidCallback? onAuthExpired;
 
-  factory ApiClient.create() {
+  ApiClient._(this._http, this._rawDio, this.tokenStorage, [this._cookieJar]);
+
+  /// Creates a production [ApiClient].
+  ///
+  /// On mobile (iOS/Android) the httpOnly refresh_token cookie is persisted to
+  /// disk via [PersistCookieJar] so that the user stays logged in across app
+  /// restarts. [getApplicationDocumentsDirectory] is called once to obtain a
+  /// stable, app-private directory that survives process kills.
+  ///
+  /// On web the browser manages cookies automatically; no jar is needed.
+  static Future<ApiClient> create() async {
     final ts = kIsWeb ? WebTokenStorage() : TokenStorage();
+    final validatedUrl = AppConfig.validatedApiUrl;
     final http = HttpClient(
-      baseUrl: AppConfig.apiUrl,
+      baseUrl: validatedUrl,
       tokenStorage: ts,
       refreshEndpoint: '/auth/_no_auto_refresh',
     );
     final rawDio = Dio(BaseOptions(
-      baseUrl: AppConfig.apiUrl,
+      baseUrl: validatedUrl,
       contentType: 'application/json',
       // A3 — send cookies (including httpOnly refresh_token) cross-origin on web.
       extra: {'withCredentials': true},
     ));
-    // A3 — on mobile (iOS/Android), persist and send the httpOnly refresh_token
-    // cookie automatically via CookieJar. On web the browser handles this.
     if (!kIsWeb) {
-      rawDio.interceptors.add(CookieManager(CookieJar()));
+      // HIGH-02 fix: PersistCookieJar writes the httpOnly refresh_token to the
+      // app's documents directory so it survives process kills. The in-memory
+      // CookieJar() it replaces lost the cookie on every cold start, forcing
+      // the user to log in again after closing the app.
+      final dir = await getApplicationDocumentsDirectory();
+      final cookieJar = PersistCookieJar(
+        storage: FileStorage('${dir.path}/.cookies/'),
+      );
+      rawDio.interceptors.add(CookieManager(cookieJar));
+      return ApiClient._(http, rawDio, ts, cookieJar);
     }
     return ApiClient._(http, rawDio, ts);
   }
@@ -86,7 +113,9 @@ class ApiClient {
   }
 
   // ---------------------------------------------------------------------------
-  // Public API — mirrors HttpClient but unwraps { data, meta } envelope
+  // Public API — mirrors HttpClient but unwraps { data, meta } envelope.
+  // Every authenticated method is wrapped with [_withRefresh] so that an
+  // expired access token triggers a transparent refresh + retry cycle.
   // ---------------------------------------------------------------------------
 
   Future<Result<T>> get<T>(
@@ -94,11 +123,11 @@ class ApiClient {
     required T Function(Map<String, dynamic>) fromJson,
     Map<String, dynamic>? queryParams,
   }) =>
-      _http.get(
-        path,
-        fromJson: (envelope) => fromJson(_unwrapObject(envelope)),
-        queryParams: queryParams,
-      );
+      _withRefresh(() => _http.get(
+            path,
+            fromJson: (envelope) => fromJson(_unwrapObject(envelope)),
+            queryParams: queryParams,
+          ));
 
   /// Backend returns { "data": [...], "meta": {...} } — NOT a raw array.
   /// flutter_http's getList() expects a raw array, so we use get<List<T>>
@@ -108,40 +137,41 @@ class ApiClient {
     required T Function(Map<String, dynamic>) fromJson,
     Map<String, dynamic>? queryParams,
   }) =>
-      _http.get<List<T>>(
-        path,
-        fromJson: (envelope) {
-          final list = (envelope['data'] as List<dynamic>);
-          return list
-              .map((item) => fromJson(item as Map<String, dynamic>))
-              .toList();
-        },
-        queryParams: queryParams,
-      );
+      _withRefresh(() => _http.get<List<T>>(
+            path,
+            fromJson: (envelope) {
+              final list = (envelope['data'] as List<dynamic>);
+              return list
+                  .map((item) => fromJson(item as Map<String, dynamic>))
+                  .toList();
+            },
+            queryParams: queryParams,
+          ));
 
   /// Fetches the list of businesses for the authenticated user from
   /// `/businesses/mine`. Unwraps the backend's `{ "data": [...] }` envelope.
   Future<Result<List<BusinessModel>>> getBusinessesMine() =>
-      _http.get<List<BusinessModel>>(
-        '/businesses/mine',
-        fromJson: (json) {
-          final data = json['data'] as List<dynamic>;
-          return data
-              .map((e) => BusinessModel.fromJson(e as Map<String, dynamic>))
-              .toList();
-        },
-      );
+      _withRefresh(() => _http.get<List<BusinessModel>>(
+            '/businesses/mine',
+            fromJson: (json) {
+              final data = json['data'] as List<dynamic>;
+              return data
+                  .map(
+                      (e) => BusinessModel.fromJson(e as Map<String, dynamic>))
+                  .toList();
+            },
+          ));
 
   Future<Result<T>> post<T>(
     String path, {
     required T Function(Map<String, dynamic>) fromJson,
     Object? body,
   }) =>
-      _http.post(
-        path,
-        fromJson: (envelope) => fromJson(_unwrapObject(envelope)),
-        body: body,
-      );
+      _withRefresh(() => _http.post(
+            path,
+            fromJson: (envelope) => fromJson(_unwrapObject(envelope)),
+            body: body,
+          ));
 
   /// POST /auth/check-email — returns { authMethod: 'totp' | 'password' }
   Future<Result<Map<String, dynamic>>> checkEmail(String email) =>
@@ -151,12 +181,20 @@ class ApiClient {
         body: {'email': email},
       );
 
-  /// POST /auth/login/password — returns { accessToken }
-  Future<Result<Map<String, dynamic>>> loginWithPassword(String email, String password) =>
+  /// POST /auth/login — returns { accessToken }
+  Future<Result<Map<String, dynamic>>> loginWithPassword({
+    required String email,
+    required String password,
+    required bool rememberMe,
+  }) =>
       post<Map<String, dynamic>>(
-        '/auth/login/password',
+        '/auth/login',
         fromJson: (json) => json,
-        body: {'email': email, 'password': password},
+        body: {
+          'email': email,
+          'password': password,
+          'rememberMe': rememberMe,
+        },
       );
 
   /// POST /auth/forgot-password — 204 No Content
@@ -184,9 +222,11 @@ class ApiClient {
       );
 
   /// DELETE via raw Dio. Backend returns 204 No Content — no body to unwrap.
-  Future<Result<void>> delete(String path) async {
+  Future<Result<void>> delete(String path) =>
+      _withRefresh(() => _deleteInner(path));
+
+  Future<Result<void>> _deleteInner(String path) async {
     try {
-      // M8 — token read is serialised through the mutex.
       final token = await _getToken();
       await _rawDio.delete<void>(
         path,
@@ -197,13 +237,12 @@ class ApiClient {
       return const Success(null);
     } on DioException catch (e) {
       final code = e.response?.statusCode;
-      if (code == 401) return const HttpFailure(UnauthorizedFailure('Unauthorized'));
-      if (code == 404) return const HttpFailure(NotFoundFailure('Not found'));
+      if (code == 401) return const HttpFailure(UnauthorizedFailure('Não autorizado'));
+      if (code == 404) return const HttpFailure(NotFoundFailure('Recurso não encontrado'));
       final backendMessage = _extractBackendMessage(e);
       return HttpFailure(
-          ServerFailure(backendMessage ?? e.message ?? 'Server error', statusCode: code ?? 500));
+          ServerFailure(backendMessage ?? e.message ?? 'Erro no servidor', statusCode: code ?? 500));
     } catch (e, stack) {
-      // A7 — generic message; raw error is only printed, never returned.
       return apiClientUnknownFailure<void>(e, stack);
     }
   }
@@ -214,9 +253,15 @@ class ApiClient {
     String path, {
     required T Function(Map<String, dynamic>) fromJson,
     Object? body,
+  }) =>
+      _withRefresh(() => _patchInner(path, fromJson: fromJson, body: body));
+
+  Future<Result<T>> _patchInner<T>(
+    String path, {
+    required T Function(Map<String, dynamic>) fromJson,
+    Object? body,
   }) async {
     try {
-      // M8 — token read is serialised through the mutex.
       final token = await _getToken();
       final response = await _rawDio.patch<Map<String, dynamic>>(
         path,
@@ -228,15 +273,22 @@ class ApiClient {
       return Success(fromJson(_unwrapObject(response.data!)));
     } on DioException catch (e) {
       final code = e.response?.statusCode;
-      if (code == 401) return const HttpFailure(UnauthorizedFailure('Unauthorized'));
-      if (code == 404) return const HttpFailure(NotFoundFailure('Not found'));
+      if (code == 401) return const HttpFailure(UnauthorizedFailure('Não autorizado'));
+      if (code == 404) return const HttpFailure(NotFoundFailure('Recurso não encontrado'));
       final backendMessage = _extractBackendMessage(e);
       return HttpFailure(
-          ServerFailure(backendMessage ?? e.message ?? 'Server error', statusCode: code ?? 500));
+          ServerFailure(backendMessage ?? e.message ?? 'Erro no servidor', statusCode: code ?? 500));
     } catch (e, stack) {
-      // A7 — generic message; raw error is only printed, never returned.
       return apiClientUnknownFailure<T>(e, stack);
     }
+  }
+
+  /// HIGH-03 fix: wipes persisted cookies (including the httpOnly refresh
+  /// token) from disk. Must be called on logout so that a subsequent user on
+  /// the same device cannot reuse the previous session's refresh cookie.
+  /// No-op on web where the browser manages cookie lifecycle.
+  Future<void> clearCookies() async {
+    await _cookieJar?.deleteAll();
   }
 
   // ---------------------------------------------------------------------------
@@ -248,6 +300,52 @@ class ApiClient {
   Future<String?> _getToken() => _tokenMutex.protect(
         () => tokenStorage.getAccessToken(),
       );
+
+  /// Attempts to refresh the access token by calling POST /auth/refresh.
+  /// The refresh token is sent as an httpOnly cookie automatically
+  /// (CookieManager on mobile, browser withCredentials on web).
+  /// Returns true if a new access token was obtained and saved.
+  Future<bool> _tryRefreshToken() async {
+    try {
+      final response = await _rawDio.post<Map<String, dynamic>>(
+        '/auth/refresh',
+      );
+      final envelope = response.data;
+      if (envelope == null) return false;
+      // Backend wraps response: { "data": { "accessToken": "..." } }
+      final data = envelope['data'];
+      final accessToken = (data is Map<String, dynamic>)
+          ? data['accessToken'] as String?
+          : null;
+      if (accessToken == null) return false;
+      await tokenStorage.saveTokens(
+        accessToken: accessToken,
+        refreshToken: '',
+      );
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Executes [call]. If it returns [UnauthorizedFailure], attempts a single
+  /// token refresh (serialised via [_tokenMutex] to prevent concurrent
+  /// refresh storms) and retries the original call once.
+  ///
+  /// When the refresh itself fails (e.g. refresh token expired), fires
+  /// [onAuthExpired] so that the auth layer can log the user out instead of
+  /// letting feature BLoCs show misleading "no permission" errors.
+  Future<Result<T>> _withRefresh<T>(Future<Result<T>> Function() call) async {
+    final result = await call();
+    if (result case HttpFailure(:final failure)
+        when failure is UnauthorizedFailure) {
+      final refreshed =
+          await _tokenMutex.protect(() => _tryRefreshToken());
+      if (refreshed) return call();
+      onAuthExpired?.call();
+    }
+    return result;
+  }
 
   /// Extracts the `data` field from the backend response envelope.
   /// Falls back to the raw map if `data` is not present (e.g. in tests).

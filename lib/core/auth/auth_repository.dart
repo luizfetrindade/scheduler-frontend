@@ -1,4 +1,5 @@
 import 'package:flutter_http/flutter_http.dart';
+import 'package:scheduler_frontend/core/auth/remember_me_storage.dart';
 import 'package:scheduler_frontend/core/models/user_model.dart';
 import 'package:scheduler_frontend/core/network/api_client.dart';
 
@@ -16,8 +17,9 @@ typedef TotpSetupRecord = ({
 
 class AuthRepository {
   final ApiClient _client;
+  final RememberMeStorage _rememberMe;
 
-  AuthRepository(this._client);
+  AuthRepository(this._client, this._rememberMe);
 
   /// Checks whether the given email is registered.
   /// Returns Success(true) if found, Success(false) if not found (404).
@@ -39,11 +41,12 @@ class AuthRepository {
   Future<Result<TokenRecord>> loginWithTotp({
     required String email,
     required String code,
+    required bool rememberMe,
   }) async {
     final result = await _client.post<Map<String, dynamic>>(
       '/auth/login/totp',
       fromJson: (json) => json,
-      body: {'email': email, 'code': code},
+      body: {'email': email, 'code': code, 'rememberMe': rememberMe},
     );
     return switch (result) {
       Success(:final data) => Success((
@@ -98,8 +101,13 @@ class AuthRepository {
   Future<Result<TokenRecord>> loginWithPassword({
     required String email,
     required String password,
+    required bool rememberMe,
   }) async {
-    final result = await _client.loginWithPassword(email, password);
+    final result = await _client.loginWithPassword(
+      email: email,
+      password: password,
+      rememberMe: rememberMe,
+    );
     return switch (result) {
       Success(:final data) => Success((
           accessToken: data['accessToken'] as String,
@@ -151,8 +159,26 @@ class AuthRepository {
         refreshToken: '',
       );
 
-  /// Clears local tokens. The backend clears the httpOnly cookie when
-  /// POST /auth/logout is called (handled by Dio's cookie jar on mobile,
-  /// or the browser on web).
+  /// Revokes the server-side session (httpOnly cookie) via POST /auth/logout,
+  /// then clears local tokens. Server errors are intentionally ignored so that
+  /// local tokens are always cleared and the user is never stuck logged-in.
+  Future<void> logout() async {
+    await _client.post<void>('/auth/logout', fromJson: (_) {});
+    await _client.tokenStorage.clearTokens();
+    await _client.clearCookies();
+  }
+
+  /// Clears local tokens only (no server call). Prefer [logout] for user
+  /// initiated sign-out so the server session is also revoked.
   Future<void> clearTokens() => _client.tokenStorage.clearTokens();
+
+  /// Reads the persisted "Lembrar de mim" state for pre-filling the login UI.
+  Future<({String? email, bool enabled})> loadRememberMe() =>
+      _rememberMe.load();
+
+  /// Persists the e-mail after a successful login when the box was checked.
+  Future<void> saveRememberMe(String email) => _rememberMe.save(email: email);
+
+  /// Clears the persisted e-mail when the box is unchecked on a successful login.
+  Future<void> clearRememberMe() => _rememberMe.clear();
 }
