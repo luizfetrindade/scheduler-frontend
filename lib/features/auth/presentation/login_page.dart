@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:scheduler_frontend/core/auth/auth_bloc.dart';
 import 'package:scheduler_frontend/core/auth/auth_event.dart';
 import 'package:scheduler_frontend/core/auth/auth_state.dart';
+import 'package:scheduler_frontend/core/auth/remember_me_storage.dart';
 import 'package:scheduler_frontend/core/l10n/l10n.dart';
 import 'package:scheduler_frontend/core/router/app_routes.dart';
 import 'package:scheduler_frontend/design_system/base_design_system.dart';
@@ -17,8 +18,27 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
+  final _rememberMeStorage = RememberMeStorage();
+  bool _rememberMe = false;
 
   static const _kBreakpoint = 720.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRememberMe();
+  }
+
+  Future<void> _loadRememberMe() async {
+    final saved = await _rememberMeStorage.load();
+    if (!mounted) return;
+    if (saved.enabled && saved.email != null) {
+      setState(() {
+        _emailController.text = saved.email!;
+        _rememberMe = true;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -39,10 +59,11 @@ class _LoginPageState extends State<LoginPage> {
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthEmailChecked) {
+            final extra = (email: state.email, rememberMe: _rememberMe);
             if (state.authMethod == 'totp') {
-              context.push('/login/totp', extra: state.email);
+              context.push('/login/totp', extra: extra);
             } else {
-              context.push('/login/password', extra: state.email);
+              context.push('/login/password', extra: extra);
             }
           }
           if (state is AuthError) {
@@ -61,6 +82,9 @@ class _LoginPageState extends State<LoginPage> {
             emailController: _emailController,
             isLoading: isLoading,
             onSubmit: _submitEmail,
+            rememberMe: _rememberMe,
+            onRememberMeChanged: (value) =>
+                setState(() => _rememberMe = value),
           );
 
           return LayoutBuilder(
@@ -280,11 +304,15 @@ class _EmailStep extends StatelessWidget {
   final TextEditingController emailController;
   final bool isLoading;
   final VoidCallback onSubmit;
+  final bool rememberMe;
+  final ValueChanged<bool> onRememberMeChanged;
 
   const _EmailStep({
     required this.emailController,
     required this.isLoading,
     required this.onSubmit,
+    required this.rememberMe,
+    required this.onRememberMeChanged,
   });
 
   @override
@@ -298,7 +326,13 @@ class _EmailStep extends StatelessWidget {
           keyboardType: TextInputType.emailAddress,
           prefixIcon: Icons.email_outlined,
         ),
-        const SizedBox(height: AppSpacing.xl),
+        const SizedBox(height: AppSpacing.sm),
+        _RememberMeRow(
+          value: rememberMe,
+          onChanged: onRememberMeChanged,
+          enabled: !isLoading,
+        ),
+        const SizedBox(height: AppSpacing.md),
         BaseButton(
           label: context.l10n.loginContinueButton,
           isLoading: isLoading,
@@ -313,6 +347,53 @@ class _EmailStep extends StatelessWidget {
           onPressed: () => context.go(AppRoutes.register),
         ),
       ],
+    );
+  }
+}
+
+class _RememberMeRow extends StatelessWidget {
+  final bool value;
+  final ValueChanged<bool> onChanged;
+  final bool enabled;
+
+  const _RememberMeRow({
+    required this.value,
+    required this.onChanged,
+    required this.enabled,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: enabled ? () => onChanged(!value) : null,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: Checkbox(
+                value: value,
+                onChanged:
+                    enabled ? (v) => onChanged(v ?? false) : null,
+                // Sharp edges per project convention (no rounded corners).
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.zero,
+                ),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Text(
+              context.l10n.loginRememberMe,
+              style: AppTypography.bodySm.copyWith(
+                color: context.appColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
