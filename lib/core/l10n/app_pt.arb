@@ -11,6 +11,10 @@
 
   "loginTitle": "Bem-vindo de volta",
   "loginEmailLabel": "E-mail",
+  "loginRememberMe": "Lembrar de mim",
+  "@loginRememberMe": {
+    "description": "Checkbox label on the login screen to persist the user's session and e-mail"
+  },
   "loginContinueButton": "Continuar",
   "loginNoAccount": "Não tem conta? Criar conta",
 

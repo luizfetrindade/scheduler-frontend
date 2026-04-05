@@ -30,6 +30,9 @@
   "loginEmailLabel": "E-mail",
   "@loginEmailLabel": { "description": "Label for email input" },
 
+  "loginRememberMe": "Remember me",
+  "@loginRememberMe": { "description": "Checkbox label on the login screen to persist the user's session and e-mail" },
+
   "loginContinueButton": "Continue",
   "@loginContinueButton": { "description": "Button to proceed from email step" },
 
