@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:scheduler_frontend/design_system/base_design_system.dart';
 import 'package:scheduler_frontend/features/reports/data/reports_model.dart';
 
 class StaffPerformanceList extends StatelessWidget {
@@ -11,87 +12,99 @@ class StaffPerformanceList extends StatelessWidget {
       return Center(
         child: Text(
           'Nenhum dado de equipe disponível',
-          style: Theme.of(context).textTheme.bodyMedium,
+          style: AppTypography.bodyMd.copyWith(
+            color: context.appColors.textSecondary,
+          ),
         ),
       );
     }
-    return Column(
-      children: staff.map((s) {
-        final initials = s.name
-            .trim()
-            .split(' ')
-            .take(2)
-            .map((w) => w.isNotEmpty ? w[0] : '')
-            .join()
-            .toUpperCase();
-        final color =
-            Color(int.parse(s.color.replaceFirst('#', '0xFF')));
 
-        return Container(
-          margin: const EdgeInsets.only(bottom: 8),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color:
-                Theme.of(context).colorScheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            children: [
-              CircleAvatar(
-                backgroundColor: color,
-                radius: 20,
-                child: Text(
-                  initials,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
+    return Column(
+      children: staff.map((s) => _StaffCard(staff: s)).toList(),
+    );
+  }
+}
+
+class _StaffCard extends StatelessWidget {
+  final StaffReport staff;
+  const _StaffCard({required this.staff});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final initials = staff.name
+        .trim()
+        .split(' ')
+        .take(2)
+        .map((w) => w.isNotEmpty ? w[0] : '')
+        .join()
+        .toUpperCase();
+    final avatarColor =
+        Color(int.parse(staff.color.replaceFirst('#', '0xFF')));
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: BaseCard(
+        padding: AppSpacing.md,
+        child: Row(
+          children: [
+            CircleAvatar(
+              backgroundColor: avatarColor,
+              radius: 20,
+              child: Text(
+                initials,
+                style: AppTypography.bodySm.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      s.name,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w600, fontSize: 13),
-                    ),
-                    if (s.roleName != null)
-                      Text(
-                        s.roleName!,
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurfaceVariant,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'R\$ ${s.revenue.toStringAsFixed(0)}',
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF16a34a)),
+                    staff.name,
+                    style: AppTypography.bodySm.copyWith(
+                      color: colors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                  Text(
-                    '${s.appointments} agend. · ${(s.completionRate * 100).round()}% concluídos',
-                    style: const TextStyle(
-                        fontSize: 10, color: Colors.grey),
-                  ),
+                  if (staff.roleName != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      staff.roleName!,
+                      style: AppTypography.caption.copyWith(
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                  ],
                 ],
               ),
-            ],
-          ),
-        );
-      }).toList(),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  'R\$ ${staff.revenue.toStringAsFixed(0)}',
+                  style: AppTypography.bodySm.copyWith(
+                    color: AppColors.success,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${staff.appointments} agend. · ${(staff.completionRate * 100).round()}%',
+                  style: AppTypography.caption.copyWith(
+                    color: colors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

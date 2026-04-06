@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:scheduler_frontend/design_system/base_design_system.dart';
 import 'package:scheduler_frontend/features/reports/data/reports_model.dart';
 import 'package:scheduler_frontend/features/reports/presentation/widgets/kpi_card_with_delta.dart';
 import 'package:scheduler_frontend/features/reports/presentation/widgets/daily_series_chart.dart';
@@ -12,9 +13,18 @@ class ReportsFinancialTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rev = model.revenue;
-    if (rev.realized == 0 && rev.confirmed == 0 && rev.previousRealized == 0 && rev.previousConfirmed == 0) {
-      return const Center(
-          child: Text('Sem receita registrada neste período'));
+    final colors = context.appColors;
+
+    if (rev.realized == 0 &&
+        rev.confirmed == 0 &&
+        rev.previousRealized == 0 &&
+        rev.previousConfirmed == 0) {
+      return Center(
+        child: Text(
+          'Sem receita registrada neste período',
+          style: AppTypography.bodyMd.copyWith(color: colors.textSecondary),
+        ),
+      );
     }
 
     final currencyFmt =
@@ -30,102 +40,129 @@ class ReportsFinancialTab extends StatelessWidget {
         .map((p) => DailyPoint(date: p.date, count: p.amount.round()))
         .toList();
 
+    final realizedDelta = calcDelta(rev.previousRealized, rev.realized);
+    final confirmedDelta = calcDelta(rev.previousConfirmed, rev.confirmed);
+    final lostDelta = calcDelta(rev.previousLost, rev.lost);
+    final ticketDelta =
+        calcDelta(rev.previousAverageTicket, rev.averageTicket);
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: _revenueBlock(
-                  context,
-                  'Realizada',
-                  currencyFmt.format(rev.realized),
-                  calcDelta(rev.previousRealized, rev.realized),
-                  fmtDelta,
-                  Colors.green.shade400,
+          BaseCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Receita',
+                  style: AppTypography.bodyMd.copyWith(
+                    color: colors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _revenueBlock(
-                  context,
-                  'Confirmada',
-                  currencyFmt.format(rev.confirmed),
-                  calcDelta(rev.previousConfirmed, rev.confirmed),
-                  fmtDelta,
-                  Colors.blue.shade400,
+                const SizedBox(height: AppSpacing.md),
+                _RevenueRow(
+                  label: 'Realizada',
+                  value: currencyFmt.format(rev.realized),
+                  delta: realizedDelta,
+                  deltaLabel: fmtDelta(realizedDelta),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _revenueBlock(
-                  context,
-                  'Perdida',
-                  currencyFmt.format(rev.lost),
-                  calcDelta(rev.previousLost, rev.lost),
-                  fmtDelta,
-                  Colors.red.shade400,
+                Divider(color: colors.outline, height: AppSpacing.lg),
+                _RevenueRow(
+                  label: 'Confirmada',
+                  value: currencyFmt.format(rev.confirmed),
+                  delta: confirmedDelta,
+                  deltaLabel: fmtDelta(confirmedDelta),
                 ),
-              ),
-            ],
+                Divider(color: colors.outline, height: AppSpacing.lg),
+                _RevenueRow(
+                  label: 'Perdida',
+                  value: currencyFmt.format(rev.lost),
+                  delta: lostDelta,
+                  deltaLabel: fmtDelta(lostDelta),
+                  invertDelta: true,
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.sm),
           KpiCardWithDelta(
             label: 'Ticket Médio / Agend.',
             value: currencyFmt.format(rev.averageTicket),
-            delta: calcDelta(rev.previousAverageTicket, rev.averageTicket),
-            deltaLabel: fmtDelta(
-                calcDelta(rev.previousAverageTicket, rev.averageTicket)),
-            accentColor: Colors.teal.shade400,
+            delta: ticketDelta,
+            deltaLabel: fmtDelta(ticketDelta),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           if (dailyAsCount.isNotEmpty)
             DailySeriesChart(
-                series: dailyAsCount, title: 'Evolução da Receita (R\$)'),
-          const SizedBox(height: 16),
+              series: dailyAsCount,
+              title: 'Evolução da Receita (R\$)',
+            ),
+          const SizedBox(height: AppSpacing.lg),
           TopServicesList(services: rev.topServices),
         ],
       ),
     );
   }
+}
 
-  Widget _revenueBlock(
-    BuildContext context,
-    String label,
-    String value,
-    double d,
-    String Function(double) fmtDelta,
-    Color color,
-  ) {
-    final isPos = d >= 0;
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(10),
-        border: Border(top: BorderSide(color: color, width: 2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label,
-              style: const TextStyle(fontSize: 9, color: Colors.grey)),
-          const SizedBox(height: 2),
-          Text(value,
-              style: const TextStyle(
-                  fontWeight: FontWeight.bold, fontSize: 13)),
+class _RevenueRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final double delta;
+  final String deltaLabel;
+  final bool invertDelta;
+
+  const _RevenueRow({
+    required this.label,
+    required this.value,
+    required this.delta,
+    required this.deltaLabel,
+    this.invertDelta = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final isPositive = invertDelta ? delta <= 0 : delta >= 0;
+    final deltaColor = isPositive ? AppColors.success : AppColors.error;
+    final arrow = delta >= 0 ? '↑' : '↓';
+
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: AppTypography.caption.copyWith(
+                  color: colors.textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: AppTypography.bodyMd.copyWith(
+                  color: colors.textPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (deltaLabel.isNotEmpty)
           Text(
-            fmtDelta(d),
-            style: TextStyle(
-              fontSize: 10,
-              color:
-                  isPos ? Colors.green.shade400 : Colors.red.shade400,
+            '$arrow $deltaLabel',
+            style: AppTypography.caption.copyWith(
+              color: deltaColor,
+              fontWeight: FontWeight.w600,
             ),
           ),
-        ],
-      ),
+      ],
     );
   }
 }

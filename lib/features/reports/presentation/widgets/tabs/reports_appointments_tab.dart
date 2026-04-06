@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:scheduler_frontend/design_system/base_design_system.dart';
 import 'package:scheduler_frontend/features/reports/data/reports_model.dart';
 import 'package:scheduler_frontend/features/reports/presentation/widgets/kpi_card_with_delta.dart';
 import 'package:scheduler_frontend/features/reports/presentation/widgets/status_bar_chart.dart';
@@ -12,9 +13,15 @@ class ReportsAppointmentsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final appts = model.appointments;
     final occ = model.occupancy;
+    final colors = context.appColors;
 
     if (appts.total == 0 && appts.previousTotal == 0) {
-      return const Center(child: Text('Nenhum agendamento neste período'));
+      return Center(
+        child: Text(
+          'Nenhum agendamento neste período',
+          style: AppTypography.bodyMd.copyWith(color: colors.textSecondary),
+        ),
+      );
     }
 
     double calcDelta(double prev, double curr) =>
@@ -25,7 +32,7 @@ class ReportsAppointmentsTab extends StatelessWidget {
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -33,18 +40,17 @@ class ReportsAppointmentsTab extends StatelessWidget {
             crossAxisCount: 2,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
-            childAspectRatio: 1.6,
+            crossAxisSpacing: AppSpacing.sm,
+            mainAxisSpacing: AppSpacing.sm,
+            childAspectRatio: 1.35,
             children: [
               KpiCardWithDelta(
                 label: 'Agendamentos',
                 value: '${appts.total}',
-                delta: calcDelta(appts.previousTotal.toDouble(),
-                    appts.total.toDouble()),
-                deltaLabel: fmtDelta(calcDelta(appts.previousTotal.toDouble(),
-                    appts.total.toDouble())),
-                accentColor: Colors.blue.shade400,
+                delta: calcDelta(
+                    appts.previousTotal.toDouble(), appts.total.toDouble()),
+                deltaLabel: fmtDelta(calcDelta(
+                    appts.previousTotal.toDouble(), appts.total.toDouble())),
               ),
               KpiCardWithDelta(
                 label: 'Cancelamentos',
@@ -54,17 +60,13 @@ class ReportsAppointmentsTab extends StatelessWidget {
                     appts.previousCancellationRate),
                 deltaLabel: fmtDelta(-(appts.cancellationRate -
                     appts.previousCancellationRate)),
-                accentColor: Colors.red.shade400,
               ),
               KpiCardWithDelta(
                 label: 'No-show',
-                value:
-                    '${(appts.noShowRate * 100).toStringAsFixed(1)}%',
-                delta:
-                    -(appts.noShowRate - appts.previousNoShowRate),
+                value: '${(appts.noShowRate * 100).toStringAsFixed(1)}%',
+                delta: -(appts.noShowRate - appts.previousNoShowRate),
                 deltaLabel: fmtDelta(
                     -(appts.noShowRate - appts.previousNoShowRate)),
-                accentColor: Colors.orange.shade400,
               ),
               KpiCardWithDelta(
                 label: 'Ocupação',
@@ -73,107 +75,152 @@ class ReportsAppointmentsTab extends StatelessWidget {
                 delta: occ.occupancyRate - occ.previousOccupancyRate,
                 deltaLabel: fmtDelta(
                     occ.occupancyRate - occ.previousOccupancyRate),
-                accentColor: occ.occupancyRate < 0.6
-                    ? Colors.red.shade400
-                    : Colors.green.shade400,
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.lg),
+          _OccupancyBar(occ: occ),
+          const SizedBox(height: AppSpacing.lg),
+          StatusBarChart(appointments: appts),
+          const SizedBox(height: AppSpacing.lg),
+          _PeakHoursCard(occ: occ),
+          const SizedBox(height: AppSpacing.lg),
+          DayOfWeekChart(data: appts.byDayOfWeek),
+        ],
+      ),
+    );
+  }
+}
+
+class _OccupancyBar extends StatelessWidget {
+  final OccupancyReport occ;
+  const _OccupancyBar({required this.occ});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return BaseCard(
+      padding: AppSpacing.md,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Taxa de Ocupação',
+                style: AppTypography.bodySm.copyWith(
+                  color: colors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                '${(occ.occupancyRate * 100).round()}%',
+                style: AppTypography.bodySm.copyWith(
+                  color: occ.occupancyRate < 0.6
+                      ? AppColors.error
+                      : AppColors.success,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
           Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color:
-                  Theme.of(context).colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(12),
+            height: 8,
+            color: colors.surfaceHigh,
+            alignment: Alignment.centerLeft,
+            child: FractionallySizedBox(
+              widthFactor: occ.occupancyRate.clamp(0.0, 1.0),
+              child: Container(
+                height: 8,
+                color: occ.occupancyRate < 0.6
+                    ? AppColors.error
+                    : colors.primary,
+              ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Taxa de Ocupação',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 12)),
-                    Text(
-                      '${(occ.occupancyRate * 100).round()}%',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        color: occ.occupancyRate < 0.6
-                            ? Colors.red.shade400
-                            : Colors.orange.shade400,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            '${occ.totalBooked} de ${occ.totalSlotsAvailable} slots ocupados',
+            style: AppTypography.caption.copyWith(
+              color: colors.textDisabled,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PeakHoursCard extends StatelessWidget {
+  final OccupancyReport occ;
+  const _PeakHoursCard({required this.occ});
+
+  @override
+  Widget build(BuildContext context) {
+    if (occ.peakHours.isEmpty) return const SizedBox.shrink();
+    final colors = context.appColors;
+    final maxCount =
+        occ.peakHours.first.count > 0 ? occ.peakHours.first.count : 1;
+
+    return BaseCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Horários de pico',
+            style: AppTypography.bodyMd.copyWith(
+              color: colors.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          ...occ.peakHours.take(5).map(
+            (h) => Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 40,
+                    child: Text(
+                      '${h.hour.toString().padLeft(2, '0')}h',
+                      style: AppTypography.caption.copyWith(
+                        color: colors.textSecondary,
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                LinearProgressIndicator(
-                  value: occ.occupancyRate,
-                  minHeight: 8,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${occ.totalBooked} de ${occ.totalSlotsAvailable} slots ocupados',
-                  style:
-                      const TextStyle(fontSize: 10, color: Colors.grey),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          StatusBarChart(appointments: appts),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color:
-                  Theme.of(context).colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Horários de pico',
-                    style: TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 12)),
-                const SizedBox(height: 8),
-                ...occ.peakHours.take(5).map(
-                  (h) => Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 48,
-                          child: Text(
-                            '${h.hour.toString().padLeft(2, '0')}h',
-                            style: const TextStyle(fontSize: 11),
-                          ),
+                  ),
+                  Expanded(
+                    child: Container(
+                      height: 8,
+                      color: colors.surfaceHigh,
+                      alignment: Alignment.centerLeft,
+                      child: FractionallySizedBox(
+                        widthFactor:
+                            (h.count / maxCount).clamp(0.0, 1.0),
+                        child: Container(
+                          height: 8,
+                          color: colors.primary,
                         ),
-                        Expanded(
-                          child: LinearProgressIndicator(
-                            value: occ.peakHours.first.count > 0
-                                ? h.count /
-                                    occ.peakHours.first.count
-                                : 0,
-                            minHeight: 8,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text('${h.count}',
-                            style: const TextStyle(fontSize: 11)),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: AppSpacing.sm),
+                  SizedBox(
+                    width: 24,
+                    child: Text(
+                      '${h.count}',
+                      style: AppTypography.caption.copyWith(
+                        color: colors.textSecondary,
+                      ),
+                      textAlign: TextAlign.end,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 16),
-          DayOfWeekChart(data: appts.byDayOfWeek),
         ],
       ),
     );

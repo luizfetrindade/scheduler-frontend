@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:scheduler_frontend/design_system/base_design_system.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_bloc.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_state.dart';
 import 'package:scheduler_frontend/features/reports/bloc/reports_bloc.dart';
@@ -86,18 +87,13 @@ class ReportsView extends StatelessWidget {
                                 ),
                       ),
                       if (state is ReportsLoaded) ...[
-                        const SizedBox(height: 4),
+                        const SizedBox(height: AppSpacing.xs),
                         Text(
                           _comparisonLabel(
                               state.data.from, state.data.previousFrom),
-                          style: Theme.of(context)
-                              .textTheme
-                              .labelSmall
-                              ?.copyWith(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                              ),
+                          style: AppTypography.caption.copyWith(
+                            color: context.appColors.textSecondary,
+                          ),
                         ),
                       ],
                     ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:scheduler_frontend/design_system/base_design_system.dart';
 import 'package:scheduler_frontend/features/reports/data/reports_model.dart';
 import 'package:scheduler_frontend/features/reports/utils/health_score.dart';
 import 'package:scheduler_frontend/features/reports/utils/smart_alerts.dart';
@@ -17,9 +18,17 @@ class ReportsGeneralTab extends StatelessWidget {
     final rev = model.revenue;
     final occ = model.occupancy;
     final clients = model.clients;
+    final colors = context.appColors;
 
-    if (appts.total == 0 && appts.previousTotal == 0 && rev.previousRealized == 0) {
-      return const Center(child: Text('Nenhum agendamento neste período'));
+    if (appts.total == 0 &&
+        appts.previousTotal == 0 &&
+        rev.previousRealized == 0) {
+      return Center(
+        child: Text(
+          'Nenhum agendamento neste período',
+          style: AppTypography.bodyMd.copyWith(color: colors.textSecondary),
+        ),
+      );
     }
 
     final revenueDelta = rev.previousRealized > 0
@@ -37,28 +46,28 @@ class ReportsGeneralTab extends StatelessWidget {
     String pctFmt(double v) => '${(v * 100).toStringAsFixed(1)}%';
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           HealthScoreCard(
-              score: score,
-              badges: _scoreBadges(score, revenueDelta, clients)),
-          const SizedBox(height: 16),
+            score: score,
+            badges: _scoreBadges(score, revenueDelta, clients),
+          ),
+          const SizedBox(height: AppSpacing.lg),
           GridView.count(
             crossAxisCount: 2,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
-            childAspectRatio: 1.6,
+            crossAxisSpacing: AppSpacing.sm,
+            mainAxisSpacing: AppSpacing.sm,
+            childAspectRatio: 1.35,
             children: [
               KpiCardWithDelta(
                 label: 'Receita Realizada',
                 value: currencyFmt.format(rev.realized),
                 delta: revenueDelta,
                 deltaLabel: _deltaLabel(revenueDelta),
-                accentColor: Colors.green.shade400,
               ),
               KpiCardWithDelta(
                 label: 'Agendamentos',
@@ -71,7 +80,6 @@ class ReportsGeneralTab extends StatelessWidget {
                     ? (appts.total - appts.previousTotal) /
                         appts.previousTotal
                     : 0),
-                accentColor: Colors.blue.shade400,
               ),
               KpiCardWithDelta(
                 label: 'Taxa de Ocupação',
@@ -79,9 +87,6 @@ class ReportsGeneralTab extends StatelessWidget {
                 delta: occ.occupancyRate - occ.previousOccupancyRate,
                 deltaLabel: _deltaLabel(
                     occ.occupancyRate - occ.previousOccupancyRate),
-                accentColor: occ.occupancyRate < 0.6
-                    ? Colors.red.shade400
-                    : Colors.orange.shade400,
               ),
               KpiCardWithDelta(
                 label: 'Clientes Novos',
@@ -94,30 +99,63 @@ class ReportsGeneralTab extends StatelessWidget {
                     ? (clients.newClients - clients.previousNewClients) /
                         clients.previousNewClients
                     : 0),
-                accentColor: Colors.purple.shade400,
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           SmartAlertsList(alerts: alerts),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           Row(
             children: [
               Expanded(
-                child: _miniCard(
-                  context,
-                  label: 'Receita perdida (cancelamentos)',
-                  value: currencyFmt.format(rev.lost),
-                  color: Colors.red.shade400,
+                child: BaseCard(
+                  padding: AppSpacing.md,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Receita perdida',
+                        style: AppTypography.caption.copyWith(
+                          color: colors.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        currencyFmt.format(rev.lost),
+                        style: AppTypography.bodyMd.copyWith(
+                          color: AppColors.error,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
-                child: _miniCard(
-                  context,
-                  label: 'Taxa de retorno de clientes',
-                  value: pctFmt(clients.returnRate),
-                  color: Colors.purple.shade400,
+                child: BaseCard(
+                  padding: AppSpacing.md,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Taxa de retorno',
+                        style: AppTypography.caption.copyWith(
+                          color: colors.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        pctFmt(clients.returnRate),
+                        style: AppTypography.bodyMd.copyWith(
+                          color: colors.textPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -140,31 +178,5 @@ class ReportsGeneralTab extends StatelessWidget {
   String _deltaLabel(double delta) {
     final pct = (delta * 100).abs().toStringAsFixed(1);
     return delta >= 0 ? '+$pct%' : '-$pct%';
-  }
-
-  Widget _miniCard(BuildContext context,
-      {required String label,
-      required String value,
-      required Color color}) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label,
-              style: const TextStyle(fontSize: 10, color: Colors.grey)),
-          const SizedBox(height: 4),
-          Text(value,
-              style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: color)),
-        ],
-      ),
-    );
   }
 }

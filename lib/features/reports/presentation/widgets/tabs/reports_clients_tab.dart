@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:scheduler_frontend/design_system/base_design_system.dart';
 import 'package:scheduler_frontend/features/reports/data/reports_model.dart';
 import 'package:scheduler_frontend/features/reports/presentation/widgets/kpi_card_with_delta.dart';
 import 'package:scheduler_frontend/features/reports/presentation/widgets/new_vs_returning_bar.dart';
@@ -12,9 +13,15 @@ class ReportsClientsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final clients = model.clients;
+    final colors = context.appColors;
+
     if (clients.total == 0 && clients.previousNewClients == 0) {
-      return const Center(
-          child: Text('Nenhum cliente atendido neste período'));
+      return Center(
+        child: Text(
+          'Nenhum cliente atendido neste período',
+          style: AppTypography.bodyMd.copyWith(color: colors.textSecondary),
+        ),
+      );
     }
 
     final currencyFmt =
@@ -27,7 +34,7 @@ class ReportsClientsTab extends StatelessWidget {
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -35,14 +42,14 @@ class ReportsClientsTab extends StatelessWidget {
             newClients: clients.newClients,
             returningClients: clients.returningClients,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           GridView.count(
             crossAxisCount: 2,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
-            childAspectRatio: 1.6,
+            crossAxisSpacing: AppSpacing.sm,
+            mainAxisSpacing: AppSpacing.sm,
+            childAspectRatio: 1.35,
             children: [
               KpiCardWithDelta(
                 label: 'Taxa de Retorno',
@@ -51,14 +58,12 @@ class ReportsClientsTab extends StatelessWidget {
                 delta: clients.returnRate - clients.previousReturnRate,
                 deltaLabel: fmtDelta(
                     clients.returnRate - clients.previousReturnRate),
-                accentColor: Colors.purple.shade400,
               ),
               KpiCardWithDelta(
                 label: 'Frequência Média',
                 value: '${clients.averageFrequencyDays} dias',
                 delta: 0,
                 deltaLabel: '',
-                accentColor: Colors.blue.shade400,
               ),
               KpiCardWithDelta(
                 label: 'Ticket Médio / Cliente',
@@ -70,18 +75,16 @@ class ReportsClientsTab extends StatelessWidget {
                 deltaLabel: fmtDelta(calcDelta(
                     clients.previousAverageTicketPerClient,
                     clients.averageTicketPerClient)),
-                accentColor: Colors.green.shade400,
               ),
               KpiCardWithDelta(
                 label: 'Clientes Ativos',
                 value: '${clients.total}',
                 delta: 0,
                 deltaLabel: '',
-                accentColor: Colors.teal.shade400,
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           AtRiskClientsList(clients: clients.atRisk),
         ],
       ),
