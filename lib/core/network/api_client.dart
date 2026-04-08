@@ -18,7 +18,7 @@ import 'package:scheduler_frontend/features/business/data/business_model.dart';
 /// Exposed as a top-level function so that unit tests can exercise the A7 fix
 /// without needing a full [ApiClient] instance.
 Result<T> apiClientUnknownFailure<T>(Object error, StackTrace stack) {
-  debugPrint('ApiClient unexpected error: $error\n$stack');
+  print('ApiClient unexpected error: $error\n$stack');
   return const HttpFailure(UnknownFailure('Erro inesperado. Tente novamente.'));
 }
 

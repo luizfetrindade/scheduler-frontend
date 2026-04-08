@@ -244,9 +244,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  String _message(AppFailure failure) => switch (failure) {
-        UnauthorizedFailure() => 'Código inválido ou expirado. Tente novamente.',
-        NetworkFailure() => 'Sem conexão com a internet',
-        _ => 'Algo deu errado. Tente novamente',
-      };
+  String _message(AppFailure failure) {
+    // Debug log for production diagnostics
+    print('[AUTH_ERROR] Original Failure: $failure');
+    
+    return switch (failure) {
+      UnauthorizedFailure() => 'Código inválido ou expirado. Tente novamente.',
+      NetworkFailure() => 'Sem conexão com a internet',
+      ServerFailure(:final message) => message,
+      _ => 'Algo deu errado. Tente novamente',
+    };
+  }
 }
