@@ -10,6 +10,12 @@ echo "--- Starting Resilient Flutter Web Build for Vercel ---"
 export PUB_CACHE=$(pwd)/.pub-cache
 export PATH="$PATH:$(pwd)/flutter/bin"
 
+# 2. Configure Git Auth for private repositories
+if [ ! -z "$GITHUB_TOKEN" ]; then
+  echo "Configuring Git authentication for private repositories..."
+  git config --global url."https://$GITHUB_TOKEN@github.com/".insteadOf "https://github.com/"
+fi
+
 # 2. Clone Flutter SDK if not present
 if [ ! -d "flutter" ]; then
   echo "Cloning Flutter SDK..."
