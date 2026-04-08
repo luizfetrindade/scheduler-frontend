@@ -3,35 +3,37 @@
 # Exit on error
 set -e
 
-echo "--- Starting Flutter Web Build for Vercel ---"
+echo "--- Starting Resilient Flutter Web Build for Vercel ---"
 
-# 1. Clone Flutter SDK if not present (Vercel cache might keep it)
+# 1. Config Local Cache and Tools to avoid Permission Denied (Exit 69)
+# We use the current directory for everything since Vercel allows writing here.
+export PUB_CACHE=$(pwd)/.pub-cache
+export PATH="$PATH:$(pwd)/flutter/bin"
+
+# 2. Clone Flutter SDK if not present
 if [ ! -d "flutter" ]; then
   echo "Cloning Flutter SDK..."
   git clone https://github.com/flutter/flutter.git -b stable --depth 1
 else
-  echo "Flutter SDK already exists, skipping clone."
+  echo "Flutter SDK already exists."
 fi
 
-# 2. Setup PATH
-export PATH="$PATH:$(pwd)/flutter/bin"
+# 3. Explicitly set permissions
+chmod -R +x flutter/bin
 
-# 3. Verify Flutter installation
-echo "Flutter path: $(which flutter)"
-flutter --version
-
-# 4. Enable web support (just in case)
+# 4. Disable analytics to speed up and avoid network blocks
+flutter config --no-analytics
 flutter config --enable-web
 
-# 5. Get dependencies
+# 5. Verify installation
+echo "Flutter version details:"
+flutter --version
+
+# 6. Build
 echo "Fetching dependencies..."
 flutter pub get
 
-# 6. Build Web
-# Use the PROD_API_URL environment variable from Vercel if available, 
-# otherwise use a placeholder or the one provided directly.
 API_URL=${PROD_API_URL:-"https://scheduler-base-production.up.railway.app"}
-
 echo "Building for Web with API_URL: $API_URL"
 
 flutter build web --release \
