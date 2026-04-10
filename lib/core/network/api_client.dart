@@ -167,11 +167,36 @@ class ApiClient {
     required T Function(Map<String, dynamic>) fromJson,
     Object? body,
   }) =>
-      _withRefresh(() => _http.post(
-            path,
-            fromJson: (envelope) => fromJson(_unwrapObject(envelope)),
-            body: body,
-          ));
+      _withRefresh(() => _postInner(path, fromJson: fromJson, body: body));
+
+  Future<Result<T>> _postInner<T>(
+    String path, {
+    required T Function(Map<String, dynamic>) fromJson,
+    Object? body,
+  }) async {
+    try {
+      final token = await _getToken();
+      final response = await _rawDio.post<Map<String, dynamic>>(
+        path,
+        data: body,
+        options: Options(headers: {
+          if (token != null) 'Authorization': 'Bearer $token',
+        }),
+      );
+      final data = response.data;
+      if (data == null) return Success(fromJson({}));
+      return Success(fromJson(_unwrapObject(data)));
+    } on DioException catch (e) {
+      final code = e.response?.statusCode;
+      if (code == 401) return const HttpFailure(UnauthorizedFailure('Não autorizado'));
+      if (code == 404) return const HttpFailure(NotFoundFailure('Recurso não encontrado'));
+      final backendMessage = _extractBackendMessage(e);
+      return HttpFailure(
+          ServerFailure(backendMessage ?? e.message ?? 'Erro no servidor', statusCode: code ?? 500));
+    } catch (e, stack) {
+      return apiClientUnknownFailure<T>(e, stack);
+    }
+  }
 
   /// POST /auth/check-email — returns { authMethod: 'totp' | 'password' }
   Future<Result<Map<String, dynamic>>> checkEmail(String email) =>
