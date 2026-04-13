@@ -111,9 +111,11 @@ class AuthRepository {
       );
 
   /// Revokes the server-side session (httpOnly cookie) via POST /auth/logout,
-  /// then clears local tokens.
+  /// then clears local tokens. Uses [ApiClient.logoutDirect] which bypasses
+  /// the refresh interceptor to prevent re-entrant logout loops when the
+  /// access token is already expired.
   Future<void> logout() async {
-    await _client.post<void>('/auth/logout', fromJson: (_) {});
+    await _client.logoutDirect();
     await _client.tokenStorage.clearTokens();
     await _client.clearCookies();
   }

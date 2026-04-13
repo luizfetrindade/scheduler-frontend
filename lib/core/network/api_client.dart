@@ -112,7 +112,10 @@ class ApiClient {
     required T Function(Map<String, dynamic>) fromJson,
     Map<String, dynamic>? queryParams,
   }) =>
-      _withRefresh(() => _getInner(path, fromJson: fromJson, queryParams: queryParams));
+      _withRefresh(
+        () => _getInner(path, fromJson: fromJson, queryParams: queryParams),
+        path: path,
+      );
 
   /// Backend returns { "data": [...], "meta": {...} } — NOT a raw array.
   /// flutter_http's getList() expects a raw array, so we use get<List<T>>
@@ -122,22 +125,28 @@ class ApiClient {
     required T Function(Map<String, dynamic>) fromJson,
     Map<String, dynamic>? queryParams,
   }) =>
-      _withRefresh(() => _getListInner(path, fromJson: fromJson, queryParams: queryParams));
+      _withRefresh(
+        () => _getListInner(path, fromJson: fromJson, queryParams: queryParams),
+        path: path,
+      );
 
   /// Fetches the list of businesses for the authenticated user from
   /// `/businesses/mine`. Unwraps the backend's `{ "data": [...] }` envelope.
   Future<Result<List<BusinessModel>>> getBusinessesMine() =>
-      _withRefresh(() => _getListInner(
-            '/businesses/mine',
-            fromJson: BusinessModel.fromJson,
-          ));
+      _withRefresh(
+        () => _getListInner('/businesses/mine', fromJson: BusinessModel.fromJson),
+        path: '/businesses/mine',
+      );
 
   Future<Result<T>> post<T>(
     String path, {
     required T Function(Map<String, dynamic>) fromJson,
     Object? body,
   }) =>
-      _withRefresh(() => _postInner(path, fromJson: fromJson, body: body));
+      _withRefresh(
+        () => _postInner(path, fromJson: fromJson, body: body),
+        path: path,
+      );
 
   Future<Result<T>> _postInner<T>(
     String path, {
@@ -284,7 +293,7 @@ class ApiClient {
 
   /// DELETE via raw Dio. Backend returns 204 No Content — no body to unwrap.
   Future<Result<void>> delete(String path) =>
-      _withRefresh(() => _deleteInner(path));
+      _withRefresh(() => _deleteInner(path), path: path);
 
   Future<Result<void>> _deleteInner(String path) async {
     try {
@@ -315,7 +324,10 @@ class ApiClient {
     required T Function(Map<String, dynamic>) fromJson,
     Object? body,
   }) =>
-      _withRefresh(() => _patchInner(path, fromJson: fromJson, body: body));
+      _withRefresh(
+        () => _patchInner(path, fromJson: fromJson, body: body),
+        path: path,
+      );
 
   Future<Result<T>> _patchInner<T>(
     String path, {
@@ -341,6 +353,23 @@ class ApiClient {
           ServerFailure(backendMessage ?? e.message ?? 'Erro no servidor', statusCode: code ?? 500));
     } catch (e, stack) {
       return apiClientUnknownFailure<T>(e, stack);
+    }
+  }
+
+  /// POST /auth/logout — does NOT go through [_withRefresh] to avoid re-entrant
+  /// logout loops. If the server returns 401 (already unauthenticated), we
+  /// ignore the error and proceed with local cleanup.
+  Future<void> logoutDirect() async {
+    try {
+      final token = await _getToken();
+      await _rawDio.post<void>(
+        '/auth/logout',
+        options: Options(headers: {
+          if (token != null) 'Authorization': 'Bearer $token',
+        }),
+      );
+    } catch (_) {
+      // Ignore server errors — always clear local state.
     }
   }
 
@@ -396,10 +425,20 @@ class ApiClient {
   /// When the refresh itself fails (e.g. refresh token expired), fires
   /// [onAuthExpired] so that the auth layer can log the user out instead of
   /// letting feature BLoCs show misleading "no permission" errors.
-  Future<Result<T>> _withRefresh<T>(Future<Result<T>> Function() call) async {
+  ///
+  /// [path] is used to skip the refresh cycle for auth endpoints — those
+  /// are unauthenticated by design and should never trigger [onAuthExpired].
+  Future<Result<T>> _withRefresh<T>(
+    Future<Result<T>> Function() call, {
+    String path = '',
+  }) async {
     final result = await call();
     if (result case HttpFailure(:final failure)
         when failure is UnauthorizedFailure) {
+      // Never attempt to refresh or fire onAuthExpired for /auth/* endpoints.
+      // They are public routes and a 401 there means a bad request, not an
+      // expired session — triggering logout here would create an infinite loop.
+      if (path.startsWith('/auth/')) return result;
       final refreshed =
           await _tokenMutex.protect(() => _tryRefreshToken());
       if (refreshed) return call();
