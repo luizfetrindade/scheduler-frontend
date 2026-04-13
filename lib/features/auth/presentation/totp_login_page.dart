@@ -32,9 +32,9 @@ class _TotpLoginPageState extends State<TotpLoginPage> {
     super.dispose();
   }
 
-  void _submitTotp(String code) {
+  void _submitOtp(String code) {
     context.read<AuthBloc>().add(
-          AuthTotpLoginSubmitted(
+          AuthOtpLoginSubmitted(
             email: widget.email,
             code: code,
             rememberMe: widget.rememberMe,
@@ -61,22 +61,22 @@ class _TotpLoginPageState extends State<TotpLoginPage> {
           final isLoading = state is AuthLoading;
           final hasError = state is AuthError;
 
-          final formWidget = _TotpStep(
+          final formWidget = _OtpStep(
             email: widget.email,
             otpController: _otpController,
             isLoading: isLoading,
             hasError: hasError,
-            onCompleted: _submitTotp,
-            onSubmit: () => _submitTotp(_otpController.text),
+            onCompleted: _submitOtp,
+            onSubmit: () => _submitOtp(_otpController.text),
             onBack: () => context.pop(),
           );
 
           return LayoutBuilder(
             builder: (context, constraints) {
               if (constraints.maxWidth < _kBreakpoint) {
-                return _MobileTotpLayout(formWidget: formWidget);
+                return _MobileOtpLayout(formWidget: formWidget);
               }
-              return _DesktopTotpLayout(formWidget: formWidget);
+              return _DesktopOtpLayout(formWidget: formWidget);
             },
           );
         },
@@ -87,10 +87,10 @@ class _TotpLoginPageState extends State<TotpLoginPage> {
 
 // ─── Mobile layout ────────────────────────────────────────────────────────────
 
-class _MobileTotpLayout extends StatelessWidget {
+class _MobileOtpLayout extends StatelessWidget {
   final Widget formWidget;
 
-  const _MobileTotpLayout({required this.formWidget});
+  const _MobileOtpLayout({required this.formWidget});
 
   @override
   Widget build(BuildContext context) {
@@ -140,7 +140,7 @@ class _MobileTotpLayout extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: AppSpacing.md),
-                  _TotpStepHeader(),
+                  _OtpStepHeader(),
                   const SizedBox(height: AppSpacing.xl),
                   formWidget,
                 ],
@@ -155,10 +155,10 @@ class _MobileTotpLayout extends StatelessWidget {
 
 // ─── Desktop layout ───────────────────────────────────────────────────────────
 
-class _DesktopTotpLayout extends StatelessWidget {
+class _DesktopOtpLayout extends StatelessWidget {
   final Widget formWidget;
 
-  const _DesktopTotpLayout({required this.formWidget});
+  const _DesktopOtpLayout({required this.formWidget});
 
   @override
   Widget build(BuildContext context) {
@@ -239,7 +239,7 @@ class _DesktopTotpLayout extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _TotpStepHeader(),
+                      _OtpStepHeader(),
                       const SizedBox(height: AppSpacing.xxl),
                       formWidget,
                     ],
@@ -256,7 +256,7 @@ class _DesktopTotpLayout extends StatelessWidget {
 
 // ─── Step header ──────────────────────────────────────────────────────────────
 
-class _TotpStepHeader extends StatelessWidget {
+class _OtpStepHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -270,7 +270,7 @@ class _TotpStepHeader extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
-          'Use o Google Authenticator para confirmar sua identidade.',
+          'Verifique seu e-mail e insira o código de 6 dígitos.',
           style: AppTypography.bodySm.copyWith(
             color: context.appColors.textSecondary,
           ),
@@ -280,9 +280,9 @@ class _TotpStepHeader extends StatelessWidget {
   }
 }
 
-// ─── TOTP step form ───────────────────────────────────────────────────────────
+// ─── OTP step form ────────────────────────────────────────────────────────────
 
-class _TotpStep extends StatelessWidget {
+class _OtpStep extends StatelessWidget {
   final String email;
   final TextEditingController otpController;
   final bool isLoading;
@@ -291,7 +291,7 @@ class _TotpStep extends StatelessWidget {
   final VoidCallback onSubmit;
   final VoidCallback onBack;
 
-  const _TotpStep({
+  const _OtpStep({
     required this.email,
     required this.otpController,
     required this.isLoading,

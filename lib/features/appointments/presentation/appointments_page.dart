@@ -4,6 +4,8 @@ import 'package:scheduler_frontend/core/auth/auth_bloc.dart';
 import 'package:scheduler_frontend/core/auth/auth_state.dart';
 import 'package:scheduler_frontend/core/config/schedule_preferences.dart';
 import 'package:scheduler_frontend/design_system/base_design_system.dart';
+import 'package:scheduler_frontend/features/appointments/bloc/appointments_bloc.dart';
+import 'package:scheduler_frontend/features/appointments/bloc/appointments_event.dart';
 import 'package:scheduler_frontend/features/appointments/bloc/schedule_bloc.dart';
 import 'package:scheduler_frontend/features/appointments/bloc/schedule_event.dart';
 import 'package:scheduler_frontend/features/appointments/bloc/schedule_state.dart';
@@ -235,6 +237,10 @@ class _AppointmentsBodyState extends State<AppointmentsBody> {
       context.read<ScheduleBloc>().add(ScheduleInitialized(
             slug: bizState.active.slug,
             date: date,
+          ));
+      context.read<AppointmentsBloc>().add(AppointmentsLoadRequested(
+            slug: bizState.active.slug,
+            date: DateTime.now(),
           ));
     }
   }

@@ -641,6 +641,7 @@ class _EditAppointmentSheetState extends State<EditAppointmentSheet> {
     final picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(_selectedDateTime),
+      initialEntryMode: TimePickerEntryMode.input,
     );
     if (picked != null) {
       setState(() {

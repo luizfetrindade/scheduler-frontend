@@ -11,31 +11,7 @@ class AuthUserFetched extends AuthEvent {
   const AuthUserFetched();
 }
 
-/// Step 1 of login: validate that the email exists on the backend.
-class AuthEmailSubmitted extends AuthEvent {
-  final String email;
-  const AuthEmailSubmitted({required this.email});
-  @override
-  List<Object?> get props => [email];
-}
-
-/// Step 2 of login: submit the 6-digit TOTP code from Google Authenticator.
-class AuthTotpLoginSubmitted extends AuthEvent {
-  final String email;
-  final String code;
-  final bool rememberMe;
-  const AuthTotpLoginSubmitted({
-    required this.email,
-    required this.code,
-    required this.rememberMe,
-  });
-  @override
-  // TOTP code excluded from props — Equatable serialises props in toString(),
-  // which leaks into debug logs and crash reporters.
-  List<Object?> get props => [email, rememberMe];
-}
-
-/// Step 1 of registration: submit profile fields (no password).
+/// Step 1 of registration: submit profile fields. Sends OTP to email.
 class AuthRegisterRequested extends AuthEvent {
   final String name;
   final String email;
@@ -49,15 +25,37 @@ class AuthRegisterRequested extends AuthEvent {
   List<Object?> get props => [name, email, phone];
 }
 
-/// Step 3 of registration: confirm TOTP setup with the 6-digit code.
-class AuthTotpSetupConfirmed extends AuthEvent {
-  final String tempToken;
+/// Step 2 of registration: confirm the OTP code sent to email.
+class AuthRegisterOtpConfirmed extends AuthEvent {
+  final String email;
   final String code;
-  const AuthTotpSetupConfirmed({required this.tempToken, required this.code});
+  const AuthRegisterOtpConfirmed({required this.email, required this.code});
   @override
-  // tempToken and TOTP code excluded — sensitive credentials must not appear
-  // in Equatable's toString() output (logs, crash reporters).
-  List<Object?> get props => [];
+  // OTP code excluded — must not appear in Equatable toString() output.
+  List<Object?> get props => [email];
+}
+
+/// Step 1 of login: send OTP to user's email.
+class AuthLoginInitiateRequested extends AuthEvent {
+  final String email;
+  const AuthLoginInitiateRequested({required this.email});
+  @override
+  List<Object?> get props => [email];
+}
+
+/// Step 2 of login: confirm the OTP code sent to email.
+class AuthOtpLoginSubmitted extends AuthEvent {
+  final String email;
+  final String code;
+  final bool rememberMe;
+  const AuthOtpLoginSubmitted({
+    required this.email,
+    required this.code,
+    required this.rememberMe,
+  });
+  @override
+  // OTP code excluded — must not appear in Equatable toString() output.
+  List<Object?> get props => [email, rememberMe];
 }
 
 /// Dispatched when the user taps logout.
@@ -65,27 +63,24 @@ class AuthLogoutRequested extends AuthEvent {
   const AuthLogoutRequested();
 }
 
-/// Checks which auth method (totp | password) is required for the given email.
-class AuthCheckEmailRequested extends AuthEvent {
-  final String email;
-  const AuthCheckEmailRequested({required this.email});
+/// Step 1 of accept-invite: validate token and send OTP to invite email.
+class AuthAcceptInviteRequested extends AuthEvent {
+  final String token;
+  final String name;
+  const AuthAcceptInviteRequested({required this.token, required this.name});
   @override
-  List<Object?> get props => [email];
+  // Token excluded — sensitive credential.
+  List<Object?> get props => [name];
 }
 
-/// Login with email + password (for staff/member personas).
-class AuthPasswordLoginRequested extends AuthEvent {
-  final String email;
-  final String password;
-  final bool rememberMe;
-  const AuthPasswordLoginRequested({
-    required this.email,
-    required this.password,
-    required this.rememberMe,
-  });
+/// Step 2 of accept-invite: confirm OTP and activate the account.
+class AuthAcceptInviteOtpConfirmed extends AuthEvent {
+  final String token;
+  final String code;
+  const AuthAcceptInviteOtpConfirmed({required this.token, required this.code});
   @override
-  // Password excluded — must not appear in Equatable's toString() output.
-  List<Object?> get props => [email, rememberMe];
+  // Token and OTP code excluded — sensitive credentials.
+  List<Object?> get props => [];
 }
 
 /// Triggers a forgot-password email to be sent.
@@ -102,19 +97,21 @@ class AuthResetPasswordRequested extends AuthEvent {
   final String newPassword;
   const AuthResetPasswordRequested({required this.token, required this.newPassword});
   @override
-  // Reset token and new password excluded — sensitive credentials must not
-  // appear in Equatable's toString() output (logs, crash reporters).
+  // Reset token and new password excluded — sensitive credentials.
   List<Object?> get props => [];
 }
 
-/// Accepts a staff invite and sets up the account with name + password.
-class AuthAcceptInviteRequested extends AuthEvent {
-  final String token;
-  final String name;
+/// Legacy event — password_login_page.dart is unreachable in the current flow.
+/// Kept to avoid a compile error until the page is removed.
+class AuthPasswordLoginRequested extends AuthEvent {
+  final String email;
   final String password;
-  const AuthAcceptInviteRequested({required this.token, required this.name, required this.password});
+  final bool rememberMe;
+  const AuthPasswordLoginRequested({
+    required this.email,
+    required this.password,
+    required this.rememberMe,
+  });
   @override
-  // Invite token and password excluded — sensitive credentials must not
-  // appear in Equatable's toString() output (logs, crash reporters).
-  List<Object?> get props => [name];
+  List<Object?> get props => [email, rememberMe];
 }

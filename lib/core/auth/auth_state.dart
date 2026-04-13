@@ -34,45 +34,25 @@ class AuthError extends AuthState {
   List<Object?> get props => [message];
 }
 
-/// Login flow: email validated, waiting for the user to enter their TOTP code.
-class AuthTotpChallengeReady extends AuthState {
+/// Register flow: OTP sent to email, waiting for user to enter code.
+class AuthRegisterOtpSent extends AuthState {
   final String email;
-  const AuthTotpChallengeReady({required this.email});
+  const AuthRegisterOtpSent(this.email);
   @override
   List<Object?> get props => [email];
 }
 
-/// Register flow: registration accepted, QR code ready to display for setup.
-class AuthTotpSetupReady extends AuthState {
-  final String qrCodeUrl;
-  final String secret;
-  final String tempToken;
-  const AuthTotpSetupReady({
-    required this.qrCodeUrl,
-    required this.secret,
-    required this.tempToken,
-  });
+/// Login flow: OTP sent to email, waiting for user to enter code.
+class AuthLoginOtpSent extends AuthState {
+  final String email;
+  const AuthLoginOtpSent({required this.email});
   @override
-  // secret and tempToken excluded — Equatable serialises props in toString()
-  // and exposes them to BlocObservers (crash reporters, analytics SDKs).
-  // Equality on qrCodeUrl alone is sufficient: only one setup state is ever
-  // emitted per registration flow and qrCodeUrls are unique per user session.
-  List<Object?> get props => [qrCodeUrl];
-
-  @override
-  String toString() =>
-      'AuthTotpSetupReady(qrCodeUrl: $qrCodeUrl, secret: [REDACTED], tempToken: [REDACTED])';
+  List<Object?> get props => [email];
 }
 
-/// check-email flow: email found, backend returned which auth method to use.
-class AuthEmailChecked extends AuthState {
-  final String email;
-
-  /// Either 'totp' (owner/manager) or 'password' (staff/member).
-  final String authMethod;
-  const AuthEmailChecked(this.email, this.authMethod);
-  @override
-  List<Object?> get props => [email, authMethod];
+/// Accept-invite flow: OTP sent, waiting for user to enter code.
+class AuthInviteOtpSent extends AuthState {
+  const AuthInviteOtpSent();
 }
 
 /// forgot-password flow: reset email has been dispatched successfully.

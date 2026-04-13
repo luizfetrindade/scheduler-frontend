@@ -49,7 +49,7 @@ class _LoginPageState extends State<LoginPage> {
   void _submitEmail() {
     final email = _emailController.text.trim();
     if (email.isEmpty) return;
-    context.read<AuthBloc>().add(AuthCheckEmailRequested(email: email));
+    context.read<AuthBloc>().add(AuthLoginInitiateRequested(email: email));
   }
 
   @override
@@ -58,13 +58,11 @@ class _LoginPageState extends State<LoginPage> {
       backgroundColor: context.appColors.background,
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
-          if (state is AuthEmailChecked) {
-            final extra = (email: state.email, rememberMe: _rememberMe);
-            if (state.authMethod == 'totp') {
-              context.push('/login/totp', extra: extra);
-            } else {
-              context.push('/login/password', extra: extra);
-            }
+          if (state is AuthLoginOtpSent) {
+            context.push(
+              '/login/totp',
+              extra: (email: state.email, rememberMe: _rememberMe),
+            );
           }
           if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -377,7 +375,6 @@ class _RememberMeRow extends StatelessWidget {
                 value: value,
                 onChanged:
                     enabled ? (v) => onChanged(v ?? false) : null,
-                // Sharp edges per project convention (no rounded corners).
                 shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.zero,
                 ),

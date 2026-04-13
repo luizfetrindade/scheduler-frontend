@@ -35,7 +35,7 @@ void main() {
   late MockAuthBloc authBloc;
 
   setUpAll(() {
-    registerFallbackValue(const AuthCheckEmailRequested(email: 'test@test.com'));
+    registerFallbackValue(const AuthLoginInitiateRequested(email: 'test@test.com'));
   });
 
   setUp(() {
@@ -43,7 +43,7 @@ void main() {
     when(() => authBloc.state).thenReturn(const AuthUnauthenticated());
   });
 
-  testWidgets('submitting email dispatches AuthCheckEmailRequested',
+  testWidgets('submitting email dispatches AuthLoginInitiateRequested',
       (tester) async {
     await tester.pumpWidget(_buildLoginPage(authBloc));
     await tester.pump(const Duration(milliseconds: 100));
@@ -58,7 +58,7 @@ void main() {
 
     verify(
       () => authBloc.add(
-        const AuthCheckEmailRequested(email: 'user@example.com'),
+        const AuthLoginInitiateRequested(email: 'user@example.com'),
       ),
     ).called(1);
   });

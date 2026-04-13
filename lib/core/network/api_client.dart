@@ -1,7 +1,7 @@
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
-import 'package:flutter/foundation.dart' show VoidCallback, debugPrint, kIsWeb;
+import 'package:flutter/foundation.dart' show VoidCallback, kIsWeb;
 import 'package:flutter_http/flutter_http.dart';
 import 'package:mutex/mutex.dart';
 import 'package:path_provider/path_provider.dart';
@@ -36,7 +36,6 @@ Result<T> apiClientUnknownFailure<T>(Object error, StackTrace stack) {
 /// and sends the cookie on every request to /auth/*.
 /// Unauthorized responses are handled in AuthBloc by emitting AuthUnauthenticated.
 class ApiClient {
-  final HttpClient _http;
   final Dio _rawDio;
   final TokenStorage tokenStorage;
 
@@ -55,7 +54,7 @@ class ApiClient {
   /// to the login screen instead of seeing misleading "no permission" errors.
   VoidCallback? onAuthExpired;
 
-  ApiClient._(this._http, this._rawDio, this.tokenStorage, [this._cookieJar]);
+  ApiClient._(this._rawDio, this.tokenStorage, [this._cookieJar]);
 
   /// Creates a production [ApiClient].
   ///
@@ -68,11 +67,6 @@ class ApiClient {
   static Future<ApiClient> create() async {
     final ts = kIsWeb ? WebTokenStorage() : TokenStorage();
     final validatedUrl = AppConfig.validatedApiUrl;
-    final http = HttpClient(
-      baseUrl: validatedUrl,
-      tokenStorage: ts,
-      refreshEndpoint: '/auth/_no_auto_refresh',
-    );
     final rawDio = Dio(BaseOptions(
       baseUrl: validatedUrl,
       contentType: 'application/json',
@@ -89,27 +83,22 @@ class ApiClient {
         storage: FileStorage('${dir.path}/.cookies/'),
       );
       rawDio.interceptors.add(CookieManager(cookieJar));
-      return ApiClient._(http, rawDio, ts, cookieJar);
+      return ApiClient._(rawDio, ts, cookieJar);
     }
-    return ApiClient._(http, rawDio, ts);
+    return ApiClient._(rawDio, ts);
   }
 
   /// Test-only factory that injects a mock [TokenStorage] and a Dio instance
   /// configured with a localhost base URL that will fail fast (no real server
   /// needed for unit tests that only verify token-reading behaviour).
   factory ApiClient.forTest({required TokenStorage tokenStorage}) {
-    final http = HttpClient(
-      baseUrl: 'http://localhost',
-      tokenStorage: tokenStorage,
-      refreshEndpoint: '/auth/_no_auto_refresh',
-    );
     final rawDio = Dio(BaseOptions(
       baseUrl: 'http://localhost',
       contentType: 'application/json',
       connectTimeout: const Duration(milliseconds: 100),
       receiveTimeout: const Duration(milliseconds: 100),
     ));
-    return ApiClient._(http, rawDio, tokenStorage);
+    return ApiClient._(rawDio, tokenStorage);
   }
 
   // ---------------------------------------------------------------------------
@@ -123,11 +112,7 @@ class ApiClient {
     required T Function(Map<String, dynamic>) fromJson,
     Map<String, dynamic>? queryParams,
   }) =>
-      _withRefresh(() => _http.get(
-            path,
-            fromJson: (envelope) => fromJson(_unwrapObject(envelope)),
-            queryParams: queryParams,
-          ));
+      _withRefresh(() => _getInner(path, fromJson: fromJson, queryParams: queryParams));
 
   /// Backend returns { "data": [...], "meta": {...} } — NOT a raw array.
   /// flutter_http's getList() expects a raw array, so we use get<List<T>>
@@ -137,29 +122,14 @@ class ApiClient {
     required T Function(Map<String, dynamic>) fromJson,
     Map<String, dynamic>? queryParams,
   }) =>
-      _withRefresh(() => _http.get<List<T>>(
-            path,
-            fromJson: (envelope) {
-              final list = (envelope['data'] as List<dynamic>);
-              return list
-                  .map((item) => fromJson(item as Map<String, dynamic>))
-                  .toList();
-            },
-            queryParams: queryParams,
-          ));
+      _withRefresh(() => _getListInner(path, fromJson: fromJson, queryParams: queryParams));
 
   /// Fetches the list of businesses for the authenticated user from
   /// `/businesses/mine`. Unwraps the backend's `{ "data": [...] }` envelope.
   Future<Result<List<BusinessModel>>> getBusinessesMine() =>
-      _withRefresh(() => _http.get<List<BusinessModel>>(
+      _withRefresh(() => _getListInner(
             '/businesses/mine',
-            fromJson: (json) {
-              final data = json['data'] as List<dynamic>;
-              return data
-                  .map(
-                      (e) => BusinessModel.fromJson(e as Map<String, dynamic>))
-                  .toList();
-            },
+            fromJson: BusinessModel.fromJson,
           ));
 
   Future<Result<T>> post<T>(
@@ -245,6 +215,72 @@ class ApiClient {
         fromJson: (json) => json,
         body: {'token': token, 'name': name, 'password': password},
       );
+
+  /// GET via raw Dio with manual Bearer token injection.
+  /// Consistent with _postInner / _patchInner / _deleteInner so that the token
+  /// is always read from tokenStorage at request time (avoids flutter_http
+  /// caching issues on web where IndexedDB reads may not be reflected
+  /// immediately in the flutter_http internal state).
+  Future<Result<T>> _getInner<T>(
+    String path, {
+    required T Function(Map<String, dynamic>) fromJson,
+    Map<String, dynamic>? queryParams,
+  }) async {
+    try {
+      final token = await _getToken();
+      final response = await _rawDio.get<Map<String, dynamic>>(
+        path,
+        queryParameters: queryParams,
+        options: Options(headers: {
+          if (token != null) 'Authorization': 'Bearer $token',
+        }),
+      );
+      final data = response.data;
+      if (data == null) return Success(fromJson({}));
+      return Success(fromJson(_unwrapObject(data)));
+    } on DioException catch (e) {
+      final code = e.response?.statusCode;
+      if (code == 401) return const HttpFailure(UnauthorizedFailure('Não autorizado'));
+      if (code == 404) return const HttpFailure(NotFoundFailure('Recurso não encontrado'));
+      final backendMessage = _extractBackendMessage(e);
+      return HttpFailure(
+          ServerFailure(backendMessage ?? e.message ?? 'Erro no servidor', statusCode: code ?? 500));
+    } catch (e, stack) {
+      return apiClientUnknownFailure<T>(e, stack);
+    }
+  }
+
+  /// GET list via raw Dio with manual Bearer token injection.
+  /// Extracts json['data'] as a list from the backend envelope.
+  Future<Result<List<T>>> _getListInner<T>(
+    String path, {
+    required T Function(Map<String, dynamic>) fromJson,
+    Map<String, dynamic>? queryParams,
+  }) async {
+    try {
+      final token = await _getToken();
+      final response = await _rawDio.get<Map<String, dynamic>>(
+        path,
+        queryParameters: queryParams,
+        options: Options(headers: {
+          if (token != null) 'Authorization': 'Bearer $token',
+        }),
+      );
+      final envelope = response.data;
+      if (envelope == null) return const Success([]);
+      final list = (envelope['data'] as List<dynamic>);
+      return Success(list.map((item) => fromJson(item as Map<String, dynamic>)).toList());
+    } on DioException catch (e) {
+      final code = e.response?.statusCode;
+      if (code == 401) return const HttpFailure(UnauthorizedFailure('Não autorizado'));
+      if (code == 404) return const HttpFailure(NotFoundFailure('Recurso não encontrado'));
+      final backendMessage = _extractBackendMessage(e);
+      return HttpFailure(
+          ServerFailure(backendMessage ?? e.message ?? 'Erro no servidor', statusCode: code ?? 500));
+    } catch (e, stack) {
+      return apiClientUnknownFailure<List<T>>(e, stack);
+    }
+  }
 
   /// DELETE via raw Dio. Backend returns 204 No Content — no body to unwrap.
   Future<Result<void>> delete(String path) =>

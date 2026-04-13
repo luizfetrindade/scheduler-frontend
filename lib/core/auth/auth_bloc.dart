@@ -9,20 +9,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   AuthBloc(this._repository) : super(const AuthInitial()) {
     on<AuthUserFetched>(_onUserFetched);
-    on<AuthEmailSubmitted>(_onEmailSubmitted);
-    on<AuthTotpLoginSubmitted>(_onTotpLoginSubmitted);
     on<AuthRegisterRequested>(_onRegisterRequested);
-    on<AuthTotpSetupConfirmed>(_onTotpSetupConfirmed);
+    on<AuthRegisterOtpConfirmed>(_onRegisterOtpConfirmed);
+    on<AuthLoginInitiateRequested>(_onLoginInitiate);
+    on<AuthOtpLoginSubmitted>(_onOtpLoginSubmitted);
     on<AuthLogoutRequested>(_onLogoutRequested);
-    on<AuthCheckEmailRequested>(_onCheckEmailRequested);
-    on<AuthPasswordLoginRequested>(_onPasswordLoginRequested);
+    on<AuthAcceptInviteRequested>(_onAcceptInviteRequested);
+    on<AuthAcceptInviteOtpConfirmed>(_onAcceptInviteOtpConfirmed);
     on<AuthForgotPasswordRequested>(_onForgotPasswordRequested);
     on<AuthResetPasswordRequested>(_onResetPasswordRequested);
-    on<AuthAcceptInviteRequested>(_onAcceptInviteRequested);
   }
 
-  /// Checks if there is a stored token and fetches the current user.
-  /// Emits AuthUnauthenticated if no token exists or the token is invalid.
   Future<void> _onUserFetched(
     AuthUserFetched event,
     Emitter<AuthState> emit,
@@ -37,38 +34,38 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  /// Step 1 of login: validates the email exists before asking for TOTP.
-  Future<void> _onEmailSubmitted(
-    AuthEmailSubmitted event,
+  /// Step 1 of registration: sends OTP to email.
+  Future<void> _onRegisterRequested(
+    AuthRegisterRequested event,
     Emitter<AuthState> emit,
   ) async {
     emit(const AuthLoading());
-    final result = await _repository.verifyEmail(email: event.email);
+    final result = await _repository.register(
+      name: event.name,
+      email: event.email,
+      phone: event.phone,
+    );
     switch (result) {
-      case Success(:final data) when data:
-        emit(AuthTotpChallengeReady(email: event.email));
       case Success():
-        emit(const AuthError('E-mail não encontrado. Verifique e tente novamente.'));
+        emit(AuthRegisterOtpSent(event.email));
       case HttpFailure(:final failure):
         emit(AuthError(_message(failure)));
     }
   }
 
-  /// Step 2 of login: verifies the TOTP code and authenticates the user.
-  Future<void> _onTotpLoginSubmitted(
-    AuthTotpLoginSubmitted event,
+  /// Step 2 of registration: confirms OTP and authenticates the user.
+  Future<void> _onRegisterOtpConfirmed(
+    AuthRegisterOtpConfirmed event,
     Emitter<AuthState> emit,
   ) async {
     emit(const AuthLoading());
-    final loginResult = await _repository.loginWithTotp(
+    final result = await _repository.registerConfirm(
       email: event.email,
       code: event.code,
-      rememberMe: event.rememberMe,
     );
-    switch (loginResult) {
+    switch (result) {
       case Success(:final data):
         await _repository.saveTokens(data.accessToken);
-        await _persistRememberMe(event.email, event.rememberMe);
         final meResult = await _repository.getMe();
         switch (meResult) {
           case Success(:final data):
@@ -81,42 +78,36 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  /// Step 1 of registration: creates the account and returns TOTP setup data.
-  Future<void> _onRegisterRequested(
-    AuthRegisterRequested event,
+  /// Step 1 of login: sends OTP to email.
+  Future<void> _onLoginInitiate(
+    AuthLoginInitiateRequested event,
     Emitter<AuthState> emit,
   ) async {
     emit(const AuthLoading());
-    final result = await _repository.register(
-      name: event.name,
-      email: event.email,
-      phone: event.phone,
-    );
+    final result = await _repository.loginInitiate(email: event.email);
     switch (result) {
-      case Success(:final data):
-        emit(AuthTotpSetupReady(
-          qrCodeUrl: data.qrCodeUrl,
-          secret: data.secret,
-          tempToken: data.tempToken,
-        ));
+      case Success():
+        emit(AuthLoginOtpSent(email: event.email));
       case HttpFailure(:final failure):
         emit(AuthError(_message(failure)));
     }
   }
 
-  /// Step 3 of registration: confirms TOTP setup and authenticates the user.
-  Future<void> _onTotpSetupConfirmed(
-    AuthTotpSetupConfirmed event,
+  /// Step 2 of login: confirms OTP and authenticates the user.
+  Future<void> _onOtpLoginSubmitted(
+    AuthOtpLoginSubmitted event,
     Emitter<AuthState> emit,
   ) async {
     emit(const AuthLoading());
-    final result = await _repository.confirmTotpSetup(
-      tempToken: event.tempToken,
+    final result = await _repository.loginConfirm(
+      email: event.email,
       code: event.code,
+      rememberMe: event.rememberMe,
     );
     switch (result) {
       case Success(:final data):
         await _repository.saveTokens(data.accessToken);
+        await _persistRememberMe(event.email, event.rememberMe);
         final meResult = await _repository.getMe();
         switch (meResult) {
           case Success(:final data):
@@ -137,54 +128,43 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(const AuthUnauthenticated());
   }
 
-  /// Checks which auth method the backend requires for the given email.
-  Future<void> _onCheckEmailRequested(
-    AuthCheckEmailRequested event,
+  /// Step 1 of accept-invite: validates token and sends OTP.
+  Future<void> _onAcceptInviteRequested(
+    AuthAcceptInviteRequested event,
     Emitter<AuthState> emit,
   ) async {
     emit(const AuthLoading());
-    final result = await _repository.checkEmail(event.email);
+    final result = await _repository.acceptInviteInitiate(
+      token: event.token,
+      name: event.name,
+    );
+    switch (result) {
+      case Success():
+        emit(const AuthInviteOtpSent());
+      case HttpFailure(:final failure):
+        emit(AuthError(_message(failure)));
+    }
+  }
+
+  /// Step 2 of accept-invite: confirms OTP and creates the account.
+  Future<void> _onAcceptInviteOtpConfirmed(
+    AuthAcceptInviteOtpConfirmed event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    final result = await _repository.acceptInviteConfirm(
+      token: event.token,
+      code: event.code,
+    );
     switch (result) {
       case Success(:final data):
-        final authMethod = data['authMethod'];
-        if (authMethod is! String) {
-          emit(const AuthError('Algo deu errado. Tente novamente'));
-          return;
-        }
-        emit(AuthEmailChecked(event.email, authMethod));
-      case HttpFailure(:final failure):
-        emit(AuthError(_message(failure)));
-    }
-  }
-
-  /// Authenticates a member/staff user with email + password.
-  Future<void> _onPasswordLoginRequested(
-    AuthPasswordLoginRequested event,
-    Emitter<AuthState> emit,
-  ) async {
-    emit(const AuthLoading());
-    final loginResult = await _repository.loginWithPassword(
-      email: event.email,
-      password: event.password,
-      rememberMe: event.rememberMe,
-    );
-    switch (loginResult) {
-      case Success(:final data):
         await _repository.saveTokens(data.accessToken);
-        await _persistRememberMe(event.email, event.rememberMe);
-        final meResult = await _repository.getMe();
-        switch (meResult) {
-          case Success(:final data):
-            emit(AuthAuthenticated(data));
-          case HttpFailure(:final failure):
-            emit(AuthError(_message(failure)));
-        }
+        emit(const AuthInviteAccepted());
       case HttpFailure(:final failure):
         emit(AuthError(_message(failure)));
     }
   }
 
-  /// Sends a password-reset email to the given address.
   Future<void> _onForgotPasswordRequested(
     AuthForgotPasswordRequested event,
     Emitter<AuthState> emit,
@@ -199,7 +179,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  /// Resets the user's password using the one-time token from the email.
   Future<void> _onResetPasswordRequested(
     AuthResetPasswordRequested event,
     Emitter<AuthState> emit,
@@ -214,28 +193,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  /// Accepts a staff invite and sets up the account.
-  Future<void> _onAcceptInviteRequested(
-    AuthAcceptInviteRequested event,
-    Emitter<AuthState> emit,
-  ) async {
-    emit(const AuthLoading());
-    final result = await _repository.acceptInvite(
-      event.token,
-      event.name,
-      event.password,
-    );
-    switch (result) {
-      case Success(:final data):
-        await _repository.saveTokens(data.accessToken);
-        emit(const AuthInviteAccepted());
-      case HttpFailure(:final failure):
-        emit(AuthError(_message(failure)));
-    }
-  }
-
-  /// Persists the "Lembrar de mim" choice after a successful login.
-  /// Called exactly once per successful login, never on failure.
   Future<void> _persistRememberMe(String email, bool rememberMe) async {
     if (rememberMe) {
       await _repository.saveRememberMe(email);
@@ -245,7 +202,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   String _message(AppFailure failure) {
-    // Attempt to extract more info despite minification
     if (failure is ServerFailure) {
       print('[AUTH_ERROR] ServerFailure: ${failure.message} (Status: ${failure.statusCode})');
     } else if (failure is UnauthorizedFailure) {
@@ -253,7 +209,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     } else {
       print('[AUTH_ERROR] Generic/Unknown Failure: $failure');
     }
-    
+
     return switch (failure) {
       UnauthorizedFailure(:final message) => message,
       NetworkFailure() => 'Sem conexão com a internet',

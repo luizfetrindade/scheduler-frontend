@@ -18,8 +18,8 @@
   "loginContinueButton": "Continuar",
   "loginNoAccount": "Não tem conta? Criar conta",
 
-  "loginTotpTitle": "Verificação em dois fatores",
-  "loginTotpInstruction": "Abra o Google Authenticator e insira o código de 6 dígitos para {email}",
+  "loginTotpTitle": "Verificação por e-mail",
+  "loginTotpInstruction": "Enviamos um código de 6 dígitos para {email}. Insira-o abaixo para entrar.",
   "@loginTotpInstruction": {
     "placeholders": {
       "email": { "type": "String" }
@@ -40,8 +40,8 @@
   "registerManualSecretLabel": "Digite esta chave manualmente no app:",
   "registerContinueAfterQr": "Já escaneei, continuar",
 
-  "registerConfirmTitle": "Confirme o código",
-  "registerConfirmInstruction": "Insira o código de 6 dígitos gerado pelo Google Authenticator para confirmar a configuração.",
+  "registerConfirmTitle": "Confirme o cadastro",
+  "registerConfirmInstruction": "Enviamos um código de 6 dígitos para o seu e-mail. Insira-o abaixo para confirmar o cadastro.",
   "registerConfirmCodeLabel": "Código do autenticador",
   "registerConfirmButton": "Confirmar",
   "registerBackButton": "Voltar"

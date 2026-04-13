@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:scheduler_frontend/core/auth/auth_bloc.dart';
 import 'package:scheduler_frontend/core/auth/auth_event.dart';
 import 'package:scheduler_frontend/core/auth/auth_state.dart';
@@ -24,12 +23,8 @@ class _RegisterPageState extends State<RegisterPage> {
   final _otpController = TextEditingController();
 
   int _step = 0;
+  String _email = '';
   Map<String, String?> _errors = {};
-
-  // Captured from AuthTotpSetupReady — kept in memory only, never persisted.
-  String? _tempToken;
-  String? _qrCodeUrl;
-  String? _secret;
 
   static const _kBreakpoint = 720.0;
 
@@ -69,19 +64,19 @@ class _RegisterPageState extends State<RegisterPage> {
 
   void _submitProfile() {
     if (!_validateProfileFields()) return;
+    _email = _emailController.text.trim();
     context.read<AuthBloc>().add(
           AuthRegisterRequested(
             name: _nameController.text.trim(),
-            email: _emailController.text.trim(),
+            email: _email,
             phone: _phoneController.text.trim(),
           ),
         );
   }
 
-  void _confirmTotp(String code) {
-    if (_tempToken == null) return;
+  void _confirmOtp(String code) {
     context.read<AuthBloc>().add(
-          AuthTotpSetupConfirmed(tempToken: _tempToken!, code: code),
+          AuthRegisterOtpConfirmed(email: _email, code: code),
         );
   }
 
@@ -91,11 +86,9 @@ class _RegisterPageState extends State<RegisterPage> {
       backgroundColor: context.appColors.background,
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
-          if (state is AuthTotpSetupReady) {
+          if (state is AuthRegisterOtpSent) {
             setState(() {
-              _tempToken = state.tempToken;
-              _qrCodeUrl = state.qrCodeUrl;
-              _secret = state.secret;
+              _email = state.email;
               _step = 1;
             });
           }
@@ -110,7 +103,7 @@ class _RegisterPageState extends State<RegisterPage> {
         },
         builder: (context, state) {
           final isLoading = state is AuthLoading;
-          final hasOtpError = state is AuthError && _step == 2;
+          final hasOtpError = state is AuthError && _step == 1;
 
           final formWidget = AnimatedSwitcher(
             duration: const Duration(milliseconds: 280),
@@ -126,22 +119,17 @@ class _RegisterPageState extends State<RegisterPage> {
                   isLoading: isLoading,
                   onSubmit: _submitProfile,
                 ),
-              1 => _QrStep(
+              _ => _OtpStep(
                   key: const ValueKey(1),
-                  qrCodeUrl: _qrCodeUrl ?? '',
-                  secret: _secret ?? '',
-                  onContinue: () => setState(() => _step = 2),
-                ),
-              _ => _ConfirmTotpStep(
-                  key: const ValueKey(2),
+                  email: _email,
                   otpController: _otpController,
                   isLoading: isLoading,
                   hasError: hasOtpError,
-                  onCompleted: _confirmTotp,
-                  onSubmit: () => _confirmTotp(_otpController.text),
+                  onCompleted: _confirmOtp,
+                  onSubmit: () => _confirmOtp(_otpController.text),
                   onBack: () {
                     _otpController.clear();
-                    setState(() => _step = 1);
+                    setState(() => _step = 0);
                   },
                 ),
             },
@@ -345,10 +333,6 @@ class _StepHeader extends StatelessWidget {
           context.l10n.registerTitle,
           'Preencha os dados para criar sua conta.',
         ),
-      1 => (
-          context.l10n.registerQrTitle,
-          context.l10n.registerQrInstruction,
-        ),
       _ => (
           context.l10n.registerConfirmTitle,
           context.l10n.registerConfirmInstruction,
@@ -445,99 +429,10 @@ class _ProfileStep extends StatelessWidget {
   }
 }
 
-// ─── Step 1: QR code scan ─────────────────────────────────────────────────────
+// ─── Step 1: OTP confirmation ─────────────────────────────────────────────────
 
-class _QrStep extends StatefulWidget {
-  final String qrCodeUrl;
-  final String secret;
-  final VoidCallback onContinue;
-
-  const _QrStep({
-    super.key,
-    required this.qrCodeUrl,
-    required this.secret,
-    required this.onContinue,
-  });
-
-  @override
-  State<_QrStep> createState() => _QrStepState();
-}
-
-class _QrStepState extends State<_QrStep> {
-  bool _showManual = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Center(
-          child: BaseCard(
-            padding: AppSpacing.xl,
-            child: QrImageView(
-              data: widget.qrCodeUrl,
-              version: QrVersions.auto,
-              size: 200,
-              backgroundColor: Colors.white,
-            ),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        GestureDetector(
-          onTap: () => setState(() => _showManual = !_showManual),
-          child: Row(
-            children: [
-              Text(
-                context.l10n.registerManualEntry,
-                style: AppTypography.bodySm.copyWith(
-                  color: context.appColors.primary,
-                  decoration: TextDecoration.underline,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              Icon(
-                _showManual ? Icons.expand_less : Icons.expand_more,
-                color: context.appColors.primary,
-                size: 18,
-              ),
-            ],
-          ),
-        ),
-        if (_showManual) ...[
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            context.l10n.registerManualSecretLabel,
-            style: AppTypography.caption.copyWith(
-              color: context.appColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            color: context.appColors.surface,
-            child: Text(
-              widget.secret,
-              style: AppTypography.bodyMd.copyWith(
-                color: context.appColors.textPrimary,
-                fontFamily: 'monospace',
-                letterSpacing: 1.5,
-              ),
-            ),
-          ),
-        ],
-        const SizedBox(height: AppSpacing.xl),
-        BaseButton(
-          label: context.l10n.registerContinueAfterQr,
-          onPressed: widget.onContinue,
-        ),
-      ],
-    );
-  }
-}
-
-// ─── Step 2: confirm TOTP ─────────────────────────────────────────────────────
-
-class _ConfirmTotpStep extends StatelessWidget {
+class _OtpStep extends StatelessWidget {
+  final String email;
   final TextEditingController otpController;
   final bool isLoading;
   final bool hasError;
@@ -545,8 +440,9 @@ class _ConfirmTotpStep extends StatelessWidget {
   final VoidCallback onSubmit;
   final VoidCallback onBack;
 
-  const _ConfirmTotpStep({
+  const _OtpStep({
     super.key,
+    required this.email,
     required this.otpController,
     required this.isLoading,
     required this.hasError,
@@ -560,6 +456,14 @@ class _ConfirmTotpStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Text(
+          'Código enviado para $email',
+          style: AppTypography.bodySm.copyWith(
+            color: context.appColors.textSecondary,
+            height: 1.6,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xl),
         Center(
           child: OtpInputField(
             controller: otpController,
