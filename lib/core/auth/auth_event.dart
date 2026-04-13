@@ -101,6 +101,11 @@ class AuthResetPasswordRequested extends AuthEvent {
   List<Object?> get props => [];
 }
 
+/// Refreshes the authenticated user's data from the server (e.g. after profile update).
+class AuthUserRefreshRequested extends AuthEvent {
+  const AuthUserRefreshRequested();
+}
+
 /// Legacy event — password_login_page.dart is unreachable in the current flow.
 /// Kept to avoid a compile error until the page is removed.
 class AuthPasswordLoginRequested extends AuthEvent {

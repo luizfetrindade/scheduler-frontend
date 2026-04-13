@@ -1,11 +1,11 @@
 {
-    "name": "gym_hero",
-    "short_name": "gym_hero",
+    "name": "Skedi",
+    "short_name": "Skedi",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Gestão de agenda facilitada",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

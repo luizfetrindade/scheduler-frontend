@@ -22,6 +22,7 @@ import 'package:scheduler_frontend/features/professionals/presentation/roles_man
 import 'package:scheduler_frontend/features/services/presentation/services_page.dart';
 import 'package:scheduler_frontend/core/router/uuid_validator.dart';
 import 'package:scheduler_frontend/features/onboarding/presentation/wizard_page.dart';
+import 'package:scheduler_frontend/features/profile/presentation/profile_page.dart';
 import 'package:scheduler_frontend/features/settings/presentation/settings_page.dart';
 
 /// Extracts a one-time token from a deep-link or web URI.
@@ -151,6 +152,7 @@ GoRouter createAppRouter(AuthBloc authBloc) => GoRouter(
             ),
             GoRoute(path: AppRoutes.reports,      builder: (context, _) => const ReportsPage()),
             GoRoute(path: AppRoutes.settings,     builder: (context, _) => const SettingsPage()),
+            GoRoute(path: AppRoutes.profile,      builder: (context, _) => const ProfilePage()),
           ],
         ),
       ],

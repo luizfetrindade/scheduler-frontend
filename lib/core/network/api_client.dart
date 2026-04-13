@@ -225,6 +225,47 @@ class ApiClient {
         body: {'token': token, 'name': name, 'password': password},
       );
 
+  /// PATCH /users/me/name — updates the authenticated user's name.
+  Future<Result<Map<String, dynamic>>> updateMyName(String name) =>
+      patch<Map<String, dynamic>>(
+        '/users/me/name',
+        fromJson: (json) => json,
+        body: {'name': name},
+      );
+
+  /// PATCH /users/me/phone — updates the authenticated user's phone.
+  Future<Result<Map<String, dynamic>>> updateMyPhone(String phone) =>
+      patch<Map<String, dynamic>>(
+        '/users/me/phone',
+        fromJson: (json) => json,
+        body: {'phone': phone},
+      );
+
+  /// POST /users/me/email — initiates email change, sends OTP to new email.
+  Future<Result<Map<String, dynamic>>> initiateEmailChange(String newEmail) =>
+      post<Map<String, dynamic>>(
+        '/users/me/email',
+        fromJson: (json) => json,
+        body: {'newEmail': newEmail},
+      );
+
+  /// POST /users/me/email/confirm — confirms OTP and persists the new email.
+  Future<Result<Map<String, dynamic>>> confirmEmailChange(String code) =>
+      post<Map<String, dynamic>>(
+        '/users/me/email/confirm',
+        fromJson: (json) => json,
+        body: {'code': code},
+      );
+
+  /// PATCH /businesses/:id/name — updates the business name (owner only).
+  Future<Result<Map<String, dynamic>>> updateBusinessName(
+          String businessId, String name) =>
+      patch<Map<String, dynamic>>(
+        '/businesses/$businessId/name',
+        fromJson: (json) => json,
+        body: {'name': name},
+      );
+
   /// GET via raw Dio with manual Bearer token injection.
   /// Consistent with _postInner / _patchInner / _deleteInner so that the token
   /// is always read from tokenStorage at request time (avoids flutter_http

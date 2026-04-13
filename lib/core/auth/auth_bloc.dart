@@ -18,6 +18,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthAcceptInviteOtpConfirmed>(_onAcceptInviteOtpConfirmed);
     on<AuthForgotPasswordRequested>(_onForgotPasswordRequested);
     on<AuthResetPasswordRequested>(_onResetPasswordRequested);
+    on<AuthUserRefreshRequested>(_onUserRefreshRequested);
   }
 
   Future<void> _onUserFetched(
@@ -190,6 +191,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(const AuthPasswordResetSuccess());
       case HttpFailure(:final failure):
         emit(AuthError(_message(failure)));
+    }
+  }
+
+  Future<void> _onUserRefreshRequested(
+    AuthUserRefreshRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    final result = await _repository.getMe();
+    if (result case Success(:final data)) {
+      emit(AuthAuthenticated(data));
     }
   }
 

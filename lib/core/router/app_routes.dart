@@ -10,4 +10,5 @@ abstract final class AppRoutes {
   static const professionalRoles = '/professional-roles';
   static const reports           = '/reports';
   static const settings      = '/settings';
+  static const profile       = '/profile';
 }

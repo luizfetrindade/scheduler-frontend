@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:scheduler_frontend/core/auth/auth_bloc.dart';
+import 'package:scheduler_frontend/core/auth/auth_event.dart';
+import 'package:scheduler_frontend/core/auth/auth_state.dart';
 import 'package:scheduler_frontend/core/config/schedule_preferences.dart';
 import 'package:scheduler_frontend/core/router/app_routes.dart';
 import 'package:scheduler_frontend/core/theme/theme_cubit.dart';
@@ -62,6 +65,40 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
+
+            // ── Perfil ───────────────────────────────────────────────
+            _SectionLabel(label: 'Perfil'),
+            const SizedBox(height: AppSpacing.sm),
+            BlocBuilder<AuthBloc, AuthState>(
+              builder: (context, state) {
+                final name = state is AuthAuthenticated
+                    ? state.user.name
+                    : '';
+                final email = state is AuthAuthenticated
+                    ? state.user.email
+                    : '';
+                return _SettingsTile(
+                  icon: Icons.person_outline,
+                  title: name.isNotEmpty ? name : 'Perfil',
+                  subtitle: email.isNotEmpty ? email : null,
+                  trailing: Icon(Icons.chevron_right,
+                      color: context.appColors.textSecondary),
+                  onTap: () => context.push(AppRoutes.profile),
+                );
+              },
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            _SettingsTile(
+              icon: Icons.logout,
+              title: 'Sair',
+              trailing: Icon(Icons.chevron_right,
+                  color: context.appColors.textSecondary),
+              onTap: () => context
+                  .read<AuthBloc>()
+                  .add(const AuthLogoutRequested()),
+            ),
+
+            const SizedBox(height: AppSpacing.xl),
 
             // ── Aparência ────────────────────────────────────────────
             _SectionLabel(label: 'Aparência'),

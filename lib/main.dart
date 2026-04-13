@@ -39,6 +39,8 @@ import 'package:scheduler_frontend/features/professionals/bloc/professionals_eve
 import 'package:scheduler_frontend/features/professionals/data/professional_repository.dart';
 import 'package:scheduler_frontend/features/onboarding/bloc/wizard_bloc.dart';
 import 'package:scheduler_frontend/features/professionals/data/professional_roles_repository.dart';
+import 'package:scheduler_frontend/features/profile/bloc/profile_bloc.dart';
+import 'package:scheduler_frontend/features/profile/data/profile_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -61,6 +63,7 @@ void main() async {
   final professionalRepo = ProfessionalRepository(apiClient);
   final professionalRolesRepo = ProfessionalRolesRepository(apiClient);
 
+  final profileRepo = ProfileRepository(apiClient);
   final authBloc = AuthBloc(authRepo)..add(const AuthUserFetched());
 
   // When the access token expires and the refresh token is also invalid,
@@ -77,6 +80,7 @@ void main() async {
     reportsRepo: reportsRepo,
     professionalRepo: professionalRepo,
     professionalRolesRepo: professionalRolesRepo,
+    profileRepo: profileRepo,
   ));
 }
 
@@ -90,6 +94,7 @@ class SchedulerApp extends StatelessWidget {
   final ReportsRepository reportsRepo;
   final ProfessionalRepository professionalRepo;
   final ProfessionalRolesRepository professionalRolesRepo;
+  final ProfileRepository profileRepo;
 
   const SchedulerApp({
     super.key,
@@ -102,6 +107,7 @@ class SchedulerApp extends StatelessWidget {
     required this.reportsRepo,
     required this.professionalRepo,
     required this.professionalRolesRepo,
+    required this.profileRepo,
   });
 
   @override
@@ -121,6 +127,7 @@ class SchedulerApp extends StatelessWidget {
           BlocProvider(create: (_) => ClientsBloc(clientRepo)),
           BlocProvider(create: (_) => ProfessionalsBloc(professionalRepo)),
           BlocProvider(create: (_) => ProfessionalRolesBloc(professionalRolesRepo)),
+          BlocProvider(create: (_) => ProfileBloc(profileRepo)),
           BlocProvider(
             create: (context) => WizardBloc(
               createBusiness: (name) async {
