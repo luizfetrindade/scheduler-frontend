@@ -33,6 +33,7 @@ class _CreateAppointmentSheetState extends State<CreateAppointmentSheet> {
   int _durationMinutes = 60;
   bool _isCustomDuration = false;
   bool _isSubmitting = false;
+  String? _errorMessage;
   String? _recurrenceRule;
   String? _selectedServiceId;
 
@@ -57,8 +58,13 @@ class _CreateAppointmentSheetState extends State<CreateAppointmentSheet> {
   Widget build(BuildContext context) {
     return BlocListener<ScheduleBloc, ScheduleState>(
       listener: (context, state) {
-        if (state is ScheduleActionSuccess || state is ScheduleActionFailure) {
+        if (state is ScheduleActionSuccess) {
           Navigator.of(context).pop();
+        } else if (state is ScheduleActionFailure) {
+          setState(() {
+            _isSubmitting = false;
+            _errorMessage = state.message;
+          });
         }
       },
       child: Padding(
@@ -113,6 +119,16 @@ class _CreateAppointmentSheetState extends State<CreateAppointmentSheet> {
                   onChanged: (rrule) => _recurrenceRule = rrule,
                 ),
                 const SizedBox(height: AppSpacing.lg),
+                if (_errorMessage != null) ...[
+                  Text(
+                    _errorMessage!,
+                    style: AppTypography.bodySm.copyWith(
+                      color: AppColors.error,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                ],
                 BaseButton(
                   label: 'Criar Agendamento',
                   onPressed: _submit,
@@ -704,7 +720,10 @@ class _CreateAppointmentSheetState extends State<CreateAppointmentSheet> {
   }
 
   void _dispatchCreate({AppointmentStatus? status}) {
-    setState(() => _isSubmitting = true);
+    setState(() {
+      _isSubmitting = true;
+      _errorMessage = null;
+    });
 
     final duration = _isCustomDuration
         ? int.parse(_customDurationController.text)

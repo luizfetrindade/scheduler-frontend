@@ -47,8 +47,10 @@ class _CreateBlockSheetState extends State<CreateBlockSheet> {
   Widget build(BuildContext context) {
     return BlocListener<ScheduleBloc, ScheduleState>(
       listener: (context, state) {
-        if (state is ScheduleActionSuccess || state is ScheduleActionFailure) {
+        if (state is ScheduleActionSuccess) {
           Navigator.of(context).pop();
+        } else if (state is ScheduleActionFailure) {
+          setState(() => _isSubmitting = false);
         }
       },
       child: Padding(

@@ -15,7 +15,10 @@ class AppointmentRepository {
       _client.getList(
         '/b/$slug/appointments',
         fromJson: AppointmentModel.fromJson,
-        queryParams: {'date': DateFormat('yyyy-MM-dd').format(date)},
+        queryParams: {
+          'date': DateFormat('yyyy-MM-dd').format(date),
+          'utcOffset': date.timeZoneOffset.inMinutes.toString(),
+        },
       );
 
   /// PATCH /b/:slug/appointments/:id/status

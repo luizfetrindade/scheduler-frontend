@@ -6,6 +6,7 @@ import 'package:scheduler_frontend/core/config/schedule_preferences.dart';
 import 'package:scheduler_frontend/design_system/base_design_system.dart';
 import 'package:scheduler_frontend/features/appointments/bloc/appointments_bloc.dart';
 import 'package:scheduler_frontend/features/appointments/bloc/appointments_event.dart';
+import 'package:scheduler_frontend/features/appointments/bloc/appointments_state.dart';
 import 'package:scheduler_frontend/features/appointments/bloc/schedule_bloc.dart';
 import 'package:scheduler_frontend/features/appointments/bloc/schedule_event.dart';
 import 'package:scheduler_frontend/features/appointments/bloc/schedule_state.dart';
@@ -66,6 +67,10 @@ class _AppointmentsBodyState extends State<AppointmentsBody> {
 
   /// Whether drag-and-drop is enabled (loaded from preferences).
   bool _dragEnabled = true;
+
+  /// Tracks when this page itself triggered an AppointmentsBloc reload,
+  /// so the AppointmentsBloc listener can skip re-triggering ScheduleBloc.
+  bool _selfTriggeredAppointmentsLoad = false;
 
   @override
   void initState() {
@@ -140,6 +145,33 @@ class _AppointmentsBodyState extends State<AppointmentsBody> {
                           .read<ScheduleBloc>()
                           .add(ScheduleFilterByProfessional(myProfId));
                     }
+                  }
+                }
+              },
+            ),
+            BlocListener<AppointmentsBloc, AppointmentsState>(
+              listener: (context, state) {
+                if (state is AppointmentsLoaded) {
+                  if (_selfTriggeredAppointmentsLoad) {
+                    _selfTriggeredAppointmentsLoad = false;
+                    return;
+                  }
+                  // External reload (e.g., from dashboard) — sync ScheduleBloc
+                  final bizState = context.read<BusinessBloc>().state;
+                  if (bizState is BusinessLoaded) {
+                    final scheduleState = context.read<ScheduleBloc>().state;
+                    final date = switch (scheduleState) {
+                      ScheduleLoading(:final selectedDate) => selectedDate,
+                      ScheduleLoaded(:final selectedDate) => selectedDate,
+                      ScheduleError(:final selectedDate) => selectedDate,
+                      ScheduleActionSuccess(:final selectedDate) => selectedDate,
+                      ScheduleActionFailure(:final selectedDate) => selectedDate,
+                      _ => DateTime.now(),
+                    };
+                    context.read<ScheduleBloc>().add(ScheduleInitialized(
+                          slug: bizState.active.slug,
+                          date: date,
+                        ));
                   }
                 }
               },
@@ -238,6 +270,7 @@ class _AppointmentsBodyState extends State<AppointmentsBody> {
             slug: bizState.active.slug,
             date: date,
           ));
+      _selfTriggeredAppointmentsLoad = true;
       context.read<AppointmentsBloc>().add(AppointmentsLoadRequested(
             slug: bizState.active.slug,
             date: DateTime.now(),

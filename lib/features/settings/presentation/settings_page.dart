@@ -55,119 +55,134 @@ class _SettingsPageState extends State<SettingsPage> {
     return Scaffold(
       backgroundColor: context.appColors.background,
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Configurações',
-              style: AppTypography.headingMd.copyWith(
-                color: context.appColors.textPrimary,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.lg),
+              child: Text(
+                'Configurações',
+                style: AppTypography.headingMd.copyWith(
+                  color: context.appColors.textPrimary,
+                ),
               ),
             ),
-            const SizedBox(height: AppSpacing.lg),
-
-            // ── Perfil ───────────────────────────────────────────────
-            _SectionLabel(label: 'Perfil'),
-            const SizedBox(height: AppSpacing.sm),
-            BlocBuilder<AuthBloc, AuthState>(
-              builder: (context, state) {
-                final name = state is AuthAuthenticated
-                    ? state.user.name
-                    : '';
-                final email = state is AuthAuthenticated
-                    ? state.user.email
-                    : '';
-                return _SettingsTile(
-                  icon: Icons.person_outline,
-                  title: name.isNotEmpty ? name : 'Perfil',
-                  subtitle: email.isNotEmpty ? email : null,
-                  trailing: Icon(Icons.chevron_right,
-                      color: context.appColors.textSecondary),
-                  onTap: () => context.push(AppRoutes.profile),
-                );
-              },
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            _SettingsTile(
-              icon: Icons.logout,
-              title: 'Sair',
-              trailing: Icon(Icons.chevron_right,
-                  color: context.appColors.textSecondary),
-              onTap: () => context
-                  .read<AuthBloc>()
-                  .add(const AuthLogoutRequested()),
-            ),
-
-            const SizedBox(height: AppSpacing.xl),
-
-            // ── Aparência ────────────────────────────────────────────
-            _SectionLabel(label: 'Aparência'),
-            const SizedBox(height: AppSpacing.sm),
-            BlocBuilder<ThemeCubit, ThemeState>(
-              builder: (context, state) {
-                final isLight = state.themeMode == ThemeMode.light;
-                return _SettingsTile(
-                  icon: isLight ? Icons.light_mode : Icons.dark_mode,
-                  title: 'Modo claro',
-                  trailing: Switch(
-                    value: isLight,
-                    activeColor: context.appColors.primary,
-                    onChanged: (_) => context.read<ThemeCubit>().toggle(),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                children: [
+                  // ── Conta ──────────────────────────────────────────────
+                  _SectionLabel(label: 'Conta'),
+                  const SizedBox(height: AppSpacing.sm),
+                  BlocBuilder<AuthBloc, AuthState>(
+                    builder: (context, state) {
+                      final name =
+                          state is AuthAuthenticated ? state.user.name : '';
+                      final email =
+                          state is AuthAuthenticated ? state.user.email : '';
+                      return _SettingsTile(
+                        icon: Icons.person_outline,
+                        title: name.isNotEmpty ? name : 'Meus dados',
+                        subtitle: email.isNotEmpty ? email : null,
+                        trailing: Icon(Icons.chevron_right,
+                            color: context.appColors.textSecondary),
+                        onTap: () => context.push(AppRoutes.profile),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
 
-            const SizedBox(height: AppSpacing.xl),
+                  const SizedBox(height: AppSpacing.xl),
 
-            // ── Agenda ───────────────────────────────────────────────
-            _SectionLabel(label: 'Agenda'),
-            const SizedBox(height: AppSpacing.sm),
-            _SettingsTile(
-              icon: Icons.drag_indicator,
-              title: 'Arrastar e soltar',
-              subtitle: 'Mover agendamentos segurando e arrastando',
-              trailing: Switch(
-                value: _dragEnabled,
-                activeColor: context.appColors.primary,
-                onChanged: _toggleDrag,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            _SettingsTile(
-              icon: Icons.event_available,
-              title: 'Confirmar comparecimento',
-              subtitle:
-                  'Perguntar o status do agendamento assim que ele terminar',
-              trailing: Switch(
-                value: _attendancePromptEnabled,
-                activeColor: context.appColors.primary,
-                onChanged: _toggleAttendancePrompt,
-              ),
-            ),
+                  // ── Aparência ──────────────────────────────────────────
+                  _SectionLabel(label: 'Aparência'),
+                  const SizedBox(height: AppSpacing.sm),
+                  BlocBuilder<ThemeCubit, ThemeState>(
+                    builder: (context, state) {
+                      final isLight = state.themeMode == ThemeMode.light;
+                      return _SettingsTile(
+                        icon: isLight ? Icons.light_mode : Icons.dark_mode,
+                        title: 'Modo claro',
+                        trailing: Switch(
+                          value: isLight,
+                          activeColor: context.appColors.primary,
+                          onChanged: (_) =>
+                              context.read<ThemeCubit>().toggle(),
+                        ),
+                      );
+                    },
+                  ),
 
-            // ── Gerenciamento ────────────────────────────────────────
-            BlocBuilder<BusinessBloc, BusinessState>(
-              builder: (context, state) {
-                if (state is! BusinessLoaded || !state.policy.canManageTeam) {
-                  return const SizedBox.shrink();
-                }
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: AppSpacing.xl),
-                    _SectionLabel(label: 'Gerenciamento'),
-                    const SizedBox(height: AppSpacing.sm),
-                    _SettingsTile(
-                      icon: Icons.work_outline,
-                      title: 'Cargos',
-                      trailing: Icon(Icons.chevron_right,
-                          color: context.appColors.textSecondary),
-                      onTap: () => context.push(AppRoutes.professionalRoles),
+                  const SizedBox(height: AppSpacing.xl),
+
+                  // ── Agenda ─────────────────────────────────────────────
+                  _SectionLabel(label: 'Agenda'),
+                  const SizedBox(height: AppSpacing.sm),
+                  _SettingsTile(
+                    icon: Icons.drag_indicator,
+                    title: 'Arrastar e soltar',
+                    subtitle: 'Mover agendamentos segurando e arrastando',
+                    trailing: Switch(
+                      value: _dragEnabled,
+                      activeColor: context.appColors.primary,
+                      onChanged: _toggleDrag,
                     ),
-                  ],
-                );
-              },
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  _SettingsTile(
+                    icon: Icons.event_available,
+                    title: 'Confirmar comparecimento',
+                    subtitle:
+                        'Perguntar o status do agendamento assim que ele terminar',
+                    trailing: Switch(
+                      value: _attendancePromptEnabled,
+                      activeColor: context.appColors.primary,
+                      onChanged: _toggleAttendancePrompt,
+                    ),
+                  ),
+
+                  // ── Gerenciamento ──────────────────────────────────────
+                  BlocBuilder<BusinessBloc, BusinessState>(
+                    builder: (context, state) {
+                      if (state is! BusinessLoaded ||
+                          !state.policy.canManageTeam) {
+                        return const SizedBox.shrink();
+                      }
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: AppSpacing.xl),
+                          _SectionLabel(label: 'Gerenciamento'),
+                          const SizedBox(height: AppSpacing.sm),
+                          _SettingsTile(
+                            icon: Icons.work_outline,
+                            title: 'Cargos',
+                            trailing: Icon(Icons.chevron_right,
+                                color: context.appColors.textSecondary),
+                            onTap: () =>
+                                context.push(AppRoutes.professionalRoles),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+
+                  // ── Sair (sempre por último) ───────────────────────────
+                  const SizedBox(height: AppSpacing.xl),
+                  _SectionLabel(label: 'Sessão'),
+                  const SizedBox(height: AppSpacing.sm),
+                  _SettingsTile(
+                    icon: Icons.logout,
+                    title: 'Sair',
+                    trailing: Icon(Icons.chevron_right,
+                        color: context.appColors.textSecondary),
+                    onTap: () =>
+                        context.read<AuthBloc>().add(const AuthLogoutRequested()),
+                  ),
+
+                  const SizedBox(height: AppSpacing.lg),
+                ],
+              ),
             ),
           ],
         ),
@@ -175,6 +190,8 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 }
+
+// ── Shared widgets ────────────────────────────────────────────────────────────
 
 class _SectionLabel extends StatelessWidget {
   final String label;

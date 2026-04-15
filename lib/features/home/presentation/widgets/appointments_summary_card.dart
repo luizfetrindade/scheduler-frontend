@@ -5,11 +5,15 @@ import 'package:intl/intl.dart';
 import 'package:scheduler_frontend/core/router/app_routes.dart';
 import 'package:scheduler_frontend/design_system/base_design_system.dart';
 import 'package:scheduler_frontend/features/appointments/bloc/appointments_bloc.dart';
+import 'package:scheduler_frontend/features/appointments/bloc/appointments_event.dart';
 import 'package:scheduler_frontend/features/appointments/bloc/appointments_state.dart';
 import 'package:scheduler_frontend/features/appointments/bloc/schedule_bloc.dart';
+import 'package:scheduler_frontend/features/appointments/bloc/schedule_event.dart';
 import 'package:scheduler_frontend/features/appointments/data/appointment_model.dart';
 import 'package:scheduler_frontend/features/appointments/data/appointment_repository.dart';
 import 'package:scheduler_frontend/features/appointments/presentation/widgets/create_appointment_sheet.dart';
+import 'package:scheduler_frontend/features/business/bloc/business_bloc.dart';
+import 'package:scheduler_frontend/features/business/bloc/business_state.dart';
 import 'package:scheduler_frontend/features/home/presentation/widgets/empty_state_cta_card.dart';
 
 class AppointmentsSummaryCard extends StatelessWidget {
@@ -95,6 +99,15 @@ class AppointmentsSummaryCard extends StatelessWidget {
   void _openNewAppointmentSheet(BuildContext context) {
     final repo = context.read<AppointmentRepository>();
     final scheduleBloc = ScheduleBloc(repo);
+
+    final bizState = context.read<BusinessBloc>().state;
+    if (bizState is BusinessLoaded) {
+      scheduleBloc.add(ScheduleInitialized(
+        slug: bizState.active.slug,
+        date: DateTime.now(),
+      ));
+    }
+
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -106,7 +119,16 @@ class AppointmentsSummaryCard extends StatelessWidget {
         create: (_) => scheduleBloc,
         child: CreateAppointmentSheet(initialDateTime: DateTime.now()),
       ),
-    );
+    ).whenComplete(() {
+      if (!context.mounted) return;
+      final bizState = context.read<BusinessBloc>().state;
+      if (bizState is BusinessLoaded) {
+        context.read<AppointmentsBloc>().add(AppointmentsLoadRequested(
+              slug: bizState.active.slug,
+              date: DateTime.now(),
+            ));
+      }
+    });
   }
 }
 
