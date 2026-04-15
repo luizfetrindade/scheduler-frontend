@@ -60,8 +60,13 @@ class _LoginPageState extends State<LoginPage> {
         listener: (context, state) {
           if (state is AuthLoginOtpSent) {
             context.push(
-              '/login/totp',
-              extra: (email: state.email, rememberMe: _rememberMe),
+              Uri(
+                path: '/login/totp',
+                queryParameters: {
+                  'email': state.email,
+                  'rememberMe': _rememberMe.toString(),
+                },
+              ).toString(),
             );
           }
           if (state is AuthError) {

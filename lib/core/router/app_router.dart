@@ -73,15 +73,10 @@ GoRouter createAppRouter(AuthBloc authBloc) => GoRouter(
         GoRoute(
           path: '/login/totp',
           builder: (_, state) {
-            final extra = state.extra;
-            if (extra is ({String email, bool rememberMe})) {
-              return TotpLoginPage(
-                email: extra.email,
-                rememberMe: extra.rememberMe,
-              );
-            }
-            // Fallback — deep-link or reload lost the extra. Send user back to login.
-            return const TotpLoginPage(email: '', rememberMe: false);
+            final email = state.uri.queryParameters['email'] ?? '';
+            final rememberMe =
+                state.uri.queryParameters['rememberMe'] == 'true';
+            return TotpLoginPage(email: email, rememberMe: rememberMe);
           },
         ),
         GoRoute(
