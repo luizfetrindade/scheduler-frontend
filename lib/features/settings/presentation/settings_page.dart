@@ -9,8 +9,10 @@ import 'package:scheduler_frontend/core/router/app_routes.dart';
 import 'package:scheduler_frontend/core/theme/theme_cubit.dart';
 import 'package:scheduler_frontend/core/theme/theme_state.dart';
 import 'package:scheduler_frontend/design_system/base_design_system.dart';
+import 'package:scheduler_frontend/features/billing/presentation/billing_page.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_bloc.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_state.dart';
+import 'package:scheduler_frontend/features/business/data/business_model.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -76,18 +78,28 @@ class _SettingsPageState extends State<SettingsPage> {
                   _SectionLabel(label: 'Conta'),
                   const SizedBox(height: AppSpacing.sm),
                   BlocBuilder<AuthBloc, AuthState>(
-                    builder: (context, state) {
-                      final name =
-                          state is AuthAuthenticated ? state.user.name : '';
-                      final email =
-                          state is AuthAuthenticated ? state.user.email : '';
-                      return _SettingsTile(
-                        icon: Icons.person_outline,
-                        title: name.isNotEmpty ? name : 'Meus dados',
-                        subtitle: email.isNotEmpty ? email : null,
-                        trailing: Icon(Icons.chevron_right,
-                            color: context.appColors.textSecondary),
-                        onTap: () => context.push(AppRoutes.profile),
+                    builder: (context, authState) {
+                      final name = authState is AuthAuthenticated
+                          ? authState.user.name
+                          : '';
+                      final email = authState is AuthAuthenticated
+                          ? authState.user.email
+                          : '';
+                      return BlocBuilder<BusinessBloc, BusinessState>(
+                        builder: (context, bizState) {
+                          final planLabel = bizState is BusinessLoaded
+                              ? 'Plano ${planDisplayName(bizState.active.planName)}'
+                              : null;
+                          return _SettingsTile(
+                            icon: Icons.person_outline,
+                            title: name.isNotEmpty ? name : 'Meus dados',
+                            subtitle: email.isNotEmpty ? email : null,
+                            extraSubtitle: planLabel,
+                            trailing: Icon(Icons.chevron_right,
+                                color: context.appColors.textSecondary),
+                            onTap: () => context.push(AppRoutes.profile),
+                          );
+                        },
                       );
                     },
                   ),
@@ -167,6 +179,49 @@ class _SettingsPageState extends State<SettingsPage> {
                     },
                   ),
 
+                  // ── Assinatura ─────────────────────────────────────────
+                  BlocBuilder<BusinessBloc, BusinessState>(
+                    builder: (context, state) {
+                      if (state is! BusinessLoaded) {
+                        return const SizedBox.shrink();
+                      }
+                      final business = state.active;
+                      final isOwner =
+                          business.myStaffRole == StaffRole.owner;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: AppSpacing.xl),
+                          _SectionLabel(label: 'Assinatura'),
+                          const SizedBox(height: AppSpacing.sm),
+                          _SettingsTile(
+                            icon: Icons.workspace_premium_outlined,
+                            title: planDisplayName(business.planName),
+                            subtitle: isOwner
+                                ? 'Toque para gerenciar sua assinatura'
+                                : null,
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                PlanBadge(planName: business.planName),
+                                if (isOwner) ...[
+                                  const SizedBox(width: AppSpacing.xs),
+                                  Icon(
+                                    Icons.chevron_right,
+                                    color: context.appColors.textSecondary,
+                                  ),
+                                ],
+                              ],
+                            ),
+                            onTap: isOwner
+                                ? () => context.push(AppRoutes.billing)
+                                : null,
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+
                   // ── Sair (sempre por último) ───────────────────────────
                   const SizedBox(height: AppSpacing.xl),
                   _SectionLabel(label: 'Sessão'),
@@ -212,6 +267,7 @@ class _SettingsTile extends StatelessWidget {
   final IconData icon;
   final String title;
   final String? subtitle;
+  final String? extraSubtitle;
   final Widget? trailing;
   final VoidCallback? onTap;
 
@@ -219,12 +275,36 @@ class _SettingsTile extends StatelessWidget {
     required this.icon,
     required this.title,
     this.subtitle,
+    this.extraSubtitle,
     this.trailing,
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    Widget? subtitleWidget;
+    if (subtitle != null || extraSubtitle != null) {
+      subtitleWidget = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (subtitle != null)
+            Text(
+              subtitle!,
+              style: AppTypography.caption
+                  .copyWith(color: context.appColors.textSecondary),
+            ),
+          if (extraSubtitle != null)
+            Text(
+              extraSubtitle!,
+              style: AppTypography.caption.copyWith(
+                color: context.appColors.textSecondary,
+              ),
+            ),
+        ],
+      );
+    }
+
     return ListTile(
       tileColor: context.appColors.surface,
       shape: const RoundedRectangleBorder(),
@@ -234,13 +314,7 @@ class _SettingsTile extends StatelessWidget {
         style: AppTypography.bodySm
             .copyWith(color: context.appColors.textPrimary),
       ),
-      subtitle: subtitle != null
-          ? Text(
-              subtitle!,
-              style: AppTypography.caption
-                  .copyWith(color: context.appColors.textSecondary),
-            )
-          : null,
+      subtitle: subtitleWidget,
       trailing: trailing,
       onTap: onTap,
     );

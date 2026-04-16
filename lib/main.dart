@@ -39,6 +39,9 @@ import 'package:scheduler_frontend/features/professionals/bloc/professionals_eve
 import 'package:scheduler_frontend/features/professionals/data/professional_repository.dart';
 import 'package:scheduler_frontend/features/onboarding/bloc/wizard_bloc.dart';
 import 'package:scheduler_frontend/features/professionals/data/professional_roles_repository.dart';
+import 'package:scheduler_frontend/features/billing/bloc/billing_bloc.dart';
+import 'package:scheduler_frontend/features/billing/bloc/billing_event.dart';
+import 'package:scheduler_frontend/features/billing/data/billing_repository.dart';
 import 'package:scheduler_frontend/features/profile/bloc/profile_bloc.dart';
 import 'package:scheduler_frontend/features/profile/data/profile_repository.dart';
 
@@ -64,6 +67,7 @@ void main() async {
   final professionalRolesRepo = ProfessionalRolesRepository(apiClient);
 
   final profileRepo = ProfileRepository(apiClient);
+  final billingRepo = BillingRepository(apiClient);
   final authBloc = AuthBloc(authRepo)..add(const AuthUserFetched());
 
   // When the access token expires and the refresh token is also invalid,
@@ -81,6 +85,7 @@ void main() async {
     professionalRepo: professionalRepo,
     professionalRolesRepo: professionalRolesRepo,
     profileRepo: profileRepo,
+    billingRepo: billingRepo,
   ));
 }
 
@@ -95,6 +100,7 @@ class SchedulerApp extends StatelessWidget {
   final ProfessionalRepository professionalRepo;
   final ProfessionalRolesRepository professionalRolesRepo;
   final ProfileRepository profileRepo;
+  final BillingRepository billingRepo;
 
   const SchedulerApp({
     super.key,
@@ -108,6 +114,7 @@ class SchedulerApp extends StatelessWidget {
     required this.professionalRepo,
     required this.professionalRolesRepo,
     required this.profileRepo,
+    required this.billingRepo,
   });
 
   @override
@@ -128,6 +135,7 @@ class SchedulerApp extends StatelessWidget {
           BlocProvider(create: (_) => ProfessionalsBloc(professionalRepo)),
           BlocProvider(create: (_) => ProfessionalRolesBloc(professionalRolesRepo)),
           BlocProvider(create: (_) => ProfileBloc(profileRepo)),
+          BlocProvider(create: (_) => BillingBloc(billingRepo)),
           BlocProvider(
             create: (context) => WizardBloc(
               createBusiness: (name) async {
@@ -207,6 +215,7 @@ class _AppBodyState extends State<_AppBody> {
                 context.read<ClientsBloc>().add(const ClientsSessionCleared());
                 context.read<ProfessionalsBloc>().add(const ProfessionalsSessionCleared());
                 context.read<ProfessionalRolesBloc>().add(const ProfessionalRolesSessionCleared());
+                context.read<BillingBloc>().add(const BillingSessionCleared());
               }
             },
           ),

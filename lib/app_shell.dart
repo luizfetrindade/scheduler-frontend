@@ -10,6 +10,7 @@ import 'package:scheduler_frontend/core/policy/app_policy.dart';
 import 'package:scheduler_frontend/core/theme/theme_cubit.dart';
 import 'package:scheduler_frontend/core/theme/theme_state.dart';
 import 'package:scheduler_frontend/design_system/base_design_system.dart';
+import 'package:scheduler_frontend/features/billing/presentation/billing_page.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_bloc.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_event.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_state.dart';
@@ -408,6 +409,7 @@ class _SidebarState extends State<_Sidebar> {
                         onTap: () => context.go(e.value.route),
                       ),
                     ),
+                    if (showExpanded) _SidebarPlanBadge(expanded: showExpanded),
                     const Spacer(),
                     _SidebarThemeToggle(expanded: showExpanded),
                     Divider(
@@ -547,6 +549,31 @@ class _SidebarTile extends StatelessWidget {
             ),
           ),
         ),
+    );
+  }
+}
+
+// ─── Sidebar plan badge ───────────────────────────────────────────────────────
+
+class _SidebarPlanBadge extends StatelessWidget {
+  final bool expanded;
+
+  const _SidebarPlanBadge({required this.expanded});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<BusinessBloc, BusinessState>(
+      builder: (context, state) {
+        if (state is! BusinessLoaded) return const SizedBox.shrink();
+        final planName = state.active.planName;
+        return Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
+          child: PlanBadge(planName: planName),
+        );
+      },
     );
   }
 }

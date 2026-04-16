@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:scheduler_frontend/app_shell.dart';
 import 'package:scheduler_frontend/core/auth/auth_bloc.dart';
 import 'package:scheduler_frontend/core/auth/auth_state.dart';
 import 'package:scheduler_frontend/core/network/router_notifier.dart';
 import 'package:scheduler_frontend/core/router/app_routes.dart';
+import 'package:scheduler_frontend/design_system/base_design_system.dart';
+import 'package:scheduler_frontend/features/business/bloc/business_bloc.dart';
+import 'package:scheduler_frontend/features/business/bloc/business_event.dart';
 import 'package:scheduler_frontend/features/appointments/presentation/appointments_page.dart';
 import 'package:scheduler_frontend/features/auth/presentation/accept_invite_page.dart';
 import 'package:scheduler_frontend/features/auth/presentation/forgot_password_page.dart';
@@ -22,6 +26,7 @@ import 'package:scheduler_frontend/features/professionals/presentation/roles_man
 import 'package:scheduler_frontend/features/services/presentation/services_page.dart';
 import 'package:scheduler_frontend/core/router/uuid_validator.dart';
 import 'package:scheduler_frontend/features/onboarding/presentation/wizard_page.dart';
+import 'package:scheduler_frontend/features/billing/presentation/billing_page.dart';
 import 'package:scheduler_frontend/features/profile/presentation/profile_page.dart';
 import 'package:scheduler_frontend/features/settings/presentation/settings_page.dart';
 
@@ -57,6 +62,114 @@ String? computeRedirect({required bool isLoggedIn, required String location}) {
   if (isLoggedIn && isOnPublicRoute) return AppRoutes.home;
   return null;
 }
+
+// ── Billing redirect pages ────────────────────────────────────────────────────
+
+class _BillingSuccessPage extends StatefulWidget {
+  const _BillingSuccessPage();
+
+  @override
+  State<_BillingSuccessPage> createState() => _BillingSuccessPageState();
+}
+
+class _BillingSuccessPageState extends State<_BillingSuccessPage> {
+  @override
+  void initState() {
+    super.initState();
+    // Reload business so the new plan name is reflected everywhere.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<BusinessBloc>().add(const BusinessLoadRequested());
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: context.appColors.background,
+      body: SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.check_circle_outline,
+                  size: 64, color: Color(0xFF00897B)),
+              const SizedBox(height: AppSpacing.lg),
+              Text(
+                'Assinatura ativada!',
+                style: AppTypography.headingMd.copyWith(
+                  color: context.appColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                'Seu plano foi atualizado com sucesso.',
+                style: AppTypography.bodySm.copyWith(
+                  color: context.appColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  shape: const RoundedRectangleBorder(),
+                ),
+                onPressed: () => context.go(AppRoutes.home),
+                child: const Text('Ir para o início'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BillingCancelPage extends StatelessWidget {
+  const _BillingCancelPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: context.appColors.background,
+      body: SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.cancel_outlined,
+                  size: 64, color: context.appColors.textSecondary),
+              const SizedBox(height: AppSpacing.lg),
+              Text(
+                'Pagamento cancelado',
+                style: AppTypography.headingMd.copyWith(
+                  color: context.appColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                'Nenhuma cobrança foi realizada.',
+                style: AppTypography.bodySm.copyWith(
+                  color: context.appColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  shape: const RoundedRectangleBorder(),
+                ),
+                onPressed: () => context.go(AppRoutes.billing),
+                child: const Text('Voltar para planos'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 GoRouter createAppRouter(AuthBloc authBloc) => GoRouter(
       initialLocation: AppRoutes.home,
@@ -148,6 +261,15 @@ GoRouter createAppRouter(AuthBloc authBloc) => GoRouter(
             GoRoute(path: AppRoutes.reports,      builder: (context, _) => const ReportsPage()),
             GoRoute(path: AppRoutes.settings,     builder: (context, _) => const SettingsPage()),
             GoRoute(path: AppRoutes.profile,      builder: (context, _) => const ProfilePage()),
+            GoRoute(path: AppRoutes.billing,      builder: (context, _) => const BillingPage()),
+            GoRoute(
+              path: AppRoutes.billingSuccess,
+              builder: (context, _) => const _BillingSuccessPage(),
+            ),
+            GoRoute(
+              path: AppRoutes.billingCancel,
+              builder: (context, _) => const _BillingCancelPage(),
+            ),
           ],
         ),
       ],

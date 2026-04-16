@@ -18,6 +18,7 @@ class BusinessModel extends Equatable {
   final String timezone;
   final StaffRole myStaffRole;
   final int planMaxStaff;
+  final String planName;
 
   const BusinessModel({
     required this.id,
@@ -27,6 +28,7 @@ class BusinessModel extends Equatable {
     required this.timezone,
     this.myStaffRole = StaffRole.owner,
     this.planMaxStaff = 1,
+    this.planName = 'FREE',
   });
 
   factory BusinessModel.fromJson(Map<String, dynamic> json) => BusinessModel(
@@ -40,6 +42,9 @@ class BusinessModel extends Equatable {
         ),
         planMaxStaff:
             (json['plan'] as Map<String, dynamic>?)?['maxStaff'] as int? ?? 1,
+        planName:
+            (json['plan'] as Map<String, dynamic>?)?['name'] as String? ??
+                'FREE',
       );
 
   BusinessModel copyWith({
@@ -50,6 +55,7 @@ class BusinessModel extends Equatable {
     String? timezone,
     StaffRole? myStaffRole,
     int? planMaxStaff,
+    String? planName,
   }) =>
       BusinessModel(
         id: id ?? this.id,
@@ -59,8 +65,9 @@ class BusinessModel extends Equatable {
         timezone: timezone ?? this.timezone,
         myStaffRole: myStaffRole ?? this.myStaffRole,
         planMaxStaff: planMaxStaff ?? this.planMaxStaff,
+        planName: planName ?? this.planName,
       );
 
   @override
-  List<Object?> get props => [id, slug, name, logo, timezone, myStaffRole, planMaxStaff];
+  List<Object?> get props => [id, slug, name, logo, timezone, myStaffRole, planMaxStaff, planName];
 }
