@@ -85,21 +85,13 @@ class _SettingsPageState extends State<SettingsPage> {
                       final email = authState is AuthAuthenticated
                           ? authState.user.email
                           : '';
-                      return BlocBuilder<BusinessBloc, BusinessState>(
-                        builder: (context, bizState) {
-                          final planLabel = bizState is BusinessLoaded
-                              ? 'Plano ${planDisplayName(bizState.active.planName)}'
-                              : null;
-                          return _SettingsTile(
-                            icon: Icons.person_outline,
-                            title: name.isNotEmpty ? name : 'Meus dados',
-                            subtitle: email.isNotEmpty ? email : null,
-                            extraSubtitle: planLabel,
-                            trailing: Icon(Icons.chevron_right,
-                                color: context.appColors.textSecondary),
-                            onTap: () => context.push(AppRoutes.profile),
-                          );
-                        },
+                      return _SettingsTile(
+                        icon: Icons.person_outline,
+                        title: name.isNotEmpty ? name : 'Meus dados',
+                        subtitle: email.isNotEmpty ? email : null,
+                        trailing: Icon(Icons.chevron_right,
+                            color: context.appColors.textSecondary),
+                        onTap: () => context.push(AppRoutes.profile),
                       );
                     },
                   ),
@@ -267,7 +259,6 @@ class _SettingsTile extends StatelessWidget {
   final IconData icon;
   final String title;
   final String? subtitle;
-  final String? extraSubtitle;
   final Widget? trailing;
   final VoidCallback? onTap;
 
@@ -275,7 +266,6 @@ class _SettingsTile extends StatelessWidget {
     required this.icon,
     required this.title,
     this.subtitle,
-    this.extraSubtitle,
     this.trailing,
     this.onTap,
   });
@@ -283,25 +273,11 @@ class _SettingsTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget? subtitleWidget;
-    if (subtitle != null || extraSubtitle != null) {
-      subtitleWidget = Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (subtitle != null)
-            Text(
-              subtitle!,
-              style: AppTypography.caption
-                  .copyWith(color: context.appColors.textSecondary),
-            ),
-          if (extraSubtitle != null)
-            Text(
-              extraSubtitle!,
-              style: AppTypography.caption.copyWith(
-                color: context.appColors.textSecondary,
-              ),
-            ),
-        ],
+    if (subtitle != null) {
+      subtitleWidget = Text(
+        subtitle!,
+        style: AppTypography.caption
+            .copyWith(color: context.appColors.textSecondary),
       );
     }
 

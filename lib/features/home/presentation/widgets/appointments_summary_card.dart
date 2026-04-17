@@ -92,7 +92,9 @@ class AppointmentsSummaryCard extends StatelessWidget {
 
   List<AppointmentModel> _extractAppointments(AppointmentsState state) =>
       switch (state) {
-        AppointmentsLoaded(:final appointments) => appointments,
+        AppointmentsLoaded(:final appointments) => appointments
+            .where((a) => a.type == AppointmentType.appointment)
+            .toList(),
         _ => const [],
       };
 

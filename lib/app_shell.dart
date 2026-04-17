@@ -10,7 +10,7 @@ import 'package:scheduler_frontend/core/policy/app_policy.dart';
 import 'package:scheduler_frontend/core/theme/theme_cubit.dart';
 import 'package:scheduler_frontend/core/theme/theme_state.dart';
 import 'package:scheduler_frontend/design_system/base_design_system.dart';
-import 'package:scheduler_frontend/features/billing/presentation/billing_page.dart';
+import 'package:scheduler_frontend/core/router/app_routes.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_bloc.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_event.dart';
 import 'package:scheduler_frontend/features/business/bloc/business_state.dart';
@@ -409,7 +409,7 @@ class _SidebarState extends State<_Sidebar> {
                         onTap: () => context.go(e.value.route),
                       ),
                     ),
-                    if (showExpanded) _SidebarPlanBadge(expanded: showExpanded),
+                    _SidebarUpgradeButton(expanded: showExpanded),
                     const Spacer(),
                     _SidebarThemeToggle(expanded: showExpanded),
                     Divider(
@@ -553,25 +553,55 @@ class _SidebarTile extends StatelessWidget {
   }
 }
 
-// ─── Sidebar plan badge ───────────────────────────────────────────────────────
+// ─── Tier label helper ────────────────────────────────────────────────────────
 
-class _SidebarPlanBadge extends StatelessWidget {
+String _tierLabel(String planName) => switch (planName.toUpperCase()) {
+      'PRO' => 'Pro',
+      'PREMIUM' => 'Plus',
+      _ => 'Free',
+    };
+
+// ─── Sidebar upgrade button (free plan only) ──────────────────────────────────
+
+class _SidebarUpgradeButton extends StatelessWidget {
   final bool expanded;
 
-  const _SidebarPlanBadge({required this.expanded});
+  const _SidebarUpgradeButton({required this.expanded});
 
   @override
   Widget build(BuildContext context) {
+    if (!expanded) return const SizedBox.shrink();
     return BlocBuilder<BusinessBloc, BusinessState>(
       builder: (context, state) {
         if (state is! BusinessLoaded) return const SizedBox.shrink();
-        final planName = state.active.planName;
+        final isFree = state.active.planName.toUpperCase() != 'PRO' &&
+            state.active.planName.toUpperCase() != 'PREMIUM';
+        if (!isFree) return const SizedBox.shrink();
         return Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
             vertical: AppSpacing.sm,
           ),
-          child: PlanBadge(planName: planName),
+          child: SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: context.appColors.sidebarForeground,
+                side: BorderSide(
+                  color: context.appColors.sidebarForeground.withValues(alpha: 0.5),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                shape: const RoundedRectangleBorder(),
+              ),
+              onPressed: () => context.push(AppRoutes.billing),
+              child: Text(
+                'Upgrade de plano',
+                style: AppTypography.bodySm.copyWith(
+                  color: context.appColors.sidebarForeground,
+                ),
+              ),
+            ),
+          ),
         );
       },
     );
@@ -684,10 +714,31 @@ class _SidebarFooter extends StatelessWidget {
               avatar,
               const SizedBox(width: AppSpacing.sm),
               Expanded(
-                child: Text(
-                  name,
-                  style: AppTypography.bodySm.copyWith(color: context.appColors.sidebarForeground),
-                  overflow: TextOverflow.ellipsis,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      name,
+                      style: AppTypography.bodySm.copyWith(
+                          color: context.appColors.sidebarForeground),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    BlocBuilder<BusinessBloc, BusinessState>(
+                      builder: (context, bizState) {
+                        if (bizState is! BusinessLoaded) {
+                          return const SizedBox.shrink();
+                        }
+                        return Text(
+                          _tierLabel(bizState.active.planName),
+                          style: AppTypography.caption.copyWith(
+                            color: context.appColors.sidebarForeground
+                                .withValues(alpha: 0.6),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ),
               IconButton(

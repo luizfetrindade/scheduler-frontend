@@ -56,7 +56,9 @@ class _TeamAppointmentsBody extends StatelessWidget {
                   ),
                 ),
               AppointmentsLoaded(:final appointments)
-                  when appointments.isEmpty =>
+                  when appointments
+                      .where((a) => a.type == AppointmentType.appointment)
+                      .isEmpty =>
                 EmptyStateCtaCard(
                   icon: Icons.calendar_today_outlined,
                   title: 'Sem agendamentos hoje',
@@ -66,6 +68,8 @@ class _TeamAppointmentsBody extends StatelessWidget {
                 ),
               AppointmentsLoaded(:final appointments) => Column(
                   children: appointments
+                      .where((a) => a.type == AppointmentType.appointment)
+                      .toList()
                       .map(
                         (appt) => Padding(
                           padding:
