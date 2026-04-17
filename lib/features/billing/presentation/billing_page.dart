@@ -19,6 +19,7 @@ String planDisplayName(String planName) => switch (planName.toUpperCase()) {
     };
 
 const _kDiscountColor = Color(0xFFF59E0B); // amber — shared by banner + border
+const _kCheckColor = Color(0xFF43A047); // consistent green for all checkmarks
 
 class _PlanInfo {
   final String backendKey; // 'FREE' | 'PRO' | 'PREMIUM'
@@ -30,6 +31,8 @@ class _PlanInfo {
   /// When non-null the card switches to a limited-time offer layout and this
   /// string is rendered inside the amber discount banner (e.g. '50% OFF').
   final String? discount; // ignore: unused_element_parameter
+  /// When true renders a "MAIS POPULAR" badge and a stronger border.
+  final bool isPopular;
 
   const _PlanInfo({
     required this.backendKey,
@@ -39,6 +42,7 @@ class _PlanInfo {
     required this.features,
     required this.accentColor,
     this.discount, // ignore: unused_element_parameter
+    this.isPopular = false,
   });
 }
 
@@ -47,9 +51,9 @@ const _plans = [
     backendKey: 'FREE',
     displayName: 'Skedi Free',
     price: 'R\$ 0',
-    priceDetail: 'para sempre',
+    priceDetail: 'sem custos ocultos',
     features: [
-      'Agenda básica',
+      'Essencial para começar',
       '1 profissional',
       'Clientes ilimitados',
       'Agendamentos ilimitados',
@@ -59,13 +63,14 @@ const _plans = [
   _PlanInfo(
     backendKey: 'PREMIUM',
     displayName: 'Skedi Plus',
-    price: 'R\$ 20',
+    price: 'R\$ 19,90',
     priceDetail: 'por mês',
+    isPopular: true,
     features: [
       'Tudo do Free',
-      'Profissional liberal',
-      'Relatórios básicos',
-      'Suporte prioritário',
+      'Ideal para autônomos em crescimento',
+      'Visão clara do seu lucro',
+      'Suporte prioritário via WhatsApp',
     ],
     accentColor: Color(0xFF5C6BC0),
     // discount: '50% OFF no 1º mês',  ← enable to activate promo layout
@@ -77,9 +82,9 @@ const _plans = [
     priceDetail: 'por mês',
     features: [
       'Tudo do Plus',
-      'Equipes e clínicas',
+      'Para negócios que querem escalar',
       'Múltiplos profissionais',
-      'Relatórios avançados',
+      'Dashboard financeiro completo',
       'Gestão de cargos',
     ],
     accentColor: Color(0xFF00897B),
@@ -88,8 +93,37 @@ const _plans = [
 
 // ── BillingPage ───────────────────────────────────────────────────────────────
 
-class BillingPage extends StatelessWidget {
+class BillingPage extends StatefulWidget {
   const BillingPage({super.key});
+
+  @override
+  State<BillingPage> createState() => _BillingPageState();
+}
+
+class _BillingPageState extends State<BillingPage> with WidgetsBindingObserver {
+  bool _checkoutLaunched = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _checkoutLaunched) {
+      _checkoutLaunched = false;
+      if (mounted) {
+        context.read<BusinessBloc>().add(const BusinessLoadRequested());
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,6 +132,7 @@ class BillingPage extends StatelessWidget {
         if (state is BillingCheckoutReady) {
           final billingBloc = context.read<BillingBloc>();
           final uri = Uri.parse(state.url);
+          _checkoutLaunched = true;
           await launchUrl(uri, mode: LaunchMode.externalApplication);
           billingBloc.add(const BillingSessionCleared());
         }
@@ -173,6 +208,13 @@ class _BillingContent extends StatelessWidget {
         Text(
           'Planos disponíveis',
           style: AppTypography.labelLarge.copyWith(
+            color: context.appColors.textSecondary,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          'Cancele quando quiser. Sem fidelidade.',
+          style: AppTypography.bodySm.copyWith(
             color: context.appColors.textSecondary,
           ),
         ),
@@ -279,11 +321,12 @@ class _PlanCard extends StatelessWidget {
   Color _borderColor(BuildContext context) {
     if (plan.discount != null) return _kDiscountColor;
     if (isCurrent) return context.appColors.primary;
+    if (plan.isPopular) return plan.accentColor;
     return context.appColors.outline;
   }
 
   double get _borderWidth =>
-      (plan.discount != null || isCurrent) ? 2 : 1;
+      (plan.discount != null || isCurrent || plan.isPopular) ? 2 : 1;
 
   @override
   Widget build(BuildContext context) {
@@ -308,7 +351,9 @@ class _PlanCard extends StatelessWidget {
             children: [
               // ── Discount banner ───────────────────────────────────────
               if (plan.discount != null)
-                _DiscountBanner(text: plan.discount!),
+                _DiscountBanner(text: plan.discount!)
+              else if (plan.isPopular)
+                _PopularBanner(accentColor: plan.accentColor),
 
               // ── Top content ───────────────────────────────────────────
               Padding(
@@ -331,8 +376,6 @@ class _PlanCard extends StatelessWidget {
                       textAlign: TextAlign.center,
                     ),
 
-                    // "PLANO ATUAL" badge — white text always contrasts on
-                    // the primary-coloured background in both light and dark.
                     if (isCurrent) ...[
                       const SizedBox(height: AppSpacing.xs),
                       Container(
@@ -343,7 +386,7 @@ class _PlanCard extends StatelessWidget {
                         child: Text(
                           'PLANO ATUAL',
                           style: AppTypography.caption.copyWith(
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.onPrimary,
                             fontWeight: FontWeight.w700,
                             fontSize: 9,
                             letterSpacing: 0.5,
@@ -355,14 +398,11 @@ class _PlanCard extends StatelessWidget {
                     const SizedBox(height: AppSpacing.xl),
 
                     // Price
-                    Text(
-                      plan.price,
-                      style: AppTypography.displayLg.copyWith(
-                        color: plan.discount != null
-                            ? _kDiscountColor
-                            : plan.accentColor,
-                      ),
-                      textAlign: TextAlign.center,
+                    _PriceDisplay(
+                      price: plan.price,
+                      color: plan.discount != null
+                          ? _kDiscountColor
+                          : plan.accentColor,
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -396,7 +436,7 @@ class _PlanCard extends StatelessWidget {
                                       size: 13,
                                       color: plan.discount != null
                                           ? _kDiscountColor
-                                          : plan.accentColor,
+                                          : _kCheckColor,
                                     ),
                                     const SizedBox(width: AppSpacing.xs),
                                     Text(
@@ -460,7 +500,7 @@ class _PlanCard extends StatelessWidget {
                                       strokeWidth: 2,
                                       color: Colors.white),
                                 )
-                              : const Text('Assinar'),
+                              : const Text('Começar Agora'),
                         ),
                       )
                     : const SizedBox.shrink(),
@@ -512,6 +552,74 @@ class _DiscountBanner extends StatelessWidget {
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── PopularBanner ─────────────────────────────────────────────────────────────
+
+class _PopularBanner extends StatelessWidget {
+  final Color accentColor;
+
+  const _PopularBanner({required this.accentColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: accentColor,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
+      child: Text(
+        'MAIS POPULAR',
+        style: AppTypography.caption.copyWith(
+          color: Colors.white,
+          fontWeight: FontWeight.w700,
+          fontSize: 10,
+          letterSpacing: 0.8,
+        ),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+}
+
+// ── PriceDisplay ──────────────────────────────────────────────────────────────
+
+class _PriceDisplay extends StatelessWidget {
+  final String price;
+  final Color color;
+
+  const _PriceDisplay({required this.price, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final spaceIdx = price.indexOf(' ');
+    final symbol = spaceIdx >= 0 ? price.substring(0, spaceIdx) : price;
+    final amount = spaceIdx >= 0 ? price.substring(spaceIdx + 1) : '';
+
+    return RichText(
+      textAlign: TextAlign.center,
+      text: TextSpan(
+        children: [
+          TextSpan(
+            text: '$symbol ',
+            style: AppTypography.bodyMd.copyWith(
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          TextSpan(
+            text: amount,
+            style: AppTypography.displayLg.copyWith(
+              color: color,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),
